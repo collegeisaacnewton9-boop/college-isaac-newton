@@ -237,28 +237,28 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
   const suspendedCount = users.filter(u => u.status === 'SUSPENDED').length;
 
   return (
-    <div className="space-y-4 sm:space-y-5 animate-fade-in">
+    <div className="space-y-3 sm:space-y-3.5 animate-fade-in">
 
       {/* ------------------------------------------------------------------
           1. COMPACT HEADER & METRICS SUMMARY
       ------------------------------------------------------------------ */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-4">
+      <div className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-xs shrink-0">
-              <ShieldCheck className="w-5 h-5 text-amber-400" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-blue-900 text-white flex items-center justify-center shadow-2xs shrink-0">
+              <ShieldCheck className="w-4 h-4 text-amber-400" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-serif font-bold text-slate-900 text-base sm:text-lg">
+                <h2 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
                   Contrôle d’Accès & Attribution des Rôles (RBAC)
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 text-[10px] font-bold uppercase tracking-wider">
+                <span className="px-2 py-0.2 rounded-full bg-blue-100 text-blue-900 text-[9.5px] font-bold uppercase tracking-wider">
                   Super-Admin
                 </span>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-[11px] text-slate-500">
                 Activez/désactivez instantanément les accès et déléguez la gestion aux membres du personnel.
               </p>
             </div>
@@ -269,7 +269,7 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
               type="button"
               onClick={loadUsers}
               disabled={isLoading}
-              className="p-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
               title="Actualiser les utilisateurs"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
@@ -278,7 +278,7 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
             <button
               type="button"
               onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs shadow-xs transition-all active:scale-98 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs shadow-2xs transition-all active:scale-98 cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5 text-amber-400" />
               <span>Nouveau Collaborateur</span>
@@ -287,60 +287,60 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
         </div>
 
         {/* Dense KPI Grid: 4 Roles + Status Badges */}
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-2.5 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-2.5">
           
-          <div className="p-3 rounded-xl bg-blue-50/70 border border-blue-200/80">
-            <div className="flex items-center justify-between text-[11px] text-blue-900 font-semibold">
+          <div className="p-2.5 rounded-lg bg-blue-50/70 border border-blue-200/80 space-y-0.5">
+            <div className="flex items-center justify-between text-[10.5px] text-blue-900 font-semibold">
               <span>Super-Admins</span>
-              <Shield className="w-3.5 h-3.5 text-blue-600" />
+              <Shield className="w-3 h-3 text-blue-600" />
             </div>
-            <div className="font-serif text-xl font-black text-blue-950 mt-0.5">{adminCount}</div>
-            <p className="text-[10px] text-blue-800">Direction Générale</p>
+            <div className="font-serif text-lg sm:text-xl font-black text-blue-950">{adminCount}</div>
+            <p className="text-[9.5px] text-blue-800">Direction Générale</p>
           </div>
 
-          <div className="p-3 rounded-xl bg-purple-50/70 border border-purple-200/80">
-            <div className="flex items-center justify-between text-[11px] text-purple-900 font-semibold">
+          <div className="p-2.5 rounded-lg bg-purple-50/70 border border-purple-200/80 space-y-0.5">
+            <div className="flex items-center justify-between text-[10.5px] text-purple-900 font-semibold">
               <span>Éditeurs</span>
-              <BookOpen className="w-3.5 h-3.5 text-purple-600" />
+              <BookOpen className="w-3 h-3 text-purple-600" />
             </div>
-            <div className="font-serif text-xl font-black text-purple-950 mt-0.5">{editorCount}</div>
-            <p className="text-[10px] text-purple-800">Presse & CMS</p>
+            <div className="font-serif text-lg sm:text-xl font-black text-purple-950">{editorCount}</div>
+            <p className="text-[9.5px] text-purple-800">Presse & CMS</p>
           </div>
 
-          <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200/80">
-            <div className="flex items-center justify-between text-[11px] text-emerald-900 font-semibold">
+          <div className="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/80 space-y-0.5">
+            <div className="flex items-center justify-between text-[10.5px] text-emerald-900 font-semibold">
               <span>Enseignants</span>
-              <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <UserCheck className="w-3 h-3 text-emerald-600" />
             </div>
-            <div className="font-serif text-xl font-black text-emerald-950 mt-0.5">{teacherCount}</div>
-            <p className="text-[10px] text-emerald-800">Agenda Officiel</p>
+            <div className="font-serif text-lg sm:text-xl font-black text-emerald-950">{teacherCount}</div>
+            <p className="text-[9.5px] text-emerald-800">Agenda Officiel</p>
           </div>
 
-          <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80">
-            <div className="flex items-center justify-between text-[11px] text-amber-900 font-semibold">
+          <div className="p-2.5 rounded-lg bg-amber-50/70 border border-amber-200/80 space-y-0.5">
+            <div className="flex items-center justify-between text-[10.5px] text-amber-900 font-semibold">
               <span>Modérateurs</span>
-              <Mail className="w-3.5 h-3.5 text-amber-600" />
+              <Mail className="w-3 h-3 text-amber-600" />
             </div>
-            <div className="font-serif text-xl font-black text-amber-950 mt-0.5">{moderatorCount}</div>
-            <p className="text-[10px] text-amber-800">Accueil & Messages</p>
+            <div className="font-serif text-lg sm:text-xl font-black text-amber-950">{moderatorCount}</div>
+            <p className="text-[9.5px] text-amber-800">Accueil & Messages</p>
           </div>
 
-          <div className="p-3 rounded-xl bg-teal-50/70 border border-teal-200/80">
-            <div className="flex items-center justify-between text-[11px] text-teal-900 font-semibold">
+          <div className="p-2.5 rounded-lg bg-teal-50/70 border border-teal-200/80 space-y-0.5">
+            <div className="flex items-center justify-between text-[10.5px] text-teal-900 font-semibold">
               <span>Comptes Actifs</span>
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             </div>
-            <div className="font-serif text-xl font-black text-teal-950 mt-0.5">{activeCount}</div>
-            <p className="text-[10px] text-teal-800">Accès autorisés</p>
+            <div className="font-serif text-lg sm:text-xl font-black text-teal-950">{activeCount}</div>
+            <p className="text-[9.5px] text-teal-800">Accès autorisés</p>
           </div>
 
-          <div className="p-3 rounded-xl bg-rose-50/70 border border-rose-200/80">
-            <div className="flex items-center justify-between text-[11px] text-rose-900 font-semibold">
+          <div className="p-2.5 rounded-lg bg-rose-50/70 border border-rose-200/80 space-y-0.5">
+            <div className="flex items-center justify-between text-[10.5px] text-rose-900 font-semibold">
               <span>Suspendus</span>
-              <Lock className="w-3.5 h-3.5 text-rose-600" />
+              <Lock className="w-3 h-3 text-rose-600" />
             </div>
-            <div className="font-serif text-xl font-black text-rose-950 mt-0.5">{suspendedCount}</div>
-            <p className="text-[10px] text-rose-800">Accès verrouillés</p>
+            <div className="font-serif text-lg sm:text-xl font-black text-rose-950">{suspendedCount}</div>
+            <p className="text-[9.5px] text-rose-800">Accès verrouillés</p>
           </div>
 
         </div>
@@ -350,18 +350,18 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
       {/* ------------------------------------------------------------------
           2. COMPACT ROLE DEFINITION GUIDE & PERMISSIONS MATRIX
       ------------------------------------------------------------------ */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3.5">
+      <div className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-amber-400/20 text-amber-800 flex items-center justify-center shrink-0">
-              <KeyRound className="w-4 h-4" />
+            <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-800 flex items-center justify-center shrink-0">
+              <KeyRound className="w-3.5 h-3.5" />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
+              <h3 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">
                 Guide des Rôles & Périmètres d'Accès Délégués
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[10.5px] text-slate-500">
                 Périmètres de gestion attribués aux Éditeurs, Enseignants et Modérateurs.
               </p>
             </div>
@@ -370,15 +370,15 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
           <button
             type="button"
             onClick={() => setShowMatrix(!showMatrix)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer self-start sm:self-auto"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-semibold border border-slate-200 transition-colors cursor-pointer self-start sm:self-auto"
           >
-            <Sliders className="w-3.5 h-3.5 text-blue-600" />
+            <Sliders className="w-3 h-3 text-blue-600" />
             <span>{showMatrix ? 'Masquer la Matrice' : 'Voir la Matrice des Permissions'}</span>
           </button>
         </div>
 
         {/* Compact Grid of 3 Cards: EDITOR, TEACHER, MODERATOR */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
           <RoleHelperTooltip role="EDITOR" variant="card" />
           <RoleHelperTooltip role="TEACHER" variant="card" />
           <RoleHelperTooltip role="MODERATOR" variant="card" />
@@ -386,68 +386,68 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
 
         {/* Collapsible Permissions Comparison Matrix */}
         {showMatrix && (
-          <div className="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200 space-y-2.5 animate-fade-in">
+          <div className="bg-slate-50/80 rounded-xl p-3 border border-slate-200 space-y-2 animate-fade-in">
             <div className="flex items-center justify-between">
               <h4 className="font-serif font-bold text-slate-900 text-xs flex items-center gap-1.5">
-                <Sliders className="w-3.5 h-3.5 text-blue-600" />
+                <Sliders className="w-3 h-3 text-blue-600" />
                 <span>Matrice des Permissions Comparatives par Module</span>
               </h4>
               <span className="text-[10px] text-slate-400">Périmètres Back-Office CIN</span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs bg-white rounded-lg border border-slate-200 overflow-hidden">
-                <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200 text-[10.5px]">
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <table className="w-full text-left text-xs bg-white min-w-[580px]">
+                <thead className="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200 text-[10px]">
                   <tr>
-                    <th className="p-2 sm:p-2.5">Module Système</th>
-                    <th className="p-2 sm:p-2.5 text-center">Super-Admin</th>
-                    <th className="p-2 sm:p-2.5 text-center">Éditeur (Editor)</th>
-                    <th className="p-2 sm:p-2.5 text-center">Enseignant (Teacher)</th>
-                    <th className="p-2 sm:p-2.5 text-center">Modérateur (Moderator)</th>
+                    <th className="py-2 px-2.5">Module Système</th>
+                    <th className="py-2 px-2.5 text-center">Super-Admin</th>
+                    <th className="py-2 px-2.5 text-center">Éditeur (Editor)</th>
+                    <th className="py-2 px-2.5 text-center">Enseignant (Teacher)</th>
+                    <th className="py-2 px-2.5 text-center">Modérateur (Moderator)</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700 text-[10.5px]">
+                <tbody className="divide-y divide-slate-100 text-slate-700 text-[10px]">
                   <tr>
-                    <td className="p-2 sm:p-2.5 font-semibold text-slate-900">Admissions & Préinscriptions</td>
-                    <td className="p-2 sm:p-2.5 text-center font-bold text-emerald-600">Complet (Validation/Rejet)</td>
-                    <td className="p-2 sm:p-2.5 text-center text-slate-500">Lecture Seule</td>
-                    <td className="p-2 sm:p-2.5 text-center text-slate-500">Consultation Listes</td>
-                    <td className="p-2 sm:p-2.5 text-center text-slate-400">Non Autorisé</td>
+                    <td className="py-2 px-2.5 font-semibold text-slate-900">Admissions & Préinscriptions</td>
+                    <td className="py-2 px-2.5 text-center font-bold text-emerald-600">Complet (Validation/Rejet)</td>
+                    <td className="py-2 px-2.5 text-center text-slate-500">Lecture Seule</td>
+                    <td className="py-2 px-2.5 text-center text-slate-500">Consultation Listes</td>
+                    <td className="py-2 px-2.5 text-center text-slate-400">Non Autorisé</td>
                   </tr>
                   <tr>
-                    <td className="p-2 sm:p-2.5 font-semibold text-slate-900">Publications & Actualités (CMS)</td>
-                    <td className="p-2 sm:p-2.5 text-center font-bold text-emerald-600">Complet</td>
-                    <td className="p-2 sm:p-2.5 text-center font-bold text-purple-700">Complet (Édition/Publier)</td>
-                    <td className="p-2 sm:p-2.5 text-center text-slate-500">Lecture Seule</td>
-                    <td className="p-2 sm:p-2.5 text-center text-slate-400">Non Autorisé</td>
+                    <td className="py-2 px-2.5 font-semibold text-slate-900">Publications & Actualités (CMS)</td>
+                    <td className="py-2 px-2.5 text-center font-bold text-emerald-600">Complet</td>
+                    <td className="py-2 px-2.5 text-center font-bold text-purple-700">Complet (Édition/Publier)</td>
+                    <td className="py-2 px-2.5 text-center text-slate-500">Lecture Seule</td>
+                    <td className="py-2 px-2.5 text-center text-slate-400">Non Autorisé</td>
                   </tr>
                   <tr>
-                    <td className="p-2 sm:p-2.5 font-semibold text-slate-900">Calendrier & Agenda Officiel</td>
-                    <td className="p-2 sm:p-2.5 text-center font-bold text-emerald-600">Complet</td>
-                    <td className="p-2 sm:p-2.5 text-center text-slate-500">Lecture Seule</td>
-                    <td className="p-2 sm:p-2.5 text-center font-bold text-emerald-700">Complet (Planifier cours/examens)</td>
-                    <td className="p-2 sm:p-2.5 text-center text-slate-500">Lecture Seule</td>
+                    <td className="py-2 px-2.5 font-semibold text-slate-900">Calendrier & Agenda Officiel</td>
+                    <td className="py-2 px-2.5 text-center font-bold text-emerald-600">Complet</td>
+                    <td className="py-2 px-2.5 text-center text-slate-500">Lecture Seule</td>
+                    <td className="py-2 px-2.5 text-center font-bold text-emerald-700">Complet (Planifier cours/examens)</td>
+                    <td className="py-2 px-2.5 text-center text-slate-500">Lecture Seule</td>
                   </tr>
                   <tr>
-                    <td className="p-2 sm:p-2.5 font-semibold text-slate-900">Secrétariat & Messages Contact</td>
-                    <td className="p-2 sm:p-2.5 text-center font-bold text-emerald-600">Complet</td>
-                    <td className="p-2 sm:p-2.5 text-center text-slate-400">Non Autorisé</td>
-                    <td className="p-2 sm:p-2.5 text-center text-slate-400">Non Autorisé</td>
-                    <td className="p-2 sm:p-2.5 text-center font-bold text-amber-700">Complet (Répondre/Archiver)</td>
+                    <td className="py-2 px-2.5 font-semibold text-slate-900">Secrétariat & Messages Contact</td>
+                    <td className="py-2 px-2.5 text-center font-bold text-emerald-600">Complet</td>
+                    <td className="py-2 px-2.5 text-center text-slate-400">Non Autorisé</td>
+                    <td className="py-2 px-2.5 text-center text-slate-400">Non Autorisé</td>
+                    <td className="py-2 px-2.5 text-center font-bold text-amber-700">Complet (Répondre/Archiver)</td>
                   </tr>
                   <tr>
-                    <td className="p-2 sm:p-2.5 font-semibold text-slate-900">Contrôle d'Accès & Attribution Rôles</td>
-                    <td className="p-2 sm:p-2.5 text-center font-bold text-emerald-600">Super-Admin Exclusif</td>
-                    <td className="p-2 sm:p-2.5 text-center text-rose-500 font-bold">Bloqué</td>
-                    <td className="p-2 sm:p-2.5 text-center text-rose-500 font-bold">Bloqué</td>
-                    <td className="p-2 sm:p-2.5 text-center text-rose-500 font-bold">Bloqué</td>
+                    <td className="py-2 px-2.5 font-semibold text-slate-900">Contrôle d'Accès & Attribution Rôles</td>
+                    <td className="py-2 px-2.5 text-center font-bold text-emerald-600">Super-Admin Exclusif</td>
+                    <td className="py-2 px-2.5 text-center text-rose-500 font-bold">Bloqué</td>
+                    <td className="py-2 px-2.5 text-center text-rose-500 font-bold">Bloqué</td>
+                    <td className="py-2 px-2.5 text-center text-rose-500 font-bold">Bloqué</td>
                   </tr>
                   <tr>
-                    <td className="p-2 sm:p-2.5 font-semibold text-slate-900">Synchronisation GitHub & Paramètres</td>
-                    <td className="p-2 sm:p-2.5 text-center font-bold text-emerald-600">Super-Admin Exclusif</td>
-                    <td className="p-2 sm:p-2.5 text-center text-rose-500 font-bold">Bloqué</td>
-                    <td className="p-2 sm:p-2.5 text-center text-rose-500 font-bold">Bloqué</td>
-                    <td className="p-2 sm:p-2.5 text-center text-rose-500 font-bold">Bloqué</td>
+                    <td className="py-2 px-2.5 font-semibold text-slate-900">Synchronisation GitHub & Paramètres</td>
+                    <td className="py-2 px-2.5 text-center font-bold text-emerald-600">Super-Admin Exclusif</td>
+                    <td className="py-2 px-2.5 text-center text-rose-500 font-bold">Bloqué</td>
+                    <td className="py-2 px-2.5 text-center text-rose-500 font-bold">Bloqué</td>
+                    <td className="py-2 px-2.5 text-center text-rose-500 font-bold">Bloqué</td>
                   </tr>
                 </tbody>
               </table>
@@ -460,15 +460,15 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
       {/* ------------------------------------------------------------------
           3. DENSE ERGONOMIC USER MANAGEMENT TABLE WITH TOGGLE SWITCH
       ------------------------------------------------------------------ */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-4">
+      <div className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
         
         {/* Search, Status & Role Filters Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
+            <h3 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">
               Gestion des Collaborateurs & Accès Instantané
             </h3>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[10.5px] text-slate-500">
               Basculez le bouton toggle switch pour suspendre ou réactiver l'accès d'un compte sans le supprimer.
             </p>
           </div>
@@ -479,15 +479,15 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
         </div>
 
         {/* Compact Filter Controls */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 pt-2 border-t border-slate-100">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-2 border-t border-slate-100">
           <div className="relative sm:col-span-2">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
             <input
               type="text"
               placeholder="Rechercher par nom, email, département..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden"
+              className="w-full pl-8 pr-2.5 py-1.5 text-xs rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden"
             />
           </div>
 
@@ -495,7 +495,7 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full px-2.5 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden"
+              className="w-full px-2 py-1.5 text-xs rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden"
             >
               <option value="ALL">Tous les rôles</option>
               <option value="ADMIN">Super-Admin (Direction)</option>
@@ -511,7 +511,7 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-2.5 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden font-medium"
+              className="w-full px-2 py-1.5 text-xs rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden font-medium"
             >
               <option value="ALL">Tous les statuts</option>
               <option value="ACTIVE">Actifs uniquement</option>
@@ -521,15 +521,15 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
         </div>
 
         {/* High-Density Users Table */}
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50/90 text-slate-600 font-semibold border-b border-slate-200 text-[11px]">
+        <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-2xs">
+          <table className="w-full text-left text-xs min-w-[650px]">
+            <thead className="bg-slate-50/95 text-slate-600 font-semibold border-b border-slate-200 text-[10.5px]">
               <tr>
-                <th className="py-2.5 px-3">Collaborateur</th>
-                <th className="py-2.5 px-3">Département / Affectation</th>
-                <th className="py-2.5 px-3">Rôle & Scope Granulaire</th>
-                <th className="py-2.5 px-3 text-center">Accès Actif (Toggle)</th>
-                <th className="py-2.5 px-3 text-right">Actions</th>
+                <th className="py-2 px-2.5">Collaborateur</th>
+                <th className="py-2 px-2.5">Département / Affectation</th>
+                <th className="py-2 px-2.5">Rôle & Scope Granulaire</th>
+                <th className="py-2 px-2.5 text-center">Accès Actif (Toggle)</th>
+                <th className="py-2 px-2.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
@@ -556,9 +556,9 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
                     >
                       
                       {/* Name & Email */}
-                      <td className="py-2.5 px-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-2xs shrink-0 ${
+                      <td className="py-2 px-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-2xs shrink-0 ${
                             isSuspended ? 'bg-slate-400' :
                             usr.role === 'ADMIN' ? 'bg-blue-900' :
                             usr.role === 'EDITOR' ? 'bg-purple-800' :
@@ -569,8 +569,8 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
                             {usr.fullName.charAt(0)}
                           </div>
                           <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className={`font-bold ${isSuspended ? 'text-slate-500 line-through decoration-slate-400' : 'text-slate-900'}`}>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className={`font-bold text-xs ${isSuspended ? 'text-slate-500 line-through decoration-slate-400' : 'text-slate-900'}`}>
                                 {usr.fullName}
                               </span>
                               {isCurrentSuperAdmin && (
@@ -579,25 +579,25 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
                                 </span>
                               )}
                               {isSuspended && (
-                                <span className="px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-700 text-[9px] font-bold flex items-center gap-1">
+                                <span className="px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-700 text-[8.5px] font-bold flex items-center gap-0.5">
                                   <Lock className="w-2.5 h-2.5" />
                                   <span>Suspendu</span>
                                 </span>
                               )}
                             </div>
-                            <span className="text-[10px] text-slate-400 font-mono block">{usr.email}</span>
+                            <span className="text-[10px] text-slate-400 font-mono block leading-tight">{usr.email}</span>
                           </div>
                         </div>
                       </td>
 
                       {/* Department */}
-                      <td className="py-2.5 px-3">
-                        <span className="font-medium text-slate-800 block text-[11px]">{usr.department || 'Pôle Général'}</span>
+                      <td className="py-2 px-2.5">
+                        <span className="font-semibold text-slate-800 block text-[11px] leading-tight">{usr.department || 'Pôle Général'}</span>
                         <span className="text-[10px] text-slate-400 font-mono">{usr.phone || '+509 ---'}</span>
                       </td>
 
                       {/* Role Selector & Helper Text Trigger */}
-                      <td className="py-2.5 px-3">
+                      <td className="py-2 px-2.5">
                         <div className="space-y-0.5">
                           <div className="flex items-center gap-1.5">
                             {/* Granular Role Selector Dropdown */}
@@ -605,7 +605,7 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
                               value={usr.role}
                               disabled={isSuspended}
                               onChange={(e) => handleAssignRole(usr.id, e.target.value as Role)}
-                              className={`text-xs font-bold py-1 px-2 rounded-lg border focus:outline-hidden cursor-pointer transition-all ${
+                              className={`text-[11px] font-bold py-0.5 px-2 rounded-lg border focus:outline-hidden cursor-pointer transition-all ${
                                 isSuspended
                                   ? 'bg-slate-100 border-slate-300 text-slate-400 cursor-not-allowed'
                                   : usr.role === 'ADMIN' ? 'bg-blue-50 border-blue-300 text-blue-900' :
@@ -634,7 +634,7 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
                       </td>
 
                       {/* INSTANT ACCESS TOGGLE SWITCH */}
-                      <td className="py-2.5 px-3">
+                      <td className="py-2 px-2.5">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             type="button"
@@ -675,7 +675,7 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
                       </td>
 
                       {/* Actions */}
-                      <td className="py-2.5 px-3 text-right">
+                      <td className="py-2 px-2.5 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
