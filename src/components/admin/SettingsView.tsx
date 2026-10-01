@@ -86,6 +86,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // Check connection using Octokit REST
   const checkGitHubStatus = async (cfg: GitHubRepoConfig) => {
+    if (!cfg.token || !cfg.token.trim()) {
+      setRepoDetails(null);
+      return;
+    }
     setIsVerifying(true);
     try {
       const details = await githubService.verifyConnection(cfg);

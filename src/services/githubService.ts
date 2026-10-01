@@ -25,7 +25,12 @@ export const githubService = {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        return { ...DEFAULT_GITHUB_CONFIG, ...JSON.parse(stored) };
+        const parsed = JSON.parse(stored);
+        return { 
+          ...DEFAULT_GITHUB_CONFIG, 
+          ...parsed,
+          token: parsed.token || '',
+        };
       }
     } catch {
       // Fallback
@@ -57,17 +62,32 @@ export const githubService = {
     };
     error?: string;
   }> {
+    if (!config.token || !config.token.trim()) {
+      return {
+        valid: false,
+        error: 'Veuillez saisir votre Token d\'accès personnel GitHub (PAT).',
+      };
+    }
+
     try {
-      const octokit = new Octokit({ auth: config.token });
+      const octokit = new Octokit({ auth: config.token.trim() });
 
-      // Check user authentication
-      const { data: user } = await octokit.rest.users.getAuthenticated();
-
-      // Check repository access
+      // Check repository access first
       const { data: repo } = await octokit.rest.repos.get({
         owner: config.owner,
         repo: config.repo,
       });
+
+      // Check user authentication (safely fallback for fine-grained repo-scoped tokens)
+      let userName = config.owner;
+      try {
+        const { data: user } = await octokit.rest.users.getAuthenticated();
+        if (user?.login) {
+          userName = user.login;
+        }
+      } catch {
+        // Fallback for fine-grained tokens that only have repository access
+      }
 
       // Get latest commit on the branch
       let lastCommit: any = undefined;
@@ -94,13 +114,13 @@ export const githubService = {
 
       return {
         valid: true,
-        user: user.login,
+        user: userName,
         repoName: repo.full_name,
         defaultBranch: repo.default_branch,
         lastCommit,
       };
     } catch (err: any) {
-      console.error('[GitHub Service Error]', err);
+      console.warn('[GitHub Service Notice]', err.message);
       return {
         valid: false,
         error: err.message || 'Impossible de se connecter au dépôt avec ce token.',

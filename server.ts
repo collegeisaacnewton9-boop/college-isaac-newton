@@ -748,7 +748,21 @@ app.post('/api/admin/github/sync', async (req: Request, res: Response) => {
 
     // 3. Push to GitHub repository using authenticated token
     const pushUrl = `https://${targetOwner}:${token}@github.com/${targetOwner}/${targetRepo}.git`;
-    await execPromise(`git push ${pushUrl} ${targetBranch}`);
+
+    // Fetch and reconcile remote branch first to prevent fast-forward rejection
+    try {
+      await execPromise(`git fetch ${pushUrl} ${targetBranch}`);
+      await execPromise(`git merge FETCH_HEAD -m "merge: synchronisation des sources" --strategy-option=ours --allow-unrelated-histories`);
+    } catch (reconcileErr: any) {
+      console.warn('[GitHub Sync Reconcile Notice]', reconcileErr.message);
+    }
+
+    try {
+      await execPromise(`git push ${pushUrl} ${targetBranch}`);
+    } catch (pushErr: any) {
+      console.warn('[GitHub Sync Push Retry with --force]', pushErr.message);
+      await execPromise(`git push --force ${pushUrl} ${targetBranch}`);
+    }
 
     // 4. Retrieve latest commit SHA via Octokit
     let latestCommitSha = 'main';
