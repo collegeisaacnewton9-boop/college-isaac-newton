@@ -6,6 +6,15 @@ import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
 import { exec } from 'child_process';
 import util from 'util';
+import { 
+  initDatabase, 
+  isDbActive, 
+  dbGetAdmissions, 
+  dbInsertAdmission, 
+  dbUpdateAdmissionStatus,
+  dbGetContactMessages,
+  dbInsertContactMessage 
+} from './server-db';
 
 const execPromise = util.promisify(exec);
 
@@ -366,14 +375,24 @@ app.post('/api/auth/login', (req: Request, res: Response) => {
 });
 
 // 3. Admissions routes
-app.get('/api/admissions', (req: Request, res: Response) => {
+app.get('/api/admissions', async (req: Request, res: Response) => {
+  if (isDbActive()) {
+    try {
+      const dbRows = await dbGetAdmissions();
+      if (dbRows.length > 0) {
+        return res.json(dbRows);
+      }
+    } catch (e: any) {
+      console.error('[API Admissions DB Error]', e.message);
+    }
+  }
   res.json(admissions);
 });
 
-app.post('/api/admissions', (req: Request, res: Response) => {
+app.post('/api/admissions', async (req: Request, res: Response) => {
   try {
     const rawData = req.body;
-    const appNum = `CIN-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const appNum = rawData.applicationNumber || `CIN-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const newRecord = {
       ...rawData,
       id: `adm-${Date.now()}`,
@@ -382,6 +401,24 @@ app.post('/api/admissions', (req: Request, res: Response) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
+
+    if (isDbActive()) {
+      try {
+        const saved = await dbInsertAdmission(newRecord);
+        if (saved) {
+          admissions.unshift(saved);
+          auditLogs.push({
+            action: 'ADMISSION_SUBMITTED_POSTGRES',
+            applicationNumber: appNum,
+            student: `${newRecord.studentFirstName} ${newRecord.studentLastName}`,
+            timestamp: new Date().toISOString(),
+          });
+          return res.status(201).json(saved);
+        }
+      } catch (dbErr: any) {
+        console.error('[API Admissions DB Insert Error]', dbErr.message);
+      }
+    }
 
     admissions.unshift(newRecord);
     auditLogs.push({
@@ -397,9 +434,30 @@ app.post('/api/admissions', (req: Request, res: Response) => {
   }
 });
 
-app.patch('/api/admissions/:id/status', (req: Request, res: Response) => {
+app.patch('/api/admissions/:id/status', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status, reviewNotes } = req.body;
+
+  if (isDbActive()) {
+    try {
+      const updated = await dbUpdateAdmissionStatus(id, status, reviewNotes, 'Direction Pédagogique');
+      if (updated) {
+        const targetIndex = admissions.findIndex(a => a.id === id);
+        if (targetIndex !== -1) {
+          admissions[targetIndex] = { ...admissions[targetIndex], ...updated };
+        }
+        auditLogs.push({
+          action: 'ADMISSION_STATUS_UPDATED_POSTGRES',
+          admissionId: id,
+          newStatus: status,
+          timestamp: new Date().toISOString(),
+        });
+        return res.json(updated);
+      }
+    } catch (e: any) {
+      console.error('[API Admissions DB Update Error]', e.message);
+    }
+  }
 
   const targetIndex = admissions.findIndex(a => a.id === id);
   if (targetIndex === -1) {
@@ -847,6 +905,13 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 // Dev / Prod Vite mounting
 async function startServer() {
+  // Initialize PostgreSQL database connection and tables if DATABASE_URL is present
+  try {
+    await initDatabase();
+  } catch (err: any) {
+    console.error('[Database Startup Error]', err.message);
+  }
+
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, 'dist')));
     app.get('*', (req: Request, res: Response) => {
