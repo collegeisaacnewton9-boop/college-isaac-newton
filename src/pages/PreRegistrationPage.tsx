@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   CheckCircle2, 
   ArrowRight, 
@@ -16,7 +16,8 @@ import {
   Mail,
   MapPin,
   Briefcase,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from 'lucide-react';
 import { AdmissionFormData, AcademicCycle } from '../types';
 import { apiService } from '../services/api';
@@ -263,6 +264,68 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     }`;
   };
 
+  // Configuration détaillée des 4 étapes du formulaire de préinscription
+  const STEPS_CONFIG = [
+    { 
+      step: 1, 
+      label: '1. Responsable Légal', 
+      shortLabel: 'Parent', 
+      title: 'Coordonnées du Responsable Légal',
+      description: 'Le parent ou tuteur officiel qui recevra la convocation et le suivi',
+      icon: User,
+      fields: ['parentFullName', 'parentPhone', 'parentEmail', 'parentAddress'] as (keyof AdmissionFormData)[]
+    },
+    { 
+      step: 2, 
+      label: '2. Élève Candidat', 
+      shortLabel: 'Élève', 
+      title: 'Identité de l\'Élève Candidat',
+      description: 'Nom, prénom et date de naissance d\'état civil de l\'enfant',
+      icon: GraduationCap,
+      fields: ['studentLastName', 'studentFirstName', 'studentBirthDate'] as (keyof AdmissionFormData)[]
+    },
+    { 
+      step: 3, 
+      label: '3. Niveau & Classe', 
+      shortLabel: 'Classe', 
+      title: 'Niveau Scolaire & Classe Visée',
+      description: 'Choix de la classe pour l\'année académique 2026-2027',
+      icon: FileText,
+      fields: ['targetLevel'] as (keyof AdmissionFormData)[]
+    },
+    { 
+      step: 4, 
+      label: '4. Pièces & Accord', 
+      shortLabel: 'Accord', 
+      title: 'Pièces Justificatives & Certification',
+      description: 'Vérification du dossier et engagement sur l\'honneur',
+      icon: ShieldCheck,
+      fields: ['consentGiven'] as (keyof AdmissionFormData)[]
+    },
+  ];
+
+  // Calcul dynamique de la progression en temps réel
+  const currentStepData = STEPS_CONFIG[currentStep - 1] || STEPS_CONFIG[0];
+
+  const currentStepFieldsStatus = useMemo(() => {
+    const fields = currentStepData.fields;
+    const filled = fields.filter(f => {
+      const val = formData[f];
+      if (typeof val === 'boolean') return val === true;
+      return Boolean(val) && !errors[f];
+    }).length;
+    return { filled, total: fields.length, isComplete: filled === fields.length };
+  }, [currentStepData, formData, errors]);
+
+  // Pourcentage linéaire global pour la jauge visuelle
+  const globalProgressPercent = useMemo(() => {
+    const base = (currentStep - 1) * 25;
+    const intra = currentStepFieldsStatus.total > 0 
+      ? (currentStepFieldsStatus.filled / currentStepFieldsStatus.total) * 25 
+      : 0;
+    return Math.min(100, Math.max(10, Math.round(base + intra)));
+  }, [currentStep, currentStepFieldsStatus]);
+
   // SUCCESS CONFIRMATION SCREEN
   if (submittedNumber) {
     return (
@@ -361,40 +424,108 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
         </p>
       </div>
 
-      {/* Stepper Progress Bar - Responsable Légal EN PREMIER, puis Élève */}
-      <div className="bg-white rounded-xl p-1.5 sm:p-2.5 shadow-2xs border border-slate-200/90">
-        <div className="grid grid-cols-4 gap-1 text-center text-xs">
-          {[
-            { step: 1, label: '1. Responsable Légal', shortLabel: 'Parent', icon: User },
-            { step: 2, label: '2. Élève Candidat', shortLabel: 'Élève', icon: GraduationCap },
-            { step: 3, label: '3. Niveau & Classe', shortLabel: 'Classe', icon: FileText },
-            { step: 4, label: '4. Pièces & Accord', shortLabel: 'Accord', icon: ShieldCheck },
-          ].map((item) => {
-            const isCompleted = currentStep > item.step;
-            const isCurrent = currentStep === item.step;
-            const Icon = item.icon;
-
-            return (
-              <div key={item.step} className="flex flex-col items-center py-0.5">
-                <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-bold transition-all ${
-                  isCompleted 
-                    ? 'bg-emerald-600 text-white' 
-                    : isCurrent 
-                    ? 'bg-blue-900 text-white ring-2 ring-blue-100' 
-                    : 'bg-slate-100 text-slate-400'
-                }`}>
-                  {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Icon className="w-3 h-3" />}
-                </div>
-                <span className={`mt-0.5 text-[9px] sm:text-[10.5px] font-semibold truncate max-w-full px-0.5 ${
-                  isCurrent ? 'text-blue-900 font-bold' : 'text-slate-500'
-                }`}>
-                  <span className="hidden sm:inline">{item.label}</span>
-                  <span className="sm:hidden">{item.shortLabel}</span>
+      {/* =========================================================================
+          BARRE DE PROGRESSION VISUELLE DYNAMIQUE & ÉTAPES DU FORMULAIRE
+      ========================================================================= */}
+      <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-2xs border border-slate-200/90 space-y-2.5 sm:space-y-3">
+        
+        {/* En-tête de progression : Titre de l'étape active, statut des champs et pourcentage */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-lg bg-blue-900 text-amber-400 font-mono text-xs font-bold flex items-center justify-center shrink-0 shadow-2xs">
+              {currentStep}
+            </span>
+            <div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-sans font-bold text-slate-900 text-xs sm:text-sm">
+                  {currentStepData.title}
+                </span>
+                <span className="text-[10px] sm:text-[10.5px] font-mono font-medium text-slate-500">
+                  ({currentStepFieldsStatus.filled}/{currentStepFieldsStatus.total} champ{currentStepFieldsStatus.total > 1 ? 's' : ''} validé{currentStepFieldsStatus.filled > 1 ? 's' : ''})
                 </span>
               </div>
-            );
-          })}
+              <p className="text-[10px] sm:text-[11px] text-slate-500 hidden sm:block">
+                {currentStepData.description}
+              </p>
+            </div>
+          </div>
+
+          {/* Pourcentage global & badge d'état */}
+          <div className="flex items-center gap-2 ml-auto">
+            <div className="text-right">
+              <div className="flex items-center justify-end gap-1 font-mono font-bold text-xs sm:text-sm text-blue-900">
+                <span>{globalProgressPercent}%</span>
+              </div>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 block font-sans">
+                Étape {currentStep} sur 4
+              </span>
+            </div>
+          </div>
         </div>
+
+        {/* Jauge linéaire horizontale fluide avec dégradé et reflet */}
+        <div className="space-y-1">
+          <div className="w-full bg-slate-100 rounded-full h-2 sm:h-2.5 overflow-hidden p-0.5 border border-slate-200/70 shadow-inner">
+            <div 
+              className="h-full rounded-full bg-gradient-to-r from-blue-950 via-blue-700 to-amber-500 transition-all duration-500 ease-out shadow-xs"
+              style={{ width: `${globalProgressPercent}%` }}
+              role="progressbar"
+              aria-valuenow={globalProgressPercent}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            />
+          </div>
+        </div>
+
+        {/* Stepper avec jalons interactifs et connecteurs d'avancement */}
+        <div className="relative pt-0.5 sm:pt-1">
+          {/* Ligne connecteur d'arrière-plan visible sur desktop */}
+          <div className="absolute top-4 left-6 right-6 h-0.5 bg-slate-200 -z-0 hidden sm:block" />
+          
+          <div className="grid grid-cols-4 gap-1 text-center relative z-10">
+            {STEPS_CONFIG.map((item) => {
+              const isCompleted = currentStep > item.step;
+              const isCurrent = currentStep === item.step;
+              const canClick = isCompleted;
+              const Icon = item.icon;
+
+              return (
+                <button
+                  key={item.step}
+                  type="button"
+                  onClick={() => canClick && setCurrentStep(item.step)}
+                  disabled={!canClick}
+                  className={`flex flex-col items-center py-0.5 transition-all text-left group ${
+                    canClick ? 'cursor-pointer' : 'cursor-default'
+                  }`}
+                  title={canClick ? `Revenir à l'étape ${item.step} (${item.shortLabel})` : undefined}
+                >
+                  <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-bold transition-all shadow-2xs ${
+                    isCompleted 
+                      ? 'bg-emerald-600 text-white group-hover:bg-emerald-700 group-hover:scale-105' 
+                      : isCurrent 
+                      ? 'bg-blue-900 text-white ring-3 ring-blue-100 scale-105' 
+                      : 'bg-slate-100 text-slate-400'
+                  }`}>
+                    {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Icon className="w-3 h-3" />}
+                  </div>
+
+                  <span className={`mt-1 text-[9px] sm:text-[10.5px] font-semibold truncate max-w-full px-0.5 transition-colors ${
+                    isCurrent 
+                      ? 'text-blue-900 font-bold' 
+                      : isCompleted
+                      ? 'text-emerald-700 group-hover:text-emerald-800'
+                      : 'text-slate-400'
+                  }`}>
+                    <span className="hidden sm:inline">{item.label}</span>
+                    <span className="sm:hidden">{item.shortLabel}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
 
       {/* Form Card - Dense, Ergonomic Spacing */}

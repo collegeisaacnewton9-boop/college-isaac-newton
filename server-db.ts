@@ -23,7 +23,7 @@ export function getDbPool(): pg.Pool | null {
       connectionTimeoutMillis: 5000,
     });
 
-    pool.on('error', (err) => {
+    pool.on('error', (err: Error) => {
       console.error('[Database Pool Error]', err.message);
     });
 
@@ -212,7 +212,7 @@ export async function dbGetAdmissions(): Promise<any[]> {
   const p = getDbPool();
   if (!p || !isConnected) return [];
   const res = await p.query('SELECT * FROM admissions ORDER BY created_at DESC');
-  return res.rows.map(row => ({
+  return res.rows.map((row: any) => ({
     id: row.id,
     applicationNumber: row.application_number,
     schoolYear: row.school_year,
@@ -330,7 +330,7 @@ export async function dbGetContactMessages(): Promise<any[]> {
   const p = getDbPool();
   if (!p || !isConnected) return [];
   const res = await p.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
-  return res.rows.map(row => ({
+  return res.rows.map((row: any) => ({
     id: row.id,
     fullName: row.full_name,
     email: row.email,
@@ -363,3 +363,54 @@ export async function dbInsertContactMessage(data: any): Promise<any> {
     createdAt: row.created_at,
   };
 }
+
+export async function dbDeleteAdmission(id: string): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query('DELETE FROM admissions WHERE id = $1', [id]);
+    return true;
+  } catch (err: any) {
+    console.error('[DB Delete Admission Error]', err.message);
+    return false;
+  }
+}
+
+export async function dbUpdateContactMessageStatus(id: string, status: string): Promise<any> {
+  const p = getDbPool();
+  if (!p || !isConnected) return null;
+  try {
+    const res = await p.query(
+      'UPDATE contact_messages SET status = $1 WHERE id = $2 RETURNING *',
+      [status, id]
+    );
+    if (res.rows.length === 0) return null;
+    const row = res.rows[0];
+    return {
+      id: row.id,
+      fullName: row.full_name,
+      email: row.email,
+      phone: row.phone,
+      subject: row.subject,
+      message: row.message,
+      status: row.status,
+      createdAt: row.created_at,
+    };
+  } catch (err: any) {
+    console.error('[DB Update Contact Error]', err.message);
+    return null;
+  }
+}
+
+export async function dbDeleteContactMessage(id: string): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query('DELETE FROM contact_messages WHERE id = $1', [id]);
+    return true;
+  } catch (err: any) {
+    console.error('[DB Delete Contact Error]', err.message);
+    return false;
+  }
+}
+

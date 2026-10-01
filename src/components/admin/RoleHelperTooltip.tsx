@@ -59,7 +59,7 @@ export const RoleHelperTooltip: React.FC<RoleHelperTooltipProps> = ({
             </div>
             <div>
               <div className="flex items-center gap-1.5 flex-wrap">
-                <h4 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">
+                <h4 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
                   {detail.name}
                 </h4>
                 <span className={`px-1.5 py-0.2 rounded-md text-[9.5px] font-bold ${detail.badgeBg} ${detail.badgeText} border ${detail.badgeBorder}`}>

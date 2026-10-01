@@ -184,10 +184,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           <Shield className="w-8 h-8 text-amber-400" />
         </div>
         <div className="space-y-2">
-          <h1 className="font-serif text-2xl font-bold text-slate-900">
+          <h1 className="font-sans text-2xl font-bold text-slate-900 tracking-tight">
             Accès Espace Direction & Personnel Habilité
           </h1>
-          <p className="text-xs text-slate-600 leading-relaxed">
+          <p className="text-xs text-slate-600 leading-relaxed font-sans">
             Cet espace de gestion est réservé au Directeur Général, aux Éditeurs de communication, aux Enseignants et aux Modérateurs du Collège Isaac Newton.
           </p>
         </div>
@@ -423,12 +423,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             
             {/* School Title & System Identity */}
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-600 flex items-center justify-center text-amber-300 font-serif font-black text-base shadow-xs border border-blue-400/30 shrink-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-600 flex items-center justify-center text-amber-300 font-sans font-black text-base shadow-xs border border-blue-400/30 shrink-0 tracking-tight">
                 IN
               </div>
               <div>
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-serif font-bold text-sm sm:text-base text-white">Collège Isaac Newton</span>
+                  <span className="font-sans font-bold text-sm sm:text-base text-white tracking-tight">Collège Isaac Newton</span>
                   <span className="px-1.5 py-0.2 rounded-full bg-blue-900/80 border border-blue-400/30 text-[9px] text-blue-200 font-semibold uppercase tracking-wider">
                     Direction
                   </span>
@@ -625,10 +625,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     <Bell className="w-3.5 h-3.5 text-slate-950" />
                   </div>
                   <div>
-                    <h3 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">
+                    <h3 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
                       Actions Pédagogiques & Administratives Requises
                     </h3>
-                    <p className="text-[11px] text-slate-600">
+                    <p className="text-[11px] text-slate-600 font-sans">
                       Vous avez <strong className="text-amber-800">{pendingCount} dossier(s)</strong> en attente et <strong className="text-blue-900">{unreadMessagesCount} message(s)</strong> non lu(s).
                     </p>
                   </div>
@@ -664,12 +664,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <FileCheck className="w-3.5 h-3.5 text-blue-600" />
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-serif text-xl sm:text-2xl font-black text-slate-900 font-mono tabular-nums">{totalAdmissions}</span>
-                  <span className="text-[9.5px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded-full">
+                  <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{totalAdmissions}</span>
+                  <span className="text-[9.5px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded-full font-sans">
                     2026-2027
                   </span>
                 </div>
-                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100">
+                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
                   <span>Admis : <strong className="text-emerald-700">{acceptedCount}</strong></span>
                   <span>Attente : <strong className="text-amber-600">{pendingCount}</strong></span>
                 </div>
@@ -681,10 +681,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <Clock className="w-3.5 h-3.5 text-amber-600" />
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-serif text-xl sm:text-2xl font-black text-slate-900 font-mono tabular-nums">{interviewCount}</span>
-                  <span className="text-[9.5px] text-slate-500">convoqués</span>
+                  <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{interviewCount}</span>
+                  <span className="text-[9.5px] text-slate-500 font-sans">convoqués</span>
                 </div>
-                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100">
+                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
                   <span>Examen : <strong>{underReviewCount}</strong></span>
                   <span>Validation : <strong>{totalAdmissions > 0 ? Math.round((acceptedCount / totalAdmissions) * 100) : 0}%</strong></span>
                 </div>
@@ -696,12 +696,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <Newspaper className="w-3.5 h-3.5 text-purple-600" />
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-serif text-xl sm:text-2xl font-black text-slate-900 font-mono tabular-nums">{news.length}</span>
-                  <span className="text-[9.5px] text-purple-700 font-bold bg-purple-50 px-1.5 py-0.2 rounded-full">
+                  <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{news.length}</span>
+                  <span className="text-[9.5px] text-purple-700 font-bold bg-purple-50 px-1.5 py-0.2 rounded-full font-sans">
                     En ligne
                   </span>
                 </div>
-                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100">
+                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
                   <span>Agenda : <strong>{events.length}</strong></span>
                   <span>À la une : <strong>{news.filter(n => n.featured).length}</strong></span>
                 </div>
@@ -713,18 +713,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <Mail className="w-3.5 h-3.5 text-blue-600" />
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-serif text-xl sm:text-2xl font-black text-slate-900 font-mono tabular-nums">{messages.length}</span>
+                  <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{messages.length}</span>
                   {unreadMessagesCount > 0 ? (
-                    <span className="text-[9.5px] text-rose-700 font-bold bg-rose-50 px-1.5 py-0.2 rounded-full">
+                    <span className="text-[9.5px] text-rose-700 font-bold bg-rose-50 px-1.5 py-0.2 rounded-full font-sans">
                       {unreadMessagesCount} non lus
                     </span>
                   ) : (
-                    <span className="text-[9.5px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded-full">
+                    <span className="text-[9.5px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded-full font-sans">
                       Tous traités
                     </span>
                   )}
                 </div>
-                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100">
+                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
                   <span>Heures : <strong>7h30 - 15h30</strong></span>
                   <span>Delmas 50</span>
                 </div>
@@ -734,7 +734,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
             {/* Quick Actions Shortcuts for Director */}
             <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2.5 border border-slate-200 shadow-2xs space-y-2">
-              <h2 className="font-serif font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+              <h2 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 <span>Raccourcis de Gestion Rapide</span>
               </h2>
@@ -810,7 +810,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               {/* Recent Admissions */}
               <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2.5 border border-slate-200 shadow-2xs space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-serif font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+                  <h3 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight flex items-center gap-1.5">
                     <FileCheck className="w-3.5 h-3.5 text-blue-600" />
                     <span>Derniers Dossiers de Préinscription</span>
                   </h3>
@@ -863,13 +863,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               {/* Recent Messages */}
               <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2.5 border border-slate-200 shadow-2xs space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-serif font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+                  <h3 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight flex items-center gap-1.5">
                     <Mail className="w-3.5 h-3.5 text-emerald-600" />
                     <span>Derniers Messages Secrétariat</span>
                   </h3>
                   <button
                     onClick={() => setActiveTab('messages')}
-                    className="text-xs text-blue-700 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                    className="text-xs text-blue-700 hover:underline font-semibold flex items-center gap-1 cursor-pointer font-sans"
                   >
                     <span>Boîte de réception ({messages.length})</span>
                     <ChevronRight className="w-3 h-3" />
@@ -888,14 +888,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-bold text-slate-900 text-xs truncate leading-tight">{msg.fullName}</span>
+                          <span className="font-bold text-slate-900 text-xs truncate leading-tight font-sans">{msg.fullName}</span>
                           {msg.status === 'NEW' && (
-                            <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[8px] font-bold">
+                            <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[8px] font-bold font-sans">
                               Nouveau
                             </span>
                           )}
                         </div>
-                        <p className="text-[10px] text-slate-600 truncate leading-tight">{msg.subject}</p>
+                        <p className="text-[10px] text-slate-600 truncate leading-tight font-sans">{msg.subject}</p>
                         <p className="text-[9px] text-slate-400 font-mono leading-tight">{msg.email}</p>
                       </div>
 
@@ -924,10 +924,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2 border border-slate-200/90 shadow-2xs space-y-2">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h2 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">
+                  <h2 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
                     Gestion des Dossiers de Préinscription 2026-2027
                   </h2>
-                  <p className="text-[10.5px] text-slate-500">
+                  <p className="text-[10.5px] text-slate-500 font-sans">
                     Examen pédagogique des candidatures, convocation aux entretiens et validation des admissions.
                   </p>
                 </div>
@@ -1099,7 +1099,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                       <span className="text-[9.5px] font-bold uppercase tracking-wider text-blue-700 font-mono">
                         Dossier N° {selectedAdmission.applicationNumber}
                       </span>
-                      <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base leading-tight">
+                      <h3 className="font-sans font-bold text-slate-900 text-sm sm:text-base leading-tight tracking-tight">
                         {selectedAdmission.studentLastName} {selectedAdmission.studentFirstName}
                       </h3>
                     </div>
@@ -1272,10 +1272,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white rounded-xl p-2.5 sm:px-3 sm:py-2 border border-slate-200/90 shadow-2xs">
               <div>
-                <h2 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">
+                <h2 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
                   Gestion des Publications & Actualités
                 </h2>
-                <p className="text-[10.5px] text-slate-500">
+                <p className="text-[10.5px] text-slate-500 font-sans">
                   Rédigez, modifiez ou dépubliez les annonces officielles, palmarès et articles du Collège Isaac Newton.
                 </p>
               </div>
@@ -1283,7 +1283,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <button
                 type="button"
                 onClick={handleOpenNewArticle}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer shrink-0"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer shrink-0 font-sans"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-400" />
                 <span>Rédiger un Nouvel Article</span>
@@ -1303,11 +1303,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                        <span className="px-2 py-0.5 rounded-full bg-blue-950/80 backdrop-blur-md text-amber-300 text-[9.5px] font-bold border border-white/10">
+                        <span className="px-2 py-0.5 rounded-full bg-blue-950/80 backdrop-blur-md text-amber-300 text-[9.5px] font-bold border border-white/10 font-sans">
                           {art.category}
                         </span>
                         {art.featured && (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[9.5px] font-bold">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[9.5px] font-bold font-sans">
                             À la une
                           </span>
                         )}
@@ -1319,7 +1319,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
                     {/* Content */}
                     <div className="p-2.5 sm:px-3 sm:py-2 space-y-1">
-                      <h3 className="font-serif font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-2">
+                      <h3 className="font-sans font-bold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-2 tracking-tight">
                         {art.title}
                       </h3>
                       <p className="text-[10.5px] text-slate-600 line-clamp-2 leading-relaxed">

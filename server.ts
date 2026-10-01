@@ -12,8 +12,11 @@ import {
   dbGetAdmissions, 
   dbInsertAdmission, 
   dbUpdateAdmissionStatus,
+  dbDeleteAdmission,
   dbGetContactMessages,
-  dbInsertContactMessage 
+  dbInsertContactMessage,
+  dbUpdateContactMessageStatus,
+  dbDeleteContactMessage
 } from './server-db';
 
 const execPromise = util.promisify(exec);
@@ -335,6 +338,7 @@ app.use((req, res, next) => {
 app.get('/api/health', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
+    database: isDbActive() ? 'connected (PostgreSQL)' : 'fallback (memory)',
     institution: 'Collège Isaac Newton',
     motto: "Savoir aujourd'hui, réussir demain",
     timestamp: new Date().toISOString(),
@@ -379,9 +383,7 @@ app.get('/api/admissions', async (req: Request, res: Response) => {
   if (isDbActive()) {
     try {
       const dbRows = await dbGetAdmissions();
-      if (dbRows.length > 0) {
-        return res.json(dbRows);
-      }
+      return res.json(dbRows);
     } catch (e: any) {
       console.error('[API Admissions DB Error]', e.message);
     }
@@ -592,11 +594,19 @@ app.delete('/api/events/:id', (req: Request, res: Response) => {
 });
 
 // 6. Contact & Secretarial Messages routes
-app.get('/api/contact', (req: Request, res: Response) => {
+app.get('/api/contact', async (req: Request, res: Response) => {
+  if (isDbActive()) {
+    try {
+      const dbMessages = await dbGetContactMessages();
+      return res.json(dbMessages);
+    } catch (e: any) {
+      console.error('[API Contact DB Error]', e.message);
+    }
+  }
   res.json(contactMessages);
 });
 
-app.post('/api/contact', (req: Request, res: Response) => {
+app.post('/api/contact', async (req: Request, res: Response) => {
   const { fullName, email, phone, subject, message } = req.body;
   if (!fullName || !email || !message) {
     return res.status(400).json({ error: 'Champs obligatoires manquants' });
@@ -613,6 +623,25 @@ app.post('/api/contact', (req: Request, res: Response) => {
     createdAt: new Date().toISOString(),
   };
 
+  if (isDbActive()) {
+    try {
+      const saved = await dbInsertContactMessage(newMsg);
+      if (saved) {
+        contactMessages.unshift(saved);
+        auditLogs.push({
+          id: `log-${Date.now()}`,
+          action: 'CONTACT_RECEIVED_POSTGRES',
+          user: 'Portail Visiteur',
+          details: `Nouveau message enregistré en base PostgreSQL de : ${fullName}`,
+          timestamp: new Date().toISOString(),
+        });
+        return res.json({ success: true, message: 'Message reçu et enregistré en base de données.', data: saved });
+      }
+    } catch (dbErr: any) {
+      console.error('[API Contact DB Insert Error]', dbErr.message);
+    }
+  }
+
   contactMessages.unshift(newMsg);
   auditLogs.push({
     id: `log-${Date.now()}`,
@@ -624,9 +653,23 @@ app.post('/api/contact', (req: Request, res: Response) => {
   res.json({ success: true, message: 'Message reçu par le secrétariat du Collège Isaac Newton.' });
 });
 
-app.patch('/api/contact/:id/status', (req: Request, res: Response) => {
+app.patch('/api/contact/:id/status', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
+
+  if (isDbActive()) {
+    try {
+      const updated = await dbUpdateContactMessageStatus(id, status);
+      if (updated) {
+        const target = contactMessages.find(m => m.id === id);
+        if (target) target.status = status;
+        return res.json(updated);
+      }
+    } catch (e: any) {
+      console.error('[API Contact DB Update Error]', e.message);
+    }
+  }
+
   const target = contactMessages.find(m => m.id === id);
   if (!target) {
     return res.status(404).json({ error: 'Message introuvable' });
@@ -635,8 +678,15 @@ app.patch('/api/contact/:id/status', (req: Request, res: Response) => {
   res.json(target);
 });
 
-app.delete('/api/contact/:id', (req: Request, res: Response) => {
+app.delete('/api/contact/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
+  if (isDbActive()) {
+    try {
+      await dbDeleteContactMessage(id);
+    } catch (e: any) {
+      console.error('[API Contact DB Delete Error]', e.message);
+    }
+  }
   contactMessages = contactMessages.filter(m => m.id !== id);
   res.json({ success: true });
 });
@@ -662,8 +712,15 @@ app.put('/api/settings', (req: Request, res: Response) => {
 });
 
 // 8. Delete admission
-app.delete('/api/admissions/:id', (req: Request, res: Response) => {
+app.delete('/api/admissions/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
+  if (isDbActive()) {
+    try {
+      await dbDeleteAdmission(id);
+    } catch (e: any) {
+      console.error('[API Admissions DB Delete Error]', e.message);
+    }
+  }
   admissions = admissions.filter(a => a.id !== id);
   auditLogs.push({
     id: `log-${Date.now()}`,
@@ -921,7 +978,20 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 async function startServer() {
   // Initialize PostgreSQL database connection and tables if DATABASE_URL is present
   try {
-    await initDatabase();
+    const initialized = await initDatabase();
+    if (initialized) {
+      console.log('[Database] Synchronisation initiale des tables en cours...');
+      const dbAdmissions = await dbGetAdmissions();
+      if (dbAdmissions.length > 0) {
+        admissions = dbAdmissions;
+        console.log(`[Database] ${dbAdmissions.length} dossiers d'admissions chargés depuis PostgreSQL.`);
+      }
+      const dbMessages = await dbGetContactMessages();
+      if (dbMessages.length > 0) {
+        contactMessages = dbMessages;
+        console.log(`[Database] ${dbMessages.length} messages de contact chargés depuis PostgreSQL.`);
+      }
+    }
   } catch (err: any) {
     console.error('[Database Startup Error]', err.message);
   }
