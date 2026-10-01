@@ -1666,9 +1666,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           MODAL: CRÉATION & ÉDITION D'ARTICLE (CMS NEWS)
       ========================================================================= */}
       {showArticleModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-4 sm:p-5 space-y-3.5 shadow-xl border border-slate-200/90 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-3 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-3 sm:px-4 sm:py-3 space-y-2.5 shadow-xl border border-slate-200/90 animate-scale-in">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div>
                 <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
                   {editingArticleId ? 'Modifier la Publication' : 'Rédiger une Nouvelle Publication'}
@@ -1800,9 +1800,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           MODAL: PLANIFIER UN ÉVÉNEMENT (AGENDA)
       ========================================================================= */}
       {showEventModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-5 space-y-3.5 shadow-xl border border-slate-200/90 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-3 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-md w-full p-3 sm:px-4 sm:py-3 space-y-2.5 shadow-xl border border-slate-200/90 animate-scale-in">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div>
                 <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
                   {editingEventId ? 'Modifier l’Événement' : 'Ajouter une Échéance Officielle'}

@@ -237,28 +237,28 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
   const suspendedCount = users.filter(u => u.status === 'SUSPENDED').length;
 
   return (
-    <div className="space-y-3 sm:space-y-3.5 animate-fade-in">
+    <div className="space-y-2 sm:space-y-2.5 animate-fade-in">
 
       {/* ------------------------------------------------------------------
           1. COMPACT HEADER & METRICS SUMMARY
       ------------------------------------------------------------------ */}
-      <div className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
+      <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2 border border-slate-200/90 shadow-2xs space-y-2">
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-2.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-blue-900 text-white flex items-center justify-center shadow-2xs shrink-0">
-              <ShieldCheck className="w-4 h-4 text-amber-400" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-blue-900 text-white flex items-center justify-center shadow-2xs shrink-0">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
+              <div className="flex items-center gap-1.5">
+                <h2 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">
                   Contrôle d’Accès & Attribution des Rôles (RBAC)
                 </h2>
-                <span className="px-2 py-0.2 rounded-full bg-blue-100 text-blue-900 text-[9.5px] font-bold uppercase tracking-wider">
+                <span className="px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-900 text-[9px] font-bold uppercase tracking-wider">
                   Super-Admin
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[10.5px] text-slate-500">
                 Activez/désactivez instantanément les accès et déléguez la gestion aux membres du personnel.
               </p>
             </div>
@@ -350,9 +350,9 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
       {/* ------------------------------------------------------------------
           2. COMPACT ROLE DEFINITION GUIDE & PERMISSIONS MATRIX
       ------------------------------------------------------------------ */}
-      <div className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
+      <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2 border border-slate-200/90 shadow-2xs space-y-2">
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-800 flex items-center justify-center shrink-0">
               <KeyRound className="w-3.5 h-3.5" />
@@ -460,7 +460,7 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
       {/* ------------------------------------------------------------------
           3. DENSE ERGONOMIC USER MANAGEMENT TABLE WITH TOGGLE SWITCH
       ------------------------------------------------------------------ */}
-      <div className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
+      <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2 border border-slate-200/90 shadow-2xs space-y-2">
         
         {/* Search, Status & Role Filters Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -707,10 +707,10 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
           4. MODAL: ADD NEW COLLABORATOR / USER
       ------------------------------------------------------------------ */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-md w-full p-4 sm:p-5 space-y-4 shadow-2xl border border-slate-200 animate-scale-in">
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-3 overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-2xl max-w-md w-full p-3 sm:px-4 sm:py-3.5 space-y-2.5 shadow-2xl border border-slate-200 animate-scale-in">
             
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-900 flex items-center justify-center">
                   <UserPlus className="w-4 h-4" />

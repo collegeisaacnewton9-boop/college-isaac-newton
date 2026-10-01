@@ -203,41 +203,41 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   return (
-    <div className="space-y-3 sm:space-y-3.5 animate-fade-in">
+    <div className="space-y-2 sm:space-y-2.5 animate-fade-in">
       
       {/* -------------------------------------------------------------
           SECTION 1 : GITHUB REST API SYNCHRONIZATION (OCTOKIT)
       ------------------------------------------------------------- */}
-      <div className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
+      <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2 border border-slate-200/90 shadow-2xs space-y-2">
         
         {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-2.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-xs shrink-0">
-              <Github className="w-4 h-4 text-amber-400" />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-xs shrink-0">
+              <Github className="w-3.5 h-3.5 text-amber-400" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
+              <div className="flex items-center gap-1.5">
+                <h2 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">
                   Synchronisation GitHub REST API
                 </h2>
-                <span className="px-2 py-0.2 rounded-full bg-slate-100 text-slate-700 text-[9.5px] font-mono font-bold uppercase tracking-wider">
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 text-[9px] font-mono font-bold uppercase tracking-wider">
                   @octokit/rest
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[10.5px] text-slate-500">
                 Poussez automatiquement l’ensemble des fichiers sources, styles et configurations vers le dépôt configuré.
               </p>
             </div>
           </div>
 
           {/* Direct Link to Repo */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <a
               href={`https://github.com/${config.owner}/${config.repo}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-950 text-[11px] font-semibold border border-slate-200 transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-950 text-[10.5px] font-semibold border border-slate-200 transition-colors"
             >
               <span>Accéder au Dépôt</span>
               <ExternalLink className="w-3 h-3 text-slate-400" />
@@ -247,7 +247,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               type="button"
               onClick={() => checkGitHubStatus(config)}
               disabled={isVerifying || isSyncing}
-              className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
+              className="p-1.2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
               title="Tester la connexion GitHub"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isVerifying ? 'animate-spin text-amber-500' : ''}`} />
@@ -256,24 +256,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         {/* Live Repository Status Card */}
-        <div className={`p-3 sm:p-3.5 rounded-xl border transition-all ${
+        <div className={`p-2 sm:px-2.5 sm:py-2 rounded-xl border transition-all ${
           repoDetails?.valid
             ? 'bg-emerald-50/50 border-emerald-200/80 text-emerald-950'
             : repoDetails && !repoDetails.valid
             ? 'bg-rose-50/50 border-rose-200/80 text-rose-950'
             : 'bg-slate-50 border-slate-200 text-slate-800'
         }`}>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2.5">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
               {isVerifying ? (
-                <Loader2 className="w-4 h-4 text-amber-600 animate-spin shrink-0" />
+                <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin shrink-0" />
               ) : repoDetails?.valid ? (
-                <div className="w-7 h-7 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <CheckCircle2 className="w-4 h-4" />
+                <div className="w-6 h-6 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
                 </div>
               ) : (
-                <div className="w-7 h-7 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <XCircle className="w-4 h-4" />
+                <div className="w-6 h-6 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <XCircle className="w-3.5 h-3.5" />
                 </div>
               )}
 
@@ -282,13 +282,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <span className="font-semibold text-xs text-slate-900">
                     {repoDetails?.valid ? 'Dépôt GitHub Connecté & Opérationnel' : 'Connexion en attente de validation'}
                   </span>
-                  <span className="font-mono text-[10.5px] font-bold px-1.5 py-0.2 rounded-md bg-white border border-slate-200 text-slate-800">
+                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-white border border-slate-200 text-slate-800">
                     {config.owner}/{config.repo}
                   </span>
                 </div>
                 
                 {repoDetails?.valid && repoDetails.lastCommit ? (
-                  <p className="text-[10.5px] text-slate-600 flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  <p className="text-[10px] text-slate-600 flex items-center gap-1.5 mt-0.5 flex-wrap">
                     <span className="font-mono font-bold text-blue-900 flex items-center gap-1">
                       <GitCommit className="w-3 h-3 text-slate-400" />
                       {repoDetails.lastCommit.sha}
@@ -299,15 +299,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <span className="text-slate-400">par {repoDetails.lastCommit.author}</span>
                   </p>
                 ) : (
-                  <p className="text-[10.5px] text-slate-500 mt-0.5">
+                  <p className="text-[10px] text-slate-500 mt-0.5">
                     {repoDetails?.error || 'Cliquez sur « Tester la connexion » ou lancez la synchronisation.'}
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-700 font-mono text-[11px] font-bold">
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-700 font-mono text-[10.5px] font-bold">
                 <GitBranch className="w-3 h-3 text-amber-500" />
                 <span>{config.branch}</span>
               </span>
@@ -316,18 +316,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         {/* Configuration Form & Sync Action Block */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-2.5">
           
           {/* Left Column: Repository Credentials Form (7 cols) */}
-          <form onSubmit={handleSaveConfig} className="lg:col-span-7 space-y-3">
+          <form onSubmit={handleSaveConfig} className="lg:col-span-7 space-y-2">
             <h3 className="font-serif font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
               <KeyRound className="w-3.5 h-3.5 text-amber-500" />
               <span>Paramètres du Dépôt & Authentification</span>
             </h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-0.5 text-[11px]">Propriétaire (Owner)</label>
+                <label className="block font-semibold text-slate-700 mb-0.5 text-[10.5px]">Propriétaire (Owner)</label>
                 <input
                   type="text"
                   value={config.owner}
@@ -339,7 +339,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-0.5 text-[11px]">Nom du Dépôt (Repository)</label>
+                <label className="block font-semibold text-slate-700 mb-0.5 text-[10.5px]">Nom du Dépôt (Repository)</label>
                 <input
                   type="text"
                   value={config.repo}
@@ -415,34 +415,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </form>
 
           {/* Right Column: SYNC ACTION PANEL WITH VISUAL LOADER (5 cols) */}
-          <div className="lg:col-span-5 bg-linear-to-b from-blue-900/5 to-amber-500/5 rounded-xl p-3.5 sm:p-4 border border-blue-100 flex flex-col justify-between space-y-3">
+          <div className="lg:col-span-5 bg-linear-to-b from-blue-900/5 to-amber-500/5 rounded-xl p-2.5 sm:px-3 sm:py-2 border border-blue-100 flex flex-col justify-between space-y-2">
             
-            <div className="space-y-1.5">
+            <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <span className="text-[9.5px] uppercase font-bold tracking-wider text-blue-900 flex items-center gap-1">
                   <UploadCloud className="w-3 h-3 text-blue-600" />
                   <span>Export & Déploiement GitHub</span>
                 </span>
-                <span className="text-[9.5px] text-slate-500 font-medium">REST API</span>
+                <span className="text-[9px] text-slate-500 font-medium">REST API</span>
               </div>
 
-              <h4 className="font-serif font-bold text-slate-900 text-sm">
+              <h4 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">
                 Pousser les Fichiers Sources
               </h4>
-              <p className="text-[11px] text-slate-600 leading-relaxed">
+              <p className="text-[10.5px] text-slate-600 leading-relaxed">
                 Cliquez pour compiler l'état actuel de votre application et envoyer les fichiers sources directement vers votre dépôt GitHub.
               </p>
             </div>
 
             {/* Visual Progress Loader (Displays live when syncing) */}
             {isSyncing && (
-              <div className="bg-white rounded-lg p-2.5 border border-blue-200 shadow-2xs space-y-1.5 animate-fade-in">
+              <div className="bg-white rounded-lg p-2 border border-blue-200 shadow-2xs space-y-1 animate-fade-in">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-800 flex items-center gap-1.5 text-[11px]">
+                  <span className="font-semibold text-slate-800 flex items-center gap-1 text-[10.5px]">
                     <Loader2 className="w-3 h-3 text-blue-600 animate-spin" />
                     <span>{syncStage || 'Traitement en cours...'}</span>
                   </span>
-                  <span className="font-mono font-bold text-blue-900 text-[10.5px]">{syncProgress}%</span>
+                  <span className="font-mono font-bold text-blue-900 text-[10px]">{syncProgress}%</span>
                 </div>
 
                 {/* Animated Progress Bar */}
@@ -453,19 +453,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   />
                 </div>
                 
-                <p className="text-[9.5px] text-slate-400 italic">
+                <p className="text-[9px] text-slate-400 italic">
                   Veuillez patienter pendant l'authentification et l'envoi des sources...
                 </p>
               </div>
             )}
 
             {/* MAIN BUTTON: 'Synchroniser avec GitHub' WITH DEDICATED LOADER */}
-            <div className="space-y-1.5 pt-1">
+            <div className="space-y-1 pt-0.5">
               <button
                 type="button"
                 onClick={handleSyncToGitHub}
                 disabled={isSyncing}
-                className={`w-full py-2.5 px-4 rounded-lg font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                className={`w-full py-2 px-3 rounded-lg font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   isSyncing
                     ? 'bg-blue-950 text-white cursor-not-allowed opacity-90'
                     : 'bg-linear-to-r from-blue-900 to-blue-800 hover:from-blue-950 hover:to-blue-900 text-white hover:shadow-sm active:scale-98'
@@ -473,12 +473,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               >
                 {isSyncing ? (
                   <>
-                    <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" />
                     <span>Synchronisation en cours ({syncProgress}%)</span>
                   </>
                 ) : (
                   <>
-                    <Github className="w-4 h-4 text-amber-400" />
+                    <Github className="w-3.5 h-3.5 text-amber-400" />
                     <span>Synchroniser avec GitHub</span>
                   </>
                 )}
@@ -488,12 +488,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 type="button"
                 onClick={handleSyncToGitHub}
                 disabled={isSyncing}
-                className="w-full py-2 px-3 rounded-lg border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-1.5 px-2.5 rounded-lg border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {isSyncing ? (
-                  <Loader2 className="w-3.5 h-3.5 text-slate-500 animate-spin" />
+                  <Loader2 className="w-3 h-3 text-slate-500 animate-spin" />
                 ) : (
-                  <UploadCloud className="w-3.5 h-3.5 text-blue-600" />
+                  <UploadCloud className="w-3 h-3 text-blue-600" />
                 )}
                 <span>Exporter les sources vers le dépôt</span>
               </button>
@@ -509,12 +509,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           SECTION 2 : PARAMÈTRES GÉNÉRAUX DU SITE (CMS & ALERTES)
       ------------------------------------------------------------- */}
       {cmsSettings && (
-        <form onSubmit={handleSaveCmsSettings} className="bg-white rounded-xl p-3.5 sm:p-4 border border-slate-200/90 shadow-2xs space-y-3">
+        <form onSubmit={handleSaveCmsSettings} className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2 border border-slate-200/90 shadow-2xs space-y-2">
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-2.5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-amber-400/20 text-amber-700 flex items-center justify-center shrink-0">
-                <Sliders className="w-4 h-4" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-700 flex items-center justify-center shrink-0">
+                <Sliders className="w-3.5 h-3.5" />
               </div>
               <div>
                 <h3 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">

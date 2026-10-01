@@ -34,3 +34,29 @@
   outline: 2px solid #183b6b;
   outline-offset: 2px;
 }
+
+@layer utilities {
+  /* Ergonomic dense utility classes for Admin Dashboard */
+  .admin-card-dense {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.03);
+  }
+
+  .admin-py-dense {
+    padding-top: 0.5rem !important; /* py-2 */
+    padding-bottom: 0.5rem !important;
+  }
+
+  .admin-gap-dense {
+    gap: 0.5rem !important; /* gap-2 */
+  }
+
+  .admin-cell-dense {
+    padding-top: 0.375rem !important; /* py-1.5 */
+    padding-bottom: 0.375rem !important;
+    padding-left: 0.625rem !important; /* px-2.5 */
+    padding-right: 0.625rem !important;
+  }
+}
