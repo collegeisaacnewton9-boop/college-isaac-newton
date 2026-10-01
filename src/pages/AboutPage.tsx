@@ -20,7 +20,7 @@ interface AboutPageProps {
 
 export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
   return (
-    <div className="space-y-16 lg:space-y-24 py-10 lg:py-16">
+    <div className="space-y-8 sm:space-y-12 py-5 sm:py-8">
       
       {/* 1. Header Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -87,26 +87,26 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* 3. Mission & Vision */}
-      <section className="bg-slate-100/70 py-16 border-y border-slate-200/60">
+      <section className="bg-slate-100/70 py-8 sm:py-10 border-y border-slate-200/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             
-            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-900 flex items-center justify-center">
-                <Target className="w-6 h-6" />
+            <div className="bg-white rounded-xl p-5 sm:p-6 border border-slate-200 shadow-2xs space-y-2.5">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center">
+                <Target className="w-5 h-5" />
               </div>
-              <h3 className="font-serif text-2xl font-bold text-slate-900">Notre Mission</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
+              <h3 className="font-serif text-xl font-bold text-slate-900">Notre Mission</h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 Offrir à chaque jeune, dès le plus jeune âge, un enseignement pluridisciplinaire exigeant fondé sur l'amour de la connaissance, la discipline personnelle et l'apprentissage méthodique. Nous nous attachons à développer la pensée critique, l'esprit d'initiative et le sens du devoir civique.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm space-y-4">
-              <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                <Award className="w-6 h-6" />
+            <div className="bg-white rounded-xl p-5 sm:p-6 border border-slate-200 shadow-2xs space-y-2.5">
+              <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                <Award className="w-5 h-5" />
               </div>
-              <h3 className="font-serif text-2xl font-bold text-slate-900">Notre Vision</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">
+              <h3 className="font-serif text-xl font-bold text-slate-900">Notre Vision</h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 Être un pôle de référence éducative reconnu pour l'excellence de ses résultats académiques, la qualité humaine de son encadrement et son avant-gardisme dans l'intégration des technologies numériques au service de la formation des leaders de demain.
               </p>
             </div>
@@ -117,14 +117,14 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
 
       {/* 4. Direction & Encadrement Pédagogique */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto text-center mb-12 space-y-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-blue-900">
+        <div className="max-w-2xl mx-auto text-center mb-6 space-y-1.5">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-900">
             Une gouvernance engagée
           </span>
-          <h2 className="font-serif text-2xl sm:text-4xl font-bold text-slate-900">
+          <h2 className="font-serif text-xl sm:text-3xl font-bold text-slate-900">
             Direction et Corps Professoral
           </h2>
-          <p className="text-sm text-slate-600">
+          <p className="text-xs sm:text-sm text-slate-600">
             Une équipe d'éducateurs expérimentés et dévoués à la réussite et à l'épanouissement de chaque élève.
           </p>
         </div>

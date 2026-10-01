@@ -16,7 +16,7 @@ export const SCHOOL_INFO = {
   founderMotto: "Savoir aujourd'hui, réussir demain",
   description: "Établissement scolaire privé d'excellence à Delmas 50, dispensant un enseignement rigoureux du préscolaire au secondaire, avec une forte composante scientifique et technologique.",
   phone: '+509 3721-1818',
-  email: 'contact@isaacnewton.edu.ht',
+  email: 'contact@collegeisaacnewton.com',
   address: 'Delmas 50, Haïti',
   openingHours: 'Lun - Ven : 7:30 AM - 2:00 PM',
   adminHours: "Secrétariat ouvert jusqu'à 3:30 PM",
@@ -27,7 +27,7 @@ export const SCHOOL_INFO = {
 export const INITIAL_USERS: User[] = [
   {
     id: 'user-admin-1',
-    email: 'admin@collegeisaacnewton.edu',
+    email: 'admin@collegeisaacnewton.com',
     fullName: 'Direction Pédagogique (Admin)',
     role: 'ADMIN',
     phone: '+509 3800-0001',
@@ -38,7 +38,7 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'user-editor-1',
-    email: 'redaction@collegeisaacnewton.edu',
+    email: 'redaction@collegeisaacnewton.com',
     fullName: 'Secrétariat & Communication (Éditeur)',
     role: 'EDITOR',
     phone: '+509 3800-0002',
@@ -49,7 +49,7 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'user-teacher-1',
-    email: 'prof.sciences@collegeisaacnewton.edu',
+    email: 'prof.sciences@collegeisaacnewton.com',
     fullName: 'Prof. Emmanuel Célestin (Enseignant SVT)',
     role: 'TEACHER',
     phone: '+509 3800-0005',
@@ -60,7 +60,7 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'user-moderator-1',
-    email: 'moderation@collegeisaacnewton.edu',
+    email: 'moderation@collegeisaacnewton.com',
     fullName: 'M. Lucner Bernard (Modérateur)',
     role: 'MODERATOR',
     phone: '+509 3800-0006',
@@ -71,7 +71,7 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'user-parent-1',
-    email: 'parent.demo@collegeisaacnewton.edu',
+    email: 'parent.demo@collegeisaacnewton.com',
     fullName: 'Mme Marie-Claire Joseph (Parent)',
     role: 'PARENT',
     phone: '+509 3800-0003',
@@ -82,7 +82,7 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'user-student-1',
-    email: 'eleve.demo@collegeisaacnewton.edu',
+    email: 'eleve.demo@collegeisaacnewton.com',
     fullName: 'Jean-Marc Joseph (Élève NS3)',
     role: 'STUDENT',
     phone: '+509 3800-0004',

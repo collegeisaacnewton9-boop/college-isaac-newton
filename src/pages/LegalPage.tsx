@@ -3,7 +3,7 @@ import { SCHOOL_INFO } from '../data/mockData';
 
 export const LegalPage: React.FC = () => {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6">
       <div className="space-y-2 border-b border-slate-200 pb-4">
         <span className="text-xs font-semibold uppercase tracking-widest text-blue-900">
           Informations Réglementaires

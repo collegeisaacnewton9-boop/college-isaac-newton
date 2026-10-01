@@ -758,7 +758,7 @@ export const AccessControlView: React.FC<AccessControlViewProps> = ({
                   <input
                     type="email"
                     required
-                    placeholder="collaborateur@collegeisaacnewton.edu"
+                    placeholder="collaborateur@collegeisaacnewton.com"
                     value={newUserForm.email}
                     onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
                     className="w-full px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden text-xs"

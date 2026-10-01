@@ -406,11 +406,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const unreadMessagesCount = messages.filter(m => m.status === 'NEW').length;
 
   return (
-    <div className="min-h-screen bg-slate-100/70 pb-20">
+    <div className="min-h-screen bg-slate-100/60 pb-8">
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-amber-400/40 flex items-center gap-3 animate-fade-in text-xs font-medium">
+        <div className="fixed bottom-4 right-4 z-50 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-2xl border border-amber-400/40 flex items-center gap-2.5 animate-fade-in text-xs font-medium">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -433,13 +433,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     Direction
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 flex-wrap">
                   <span className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Session 2026-2027 Active</span>
+                    <span>Session 2026-2027</span>
                   </span>
                   <span>·</span>
-                  <span>Delmas 50, Haïti</span>
+                  <span className="inline-flex items-center gap-1 text-emerald-400 font-mono text-[10px] bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/50">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span>PostgreSQL 18</span>
+                  </span>
+                  <span>·</span>
+                  <span>Delmas 50 · collegeisaacnewton.com</span>
                 </div>
               </div>
             </div>
@@ -1086,7 +1091,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
               {/* Dossier Detail Review Panel (5 cols) */}
               {selectedAdmission && (
-                <div className="lg:col-span-5 bg-white rounded-xl border border-blue-200/90 shadow-sm p-3.5 sm:p-4 space-y-2.5 sm:space-y-3 animate-fade-in">
+                <div className="lg:col-span-5 bg-white rounded-xl border border-blue-200/90 shadow-sm p-3.5 sm:p-4 space-y-2.5 sm:space-y-3 animate-fade-in lg:sticky lg:top-20 max-h-[calc(100vh-6rem)] overflow-y-auto no-scrollbar">
                   
                   {/* Top Bar of Review */}
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">

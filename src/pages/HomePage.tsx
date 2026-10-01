@@ -732,7 +732,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle 
               },
               {
                 q: "Comment joindre l'administration directement ?",
-                a: "Vous pouvez nous joindre par téléphone au +509 3721-1818 ou par e-mail à contact@isaacnewton.edu.ht. Notre équipe répond avec diligence sous 24 à 48 heures."
+                a: "Vous pouvez nous joindre par téléphone au +509 3721-1818 ou par e-mail à contact@collegeisaacnewton.com. Notre équipe répond avec diligence sous 24 à 48 heures."
               }
             ].map((faq, idx) => {
               const isOpen = activeFaq === idx;

@@ -207,7 +207,7 @@ let siteSettings = {
   contactInfo: {
     phone: '+509 3721-1818',
     phoneAlt: '+509 3645-1212',
-    email: 'contact@isaacnewton.edu.ht',
+    email: 'contact@collegeisaacnewton.com',
     address: 'Delmas 50, Port-au-Prince, Haïti',
     openingHours: 'Lun - Ven : 7h30 - 15h30',
   },
@@ -251,7 +251,7 @@ let auditLogs: Array<Record<string, any>> = [
 let systemUsers: Array<Record<string, any>> = [
   {
     id: 'user-admin-1',
-    email: 'admin@collegeisaacnewton.edu',
+    email: 'admin@collegeisaacnewton.com',
     fullName: 'Direction Pédagogique (Admin)',
     role: 'ADMIN',
     phone: '+509 3800-0001',
@@ -262,7 +262,7 @@ let systemUsers: Array<Record<string, any>> = [
   },
   {
     id: 'user-editor-1',
-    email: 'redaction@collegeisaacnewton.edu',
+    email: 'redaction@collegeisaacnewton.com',
     fullName: 'Secrétariat & Communication (Éditeur)',
     role: 'EDITOR',
     phone: '+509 3800-0002',
@@ -273,7 +273,7 @@ let systemUsers: Array<Record<string, any>> = [
   },
   {
     id: 'user-teacher-1',
-    email: 'prof.sciences@collegeisaacnewton.edu',
+    email: 'prof.sciences@collegeisaacnewton.com',
     fullName: 'Prof. Emmanuel Célestin (Enseignant SVT)',
     role: 'TEACHER',
     phone: '+509 3800-0005',
@@ -284,7 +284,7 @@ let systemUsers: Array<Record<string, any>> = [
   },
   {
     id: 'user-moderator-1',
-    email: 'moderation@collegeisaacnewton.edu',
+    email: 'moderation@collegeisaacnewton.com',
     fullName: 'M. Lucner Bernard (Modérateur)',
     role: 'MODERATOR',
     phone: '+509 3800-0006',
@@ -295,7 +295,7 @@ let systemUsers: Array<Record<string, any>> = [
   },
   {
     id: 'user-parent-1',
-    email: 'parent.demo@collegeisaacnewton.edu',
+    email: 'parent.demo@collegeisaacnewton.com',
     fullName: 'Mme Marie-Claire Joseph (Parent)',
     role: 'PARENT',
     phone: '+509 3800-0003',
@@ -306,7 +306,7 @@ let systemUsers: Array<Record<string, any>> = [
   },
   {
     id: 'user-student-1',
-    email: 'eleve.demo@collegeisaacnewton.edu',
+    email: 'eleve.demo@collegeisaacnewton.com',
     fullName: 'Jean-Marc Joseph (Élève NS3)',
     role: 'STUDENT',
     phone: '+509 3800-0004',

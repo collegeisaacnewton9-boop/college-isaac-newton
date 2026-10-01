@@ -18,7 +18,7 @@ interface SchoolLifePageProps {
 
 export const SchoolLifePage: React.FC<SchoolLifePageProps> = ({ onNavigate }) => {
   return (
-    <div className="space-y-16 lg:space-y-24 py-10 lg:py-16">
+    <div className="space-y-8 sm:space-y-12 py-5 sm:py-8">
       
       {/* Header */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -77,9 +77,9 @@ export const SchoolLifePage: React.FC<SchoolLifePageProps> = ({ onNavigate }) =>
       </section>
 
       {/* 2. Les Clubs & Activités Périscolaires */}
-      <section className="bg-slate-100/70 py-16 border-y border-slate-200/60">
+      <section className="bg-slate-100/70 py-8 sm:py-10 border-y border-slate-200/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12 space-y-2">
+          <div className="text-center max-w-2xl mx-auto mb-6 space-y-1.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-blue-900">
               Talents & Passions
             </span>

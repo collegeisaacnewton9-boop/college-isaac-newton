@@ -215,7 +215,7 @@ export const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
       'PRODID:-//Collège Isaac Newton//Calendrier Scolaire//FR',
       'CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
-      `UID:${event.id}@isaacnewton.edu.ht`,
+      `UID:${event.id}@collegeisaacnewton.com`,
       `DTSTAMP:${new Date().toISOString().replace(/-|:|\.\d+/g, '')}`,
       `DTSTART:${start}`,
       `DTEND:${end}`,

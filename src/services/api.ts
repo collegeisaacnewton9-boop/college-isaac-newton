@@ -37,7 +37,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   contactInfo: {
     phone: '+509 3721-1818',
     phoneAlt: '+509 3645-1212',
-    email: 'contact@isaacnewton.edu.ht',
+    email: 'contact@collegeisaacnewton.com',
     address: 'Delmas 50, Port-au-Prince, Haïti',
     openingHours: 'Lun - Ven : 7h30 - 15h30',
   },
