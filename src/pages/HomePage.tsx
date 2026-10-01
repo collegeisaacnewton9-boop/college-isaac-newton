@@ -720,7 +720,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle 
             {[
               {
                 q: "Où se situe exactement le campus du Collège Isaac Newton ?",
-                a: "Notre campus principal est situé à Delmas 50, Haïti. L'accès est sécurisé avec un parking intérieur pour les déposes d'élèves."
+                a: "Notre campus principal est situé à Delmas 50, rue Dominique #2 bis, Port-au-Prince, Haïti. L'accès est sécurisé avec un poste de contrôle et un parking intérieur pour les déposes d'élèves."
+              },
+              {
+                q: "Qui assure la direction de l'établissement ?",
+                a: "L'établissement est dirigé par son Directeur fondateur, M. Orphe Jean Marie, Professeur de Mathématiques & Sciences Physiques, épaulé par une équipe pédagogique d'excellence."
               },
               {
                 q: "Quelles sont les heures d'ouverture du secrétariat ?",
@@ -732,7 +736,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle 
               },
               {
                 q: "Comment joindre l'administration directement ?",
-                a: "Vous pouvez nous joindre par téléphone au +509 3721-1818 ou par e-mail à contact@collegeisaacnewton.com. Notre équipe répond avec diligence sous 24 à 48 heures."
+                a: "Vous pouvez joindre le secrétariat par téléphone au +509 3316-0934 / +509 3721-1818 ou par e-mail à contact@collegeisaacnewton.com. Notre équipe répond avec diligence sous 24 à 48 heures."
               }
             ].map((faq, idx) => {
               const isOpen = activeFaq === idx;

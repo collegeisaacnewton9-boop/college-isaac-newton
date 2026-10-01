@@ -67,18 +67,30 @@ export const TopUtilityBar: React.FC<TopUtilityBarProps> = ({ onNavigate }) => {
           {/* Contact info & address */}
           <div className="flex items-center gap-5 lg:gap-6">
             <div className="flex items-center gap-1.5 text-slate-300">
-              <MapPin className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-medium">{settings?.contactInfo.address || SCHOOL_INFO.address}</span>
+              <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="font-medium truncate">{settings?.contactInfo.address || SCHOOL_INFO.address}</span>
             </div>
 
-            <a 
-              href={`tel:${(settings?.contactInfo.phone || SCHOOL_INFO.phone).replace(/\s+/g, '')}`} 
-              className="flex items-center gap-1.5 hover:text-amber-400 transition-colors"
-              title="Appeler le secrétariat"
-            >
-              <Phone className="w-3.5 h-3.5 text-amber-400" />
-              <span className="font-mono font-semibold">{settings?.contactInfo.phone || SCHOOL_INFO.phone}</span>
-            </a>
+            <div className="flex items-center gap-1.5">
+              <Phone className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <div className="flex items-center gap-1 font-mono text-[11px] font-semibold">
+                <a 
+                  href="tel:+50933160934" 
+                  className="hover:text-amber-400 transition-colors"
+                  title="Appeler le secrétariat (+509 3316-0934)"
+                >
+                  +509 3316-0934
+                </a>
+                <span className="text-slate-600 font-sans">/</span>
+                <a 
+                  href="tel:+50937211818" 
+                  className="hover:text-amber-400 transition-colors"
+                  title="Appeler le secrétariat (+509 3721-1818)"
+                >
+                  +509 3721-1818
+                </a>
+              </div>
+            </div>
 
             <a 
               href={`mailto:${settings?.contactInfo.email || SCHOOL_INFO.email}`} 

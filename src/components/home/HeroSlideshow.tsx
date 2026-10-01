@@ -53,11 +53,11 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
       image: SCHOOL_IMAGES.entranceFacade,
       // Adjusted so the pediment with "COLLÈGE ISAAC NEWTON", the cursive text, and entrance are fully visible (Image 1)
       objectPosition: 'center 35%',
-      tag: 'Façade Principale · Delmas 50',
+      tag: 'Façade Principale · Delmas 50, rue Dominique #2 bis',
       tagIcon: ShieldCheck,
       title: 'Collège Isaac Newton',
       motto: '« Savoir aujourd’hui, réussir demain »',
-      description: 'Campus moderne et sécurisé à Delmas 50. Une formation académique d’excellence du préscolaire au baccalauréat d’État pour l’avenir de chaque enfant.',
+      description: 'Campus moderne et sécurisé à Delmas 50, rue Dominique #2 bis. Une formation académique d’excellence du préscolaire au baccalauréat d’État pour l’avenir de chaque enfant.',
       metrics: [
         { label: 'Secrétariat ouvert', value: 'Jusqu’à 15h30' },
         { label: 'Encadrement civique', value: '100% Dédié' },
@@ -65,7 +65,7 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
       ],
       primaryCtaText: 'Formulaire de Préinscription',
       primaryCtaAction: () => onNavigate('pre-registration'),
-      fullCaption: 'Entrée principale du Collège Isaac Newton (Delmas 50). Architecture soignée arborant la devise officielle « Savoir aujourd’hui, réussir demain ».'
+      fullCaption: 'Entrée principale du Collège Isaac Newton (Delmas 50, rue Dominique #2 bis). Architecture soignée arborant la devise officielle « Savoir aujourd’hui, réussir demain ».'
     },
     {
       id: 'computer-lab',
@@ -195,16 +195,15 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
           <div className="pointer-events-auto inline-flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/15 text-xs text-slate-200 shadow-md">
             <span className="flex items-center gap-1 text-amber-400 font-semibold">
               <MapPin className="w-3.5 h-3.5" />
-              <span>Delmas 50, Haïti</span>
+              <span>Delmas 50, rue Dominique #2 bis</span>
             </span>
             <span className="text-slate-500">|</span>
-            <a 
-              href={`tel:${SCHOOL_INFO.phone}`} 
-              className="flex items-center gap-1 font-mono text-white hover:text-amber-300 transition-colors"
-            >
-              <Phone className="w-3 h-3 text-amber-400" />
-              <span>{SCHOOL_INFO.phone}</span>
-            </a>
+            <div className="flex items-center gap-1 font-mono text-white text-[11px]">
+              <Phone className="w-3 h-3 text-amber-400 shrink-0" />
+              <a href="tel:+50933160934" className="hover:text-amber-300 transition-colors">+509 3316-0934</a>
+              <span className="text-white/40">/</span>
+              <a href="tel:+50937211818" className="hover:text-amber-300 transition-colors">+509 3721-1818</a>
+            </div>
           </div>
 
           {/* Quick controls: Play/Pause & Fullscreen preview */}
@@ -283,20 +282,19 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
                 <ArrowRight className="w-4 h-4" />
               </button>
 
-              <a
-                href={`tel:${SCHOOL_INFO.phone}`}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm backdrop-blur-md border border-white/20 transition-colors"
-              >
-                <Phone className="w-3.5 h-3.5 text-amber-400" />
-                <span>Appeler : {SCHOOL_INFO.phone}</span>
-              </a>
+              <div className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/10 text-white font-mono text-xs sm:text-sm backdrop-blur-md border border-white/20">
+                <Phone className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <a href="tel:+50933160934" className="hover:text-amber-300 transition-colors">+509 3316-0934</a>
+                <span className="text-white/40 font-sans">/</span>
+                <a href="tel:+50937211818" className="hover:text-amber-300 transition-colors">+509 3721-1818</a>
+              </div>
 
               <button
                 onClick={() => onNavigate('contact')}
                 className="inline-flex items-center justify-center gap-1.5 px-3 py-3 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs font-medium transition-colors cursor-pointer"
               >
                 <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                <span>Situer à Delmas 50</span>
+                <span>Delmas 50, rue Dominique #2 bis</span>
               </button>
             </div>
 

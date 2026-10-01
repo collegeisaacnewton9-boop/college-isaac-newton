@@ -91,25 +91,46 @@ export const ContactPage: React.FC = () => {
                   <MapPin className="w-3.5 h-3.5 text-amber-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-white">Delmas 50, Haïti</p>
-                  <p className="text-[10px] text-slate-400">Campus Principal · Secrétariat</p>
+                  <p className="font-semibold text-white">Delmas 50, rue Dominique #2 bis</p>
+                  <p className="text-[10px] text-slate-300">Port-au-Prince, Haïti · Campus Principal</p>
                 </div>
               </div>
 
-              {/* Phone */}
+              {/* Phones */}
               <div className="flex items-start gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0 mt-0.5">
                   <Phone className="w-3.5 h-3.5 text-amber-400" />
                 </div>
                 <div>
-                  <a 
-                    href={`tel:${SCHOOL_INFO.phone}`} 
-                    className="font-mono font-bold text-white hover:text-amber-400 transition-colors"
-                  >
-                    {SCHOOL_INFO.phone}
-                  </a>
-                  <p className="text-[10px] text-slate-400">Ligne directe secrétariat</p>
+                  <div className="flex flex-col gap-0.5 font-mono font-bold text-white">
+                    <a 
+                      href="tel:+50933160934" 
+                      className="hover:text-amber-400 transition-colors"
+                    >
+                      +509 3316-0934
+                    </a>
+                    <a 
+                      href="tel:+50937211818" 
+                      className="hover:text-amber-400 transition-colors"
+                    >
+                      +509 3721-1818
+                    </a>
+                  </div>
+                  <p className="text-[10px] text-slate-400">Lignes directes du secrétariat</p>
                 </div>
+              </div>
+
+              {/* Founder & Direction */}
+              <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-[11px] space-y-0.5">
+                <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider block">
+                  Direction Générale
+                </span>
+                <p className="font-semibold text-white">
+                  Orphe Jean Marie
+                </p>
+                <p className="text-[10px] text-slate-300">
+                  Directeur fondateur · Professeur de Mathématiques & Sciences Physiques
+                </p>
               </div>
 
               {/* Email */}
@@ -154,20 +175,29 @@ export const ContactPage: React.FC = () => {
             {/* Quick Action Buttons */}
             <div className="pt-2.5 border-t border-slate-800/80 flex flex-wrap gap-2">
               <a
-                href={`tel:${SCHOOL_INFO.phone}`}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors"
+                href="tel:+50933160934"
+                className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors"
+                title="Appeler la ligne 1"
               >
                 <Phone className="w-3.5 h-3.5" />
-                <span>Appeler maintenant</span>
+                <span>+509 3316-0934</span>
               </a>
               <a
-                href="https://maps.google.com/?q=Delmas+50+Haiti"
+                href="tel:+50937211818"
+                className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-colors border border-slate-700"
+                title="Appeler la ligne 2"
+              >
+                <Phone className="w-3.5 h-3.5 text-amber-400" />
+                <span>+509 3721-1818</span>
+              </a>
+              <a
+                href="https://maps.google.com/?q=Delmas+50+rue+Dominique+2+bis+Port-au-Prince+Haiti"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium text-xs transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium text-xs transition-colors"
               >
                 <Navigation className="w-3.5 h-3.5 text-amber-400" />
-                <span>Itinéraire</span>
+                <span>Itinéraire Google Maps</span>
               </a>
             </div>
           </div>

@@ -205,7 +205,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate }) => {
               Secrétariat & Justification d'Absence
             </h3>
             <p>
-              Toute absence doit être signalée au plus tard le jour même avant 09h00 par téléphone au <strong className="font-mono text-slate-900">+509 3721-1818</strong> ou par e-mail.
+              Toute absence doit être signalée au plus tard le jour même avant 09h00 par téléphone au <strong className="font-mono text-slate-900">+509 3316-0934</strong> / <strong className="font-mono text-slate-900">+509 3721-1818</strong> ou par e-mail.
             </p>
           </div>
         </div>

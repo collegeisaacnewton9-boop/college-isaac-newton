@@ -77,7 +77,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
                 className="w-full h-80 sm:h-96 object-cover"
               />
               <div className="p-4 bg-slate-900 text-white text-xs">
-                <p className="font-semibold text-amber-300">Campus Principal du Collège Isaac Newton (Delmas 50, Haïti)</p>
+                <p className="font-semibold text-amber-300">Campus Principal du Collège Isaac Newton (Delmas 50, rue Dominique #2 bis, Port-au-Prince)</p>
                 <p className="text-slate-300 text-[11px]">Un cadre d'étude moderne, sécurisé et aéré propice à la sérénité des apprentissages</p>
               </div>
             </div>
@@ -116,8 +116,8 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
       </section>
 
       {/* 4. Direction & Encadrement Pédagogique */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mx-auto text-center mb-6 space-y-1.5">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="max-w-2xl mx-auto text-center space-y-1.5">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-blue-900">
             Une gouvernance engagée
           </span>
@@ -125,8 +125,54 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
             Direction et Corps Professoral
           </h2>
           <p className="text-xs sm:text-sm text-slate-600">
-            Une équipe d'éducateurs expérimentés et dévoués à la réussite et à l'épanouissement de chaque élève.
+            Une équipe d'éducateurs chevronnés sous l'impulsion d'une direction fondatrice attachée à l'excellence scientifique et morale.
           </p>
+        </div>
+
+        {/* Carte Spéciale : Directeur Fondateur */}
+        <div className="relative rounded-2xl bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white p-6 sm:p-8 border border-slate-800 shadow-xl overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div className="lg:col-span-3 text-center sm:text-left flex flex-col sm:flex-row lg:flex-col items-center gap-4">
+              <div className="w-24 h-24 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 text-slate-950 flex items-center justify-center font-serif text-3xl font-bold shadow-lg ring-4 ring-white/10 shrink-0">
+                OJM
+              </div>
+              <div>
+                <span className="inline-block px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  Direction Générale
+                </span>
+                <h3 className="font-serif text-xl sm:text-2xl font-bold text-white">
+                  Orphe Jean Marie
+                </h3>
+                <p className="text-xs text-amber-400 font-medium">
+                  Directeur fondateur
+                </p>
+                <p className="text-[11px] text-slate-300 font-light mt-0.5">
+                  Professeur de Mathématiques & Sciences Physiques
+                </p>
+              </div>
+            </div>
+
+            <div className="lg:col-span-9 space-y-3.5 border-t lg:border-t-0 lg:border-l border-slate-800 pt-4 lg:pt-0 lg:pl-8 text-xs sm:text-sm text-slate-200">
+              <blockquote className="font-serif italic text-sm sm:text-base text-slate-100 leading-relaxed border-l-2 border-amber-400 pl-3">
+                « Notre ambition pour chaque enfant confié au Collège Isaac Newton est d'ériger les sciences exactes, la rigueur de l'esprit d'analyse et les valeurs humanistes en véritables moteurs d'émancipation personnelle et de contribution citoyenne. »
+              </blockquote>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Fort d'une solide expérience professorale en mathématiques et en sciences physiques, le Directeur fondateur veille personnellement à l'élévation continue du niveau d'exigence, à l'encadrement scrupuleux des cycles fondamental et secondaire, ainsi qu'au dialogue transparent avec chaque famille haïtienne.
+              </p>
+              <div className="flex flex-wrap items-center gap-4 pt-1 text-[11px] text-slate-300">
+                <span className="flex items-center gap-1.5 text-amber-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  Campus Delmas 50, rue Dominique #2 bis, Port-au-Prince
+                </span>
+                <span className="text-slate-500">|</span>
+                <span className="font-mono text-slate-200">
+                  Lignes directes : +509 3316-0934 / +509 3721-1818
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

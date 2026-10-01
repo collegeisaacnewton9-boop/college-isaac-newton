@@ -35,14 +35,19 @@ const DEFAULT_SETTINGS: SiteSettings = {
     deadlineNotice: 'Dépôt des dossiers ouvert jusqu\'au 31 août 2026',
   },
   contactInfo: {
-    phone: '+509 3721-1818',
-    phoneAlt: '+509 3645-1212',
+    phone: '+509 3316-0934',
+    phoneAlt: '+509 3721-1818',
     email: 'contact@collegeisaacnewton.com',
-    address: 'Delmas 50, Port-au-Prince, Haïti',
+    address: 'Delmas 50, rue Dominique #2 bis, Port-au-Prince, Haïti',
     openingHours: 'Lun - Ven : 7h30 - 15h30',
   },
+  directorInfo: {
+    name: 'Orphe Jean Marie',
+    title: 'Directeur fondateur',
+    role: 'Professeur de Mathématiques & Sciences Physiques',
+  },
   schoolMotto: "Savoir aujourd'hui, réussir demain",
-  directorWelcome: "Bienvenue au Collège Isaac Newton. Notre mission est de forger les bâtisseurs de demain par l'exigence intellectuelle, la discipline et les technologies.",
+  directorWelcome: "Bienvenue au Collège Isaac Newton. Sous la direction d'Orphe Jean Marie, notre mission est de forger les bâtisseurs de demain par la rigueur scientifique, la maîtrise des mathématiques, la discipline civique et les technologies.",
 };
 
 const STORAGE_KEYS = {

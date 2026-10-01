@@ -164,6 +164,11 @@ export interface SiteSettings {
     address: string;
     openingHours: string;
   };
+  directorInfo?: {
+    name: string;
+    title: string;
+    role: string;
+  };
   schoolMotto: string;
   directorWelcome: string;
 }

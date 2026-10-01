@@ -600,7 +600,7 @@ export const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
             <div className="pt-3 border-t border-slate-100 flex items-start gap-2.5 text-xs text-slate-500 bg-slate-50 p-3 rounded-xl">
               <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
               <p className="leading-snug text-[11px]">
-                Pour toute convocation d’urgence ou justification d’absence, contactez le secrétariat au <strong className="text-slate-800 font-mono">+509 3721-1818</strong>.
+                Pour toute convocation d’urgence ou justification d’absence, contactez le secrétariat au <strong className="text-slate-800 font-mono">+509 3316-0934</strong> ou <strong className="text-slate-800 font-mono">+509 3721-1818</strong>.
               </p>
             </div>
 

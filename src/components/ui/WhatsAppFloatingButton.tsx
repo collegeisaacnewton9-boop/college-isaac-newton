@@ -124,7 +124,7 @@ export const WhatsAppFloatingButton: React.FC = () => {
                   </h3>
                   <div className="flex items-center gap-1 text-[11px] text-emerald-100 font-light mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse" />
-                    <span>En ligne · Secrétariat Delmas 50</span>
+                    <span>En ligne · Delmas 50, rue Dominique #2 bis</span>
                   </div>
                 </div>
               </div>
@@ -224,10 +224,13 @@ export const WhatsAppFloatingButton: React.FC = () => {
                 </a>
               </form>
 
-              <div className="mt-2 text-center">
-                <span className="text-[10px] text-slate-400">
-                  Numéro officiel : <strong className="text-slate-600 font-mono">{WHATSAPP_DISPLAY_PHONE}</strong>
-                </span>
+              <div className="mt-2 text-center text-[10px] text-slate-500 space-y-0.5">
+                <div>
+                  Lignes directes : <strong className="text-slate-700 font-mono">+509 3316-0934</strong> / <strong className="text-slate-700 font-mono">+509 3721-1818</strong>
+                </div>
+                <div className="text-slate-400">
+                  WhatsApp officiel : <strong className="text-emerald-700 font-mono">{WHATSAPP_DISPLAY_PHONE}</strong>
+                </div>
               </div>
             </div>
 

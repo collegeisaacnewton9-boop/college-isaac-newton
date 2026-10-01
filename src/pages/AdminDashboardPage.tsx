@@ -444,7 +444,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     <span>PostgreSQL 18</span>
                   </span>
                   <span>·</span>
-                  <span>Delmas 50 · collegeisaacnewton.com</span>
+                  <span>Delmas 50, rue Dominique #2 bis · collegeisaacnewton.com</span>
                 </div>
               </div>
             </div>

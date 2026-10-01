@@ -35,26 +35,25 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
             
             {/* Action 1 : Téléphone Direct */}
-            <a 
-              href={`tel:${SCHOOL_INFO.phone.replace(/\s+/g, '')}`}
-              className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-950/70 hover:bg-blue-900/40 border border-slate-800 hover:border-amber-400/40 transition-all group"
-            >
+            <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-950/70 hover:bg-blue-900/40 border border-slate-800 hover:border-amber-400/40 transition-all group">
               <div className="w-9 h-9 rounded-lg bg-amber-400/10 text-amber-400 flex items-center justify-center shrink-0 group-hover:bg-amber-400 group-hover:text-slate-950 transition-colors">
                 <Phone className="w-4 h-4" />
               </div>
               <div className="min-w-0">
                 <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                  Téléphone direct
+                  Lignes téléphoniques directes
                 </span>
-                <span className="text-xs sm:text-sm font-bold font-mono text-white group-hover:text-amber-300 transition-colors truncate block">
-                  {SCHOOL_INFO.phone}
-                </span>
+                <div className="text-xs sm:text-sm font-bold font-mono text-white group-hover:text-amber-300 transition-colors flex flex-wrap items-center gap-1">
+                  <a href="tel:+50933160934" className="hover:underline">+509 3316-0934</a>
+                  <span className="text-slate-500 font-sans font-normal">/</span>
+                  <a href="tel:+50937211818" className="hover:underline">+509 3721-1818</a>
+                </div>
               </div>
-            </a>
+            </div>
 
             {/* Action 2 : Adresse & Itinéraire */}
             <a 
-              href="https://maps.google.com/?q=Delmas+50+Haiti"
+              href="https://maps.google.com/?q=Delmas+50+rue+Dominique+2+bis+Port-au-Prince+Haiti"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-950/70 hover:bg-blue-900/40 border border-slate-800 hover:border-amber-400/40 transition-all group"
@@ -67,7 +66,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
                   Campus Principal
                 </span>
                 <span className="text-xs sm:text-sm font-semibold text-white group-hover:text-amber-300 transition-colors truncate block">
-                  {SCHOOL_INFO.address}
+                  Delmas 50, rue Dominique #2 bis, Port-au-Prince
                 </span>
               </div>
             </a>
@@ -115,13 +114,17 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
               Établissement scolaire privé d’excellence à Delmas 50. Une formation académique rigoureuse, bilingue et technologique du préscolaire au baccalauréat.
             </p>
 
-            {/* Devises officielles */}
-            <div className="space-y-1 text-xs text-slate-400 border-l-2 border-amber-400 pl-3 py-0.5">
+            {/* Devises officielles & Direction */}
+            <div className="space-y-1.5 text-xs text-slate-400 border-l-2 border-amber-400 pl-3 py-0.5">
               <p className="italic font-serif text-slate-200">
                 « Apprendre aujourd'hui pour bâtir demain »
               </p>
               <p className="text-[11px] text-slate-400">
                 Devise fondatrice : <em>« Savoir aujourd'hui, réussir demain »</em>
+              </p>
+              <p className="text-[11px] text-slate-300 pt-0.5">
+                <span className="text-amber-400 font-semibold">Directeur fondateur :</span> Orphe Jean Marie
+                <span className="block text-[10px] text-slate-400 font-light">Professeur de Mathématiques & Sciences Physiques</span>
               </p>
             </div>
 
@@ -279,21 +282,29 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
               <li className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-semibold text-white block">Delmas 50, Port-au-Prince, Haïti</span>
-                  <span className="text-[11px] text-slate-400">Campus principal · Accueil & Secrétariat</span>
+                  <span className="font-semibold text-white block">Delmas 50, rue Dominique #2 bis</span>
+                  <span className="text-[11px] text-slate-400">Port-au-Prince, Haïti · Campus principal</span>
                 </div>
               </li>
 
               <li className="flex items-start gap-2.5">
                 <Phone className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <a 
-                    href={`tel:${SCHOOL_INFO.phone.replace(/\s+/g, '')}`} 
-                    className="font-mono font-semibold text-white hover:text-amber-300 transition-colors block"
-                  >
-                    {SCHOOL_INFO.phone}
-                  </a>
-                  <span className="text-[11px] text-slate-400">Appels & renseignements administratifs</span>
+                  <div className="font-mono font-semibold text-white space-y-0.5">
+                    <a 
+                      href="tel:+50933160934" 
+                      className="hover:text-amber-300 transition-colors block"
+                    >
+                      +509 3316-0934
+                    </a>
+                    <a 
+                      href="tel:+50937211818" 
+                      className="hover:text-amber-300 transition-colors block"
+                    >
+                      +509 3721-1818
+                    </a>
+                  </div>
+                  <span className="text-[11px] text-slate-400">Secrétariat & accueil téléphonique</span>
                 </div>
               </li>
 
@@ -334,7 +345,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
             <span className="text-slate-700 hidden sm:inline">|</span>
             <span className="text-slate-400">Tous droits réservés.</span>
             <span className="text-slate-700 hidden md:inline">|</span>
-            <span className="italic text-slate-400 font-serif hidden md:inline">Delmas 50, Haïti</span>
+            <span className="italic text-slate-400 font-serif hidden md:inline">Delmas 50, rue Dominique #2 bis, Port-au-Prince, Haïti</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] sm:text-xs text-slate-400">

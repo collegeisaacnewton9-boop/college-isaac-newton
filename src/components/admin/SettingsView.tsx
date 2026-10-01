@@ -749,9 +749,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 Coordonnées Officielles du Secrétariat (Affichage Global)
               </span>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                 <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">Téléphone Principal</label>
+                  <label className="block text-slate-600 mb-0.5 text-[11px]">Téléphone 1 (Principal)</label>
                   <input
                     type="text"
                     value={cmsSettings.contactInfo.phone}
@@ -759,6 +759,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       ...cmsSettings,
                       contactInfo: { ...cmsSettings.contactInfo, phone: e.target.value }
                     })}
+                    placeholder="+509 3316-0934"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden font-mono text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 mb-0.5 text-[11px]">Téléphone 2 (Secondaire)</label>
+                  <input
+                    type="text"
+                    value={cmsSettings.contactInfo.phoneAlt || ''}
+                    onChange={(e) => setCmsSettings({
+                      ...cmsSettings,
+                      contactInfo: { ...cmsSettings.contactInfo, phoneAlt: e.target.value }
+                    })}
+                    placeholder="+509 3721-1818"
                     className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden font-mono text-xs"
                   />
                 </div>
@@ -785,6 +800,45 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       ...cmsSettings,
                       contactInfo: { ...cmsSettings.contactInfo, address: e.target.value }
                     })}
+                    placeholder="Delmas 50, rue Dominique #2 bis, Port-au-Prince, Haïti"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-slate-600 mb-0.5 text-[11px]">Directeur Fondateur</label>
+                  <input
+                    type="text"
+                    value={cmsSettings.directorInfo?.name || 'Orphe Jean Marie'}
+                    onChange={(e) => setCmsSettings({
+                      ...cmsSettings,
+                      directorInfo: {
+                        name: e.target.value,
+                        title: cmsSettings.directorInfo?.title || 'Directeur fondateur',
+                        role: cmsSettings.directorInfo?.role || 'Professeur de Mathématiques & Sciences Physiques',
+                      }
+                    })}
+                    placeholder="Orphe Jean Marie"
+                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs font-semibold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 mb-0.5 text-[11px]">Titre & Spécialité Pédagogique</label>
+                  <input
+                    type="text"
+                    value={cmsSettings.directorInfo?.role || 'Professeur de Mathématiques & Sciences Physiques'}
+                    onChange={(e) => setCmsSettings({
+                      ...cmsSettings,
+                      directorInfo: {
+                        name: cmsSettings.directorInfo?.name || 'Orphe Jean Marie',
+                        title: cmsSettings.directorInfo?.title || 'Directeur fondateur',
+                        role: e.target.value,
+                      }
+                    })}
+                    placeholder="Professeur de Mathématiques & Sciences Physiques"
                     className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs"
                   />
                 </div>

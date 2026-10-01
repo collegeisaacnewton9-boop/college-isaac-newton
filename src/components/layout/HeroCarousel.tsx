@@ -45,14 +45,14 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
     {
       id: 'campus-facade-real',
       image: SCHOOL_IMAGES.entranceFacade,
-      badge: 'Façade Principale · Delmas 50, Haïti',
+      badge: 'Campus Principal · Delmas 50, rue Dominique #2 bis',
       badgeIcon: ShieldCheck,
       title: 'Collège Isaac Newton',
-      subtitle: '« Savoir aujourd’hui, réussir demain » — Notre campus moderne et sécurisé à Delmas 50 dédié à l’excellence intellectuelle et civique de vos enfants.',
+      subtitle: '« Savoir aujourd’hui, réussir demain » — Notre campus moderne et sécurisé à Delmas 50, rue Dominique #2 bis, dédié à l’excellence intellectuelle et civique de vos enfants.',
       objectPosition: 'center 35%',
       ctaText: 'Formulaire de Préinscription',
       ctaAction: () => onNavigate('pre-registration'),
-      secondaryCtaText: 'Secrétariat (+509 3721-1818)',
+      secondaryCtaText: 'Secrétariat (+509 3316-0934 / 3721-1818)',
       secondaryCtaAction: () => onNavigate('contact'),
     },
     {

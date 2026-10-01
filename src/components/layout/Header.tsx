@@ -71,9 +71,9 @@ const NAV_ITEMS: NavItem[] = [
     children: [
       { id: 'college', label: 'Notre histoire & Fondation', subSection: 'histoire', icon: Target, description: 'L’héritage scientifique et les valeurs fondatrices' },
       { id: 'college', label: 'Mission & Vision pédagogique', subSection: 'mission', icon: Sparkles, description: 'Exigence académique et formation citoyenne' },
-      { id: 'college', label: 'Direction & Corps professoral', subSection: 'equipe', icon: Users, description: 'Une équipe enseignante qualifiée et dévouée' },
+      { id: 'college', label: 'Direction & Corps professoral', subSection: 'equipe', icon: Users, description: 'Dirigé par M. Orphe Jean Marie, Directeur fondateur' },
       { id: 'college', label: 'Infrastructures & Campus', subSection: 'infrastructures', icon: Building, description: 'Bâtiments modernes et cour sécurisée à Delmas 50' },
-      { id: 'contact', label: 'Localisation & Secrétariat', icon: MapPin, description: 'Delmas 50 · Port-au-Prince, Haïti' },
+      { id: 'contact', label: 'Localisation & Secrétariat', icon: MapPin, description: 'Delmas 50, rue Dominique #2 bis · Port-au-Prince' },
     ],
   },
   {

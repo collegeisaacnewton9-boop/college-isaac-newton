@@ -376,7 +376,7 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                 <strong>Test diagnostique :</strong> Convocation de l'élève pour le test d'aptitude.
               </li>
               <li>
-                <strong>Entretien final :</strong> Dépôt des pièces physiques et confirmation de la place.
+                <strong>Entretien final :</strong> Dépôt des pièces physiques au campus (Delmas 50, rue Dominique #2 bis) et confirmation de la place.
               </li>
             </ol>
             <div className="pt-2 flex items-center gap-1.5 text-slate-500 font-mono text-[10px] sm:text-[11px] border-t border-slate-200/60">

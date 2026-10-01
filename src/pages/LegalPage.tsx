@@ -24,11 +24,12 @@ export const LegalPage: React.FC = () => {
           </p>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Dénomination :</strong> Collège Isaac Newton (CIN)</li>
+            <li><strong>Directeur fondateur :</strong> Orphe Jean Marie (Professeur de Mathématiques & Sciences Physiques)</li>
+            <li><strong>Directeur de la publication :</strong> Orphe Jean Marie, Direction Générale</li>
             <li><strong>Devise :</strong> « Savoir aujourd'hui, réussir demain »</li>
-            <li><strong>Adresse :</strong> {SCHOOL_INFO.address}</li>
-            <li><strong>Téléphone :</strong> {SCHOOL_INFO.phone}</li>
+            <li><strong>Adresse officielle :</strong> {SCHOOL_INFO.address}</li>
+            <li><strong>Lignes téléphoniques :</strong> +509 3316-0934 / +509 3721-1818</li>
             <li><strong>Courrier électronique :</strong> {SCHOOL_INFO.email}</li>
-            <li><strong>Directeur de la publication :</strong> Direction Générale du Collège Isaac Newton</li>
           </ul>
         </section>
 
