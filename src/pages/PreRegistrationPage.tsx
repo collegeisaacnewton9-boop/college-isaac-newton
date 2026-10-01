@@ -10,10 +10,13 @@ import {
   Printer, 
   Copy, 
   Clock, 
-  Phone,
-  Calendar,
-  Sparkles,
-  Info
+  Phone, 
+  Calendar, 
+  AlertCircle,
+  Mail,
+  MapPin,
+  Briefcase,
+  BookOpen
 } from 'lucide-react';
 import { AdmissionFormData, AcademicCycle } from '../types';
 import { apiService } from '../services/api';
@@ -28,8 +31,8 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
   const [submitting, setSubmitting] = useState(false);
   const [submittedNumber, setSubmittedNumber] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Form State
   const [formData, setFormData] = useState<AdmissionFormData>({
     parentFullName: '',
     parentRelationship: 'Père',
@@ -53,17 +56,108 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     consentGiven: false,
   });
 
-  const updateField = (field: keyof AdmissionFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
+  // Real-time validation state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  // Field validation logic
+  const validateSingleField = (field: keyof AdmissionFormData, value: any): string => {
+    switch (field) {
+      case 'parentFullName': {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return 'Nom et prénom du responsable requis';
+        if (trimmed.length < 3) return 'Veuillez saisir un nom complet (minimum 3 caractères)';
+        return '';
+      }
+      case 'parentPhone': {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return 'Numéro de téléphone joignable requis';
+        const digits = trimmed.replace(/\D/g, '');
+        if (digits.length < 8) return 'Numéro de téléphone incomplet (au moins 8 chiffres, ex: +509 3700-0000)';
+        return '';
+      }
+      case 'parentEmail': {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return 'Adresse email requise pour les notifications';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmed)) return 'Format d\'email invalide (ex: contact@exemple.com)';
+        return '';
+      }
+      case 'parentAddress': {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return 'Adresse de résidence requise';
+        if (trimmed.length < 4) return 'Veuillez préciser la zone de résidence (ex: Delmas 50)';
+        return '';
+      }
+      case 'studentLastName': {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return 'Nom de famille de l\'élève requis';
+        if (trimmed.length < 2) return 'Le nom doit comporter au moins 2 lettres';
+        return '';
+      }
+      case 'studentFirstName': {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return 'Prénom(s) de l\'élève requis';
+        if (trimmed.length < 2) return 'Le prénom doit comporter au moins 2 lettres';
+        return '';
+      }
+      case 'studentBirthDate': {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return 'Date de naissance de l\'élève requise';
+        const birth = new Date(trimmed);
+        if (isNaN(birth.getTime())) return 'Date de naissance non valide';
+        const now = new Date();
+        const age = now.getFullYear() - birth.getFullYear();
+        if (age < 2 || age > 25) return 'Veuillez vérifier l\'année de naissance (âge attendu entre 2 et 25 ans)';
+        return '';
+      }
+      case 'targetLevel': {
+        const trimmed = String(value || '').trim();
+        if (!trimmed) return 'Veuillez sélectionner une classe visée';
+        return '';
+      }
+      case 'consentGiven': {
+        if (!value) return 'Vous devez certifier l\'exactitude des renseignements et autoriser le traitement';
+        return '';
+      }
+      default:
+        return '';
     }
   };
 
+  // Real-time update handler
+  const handleFieldChange = (field: keyof AdmissionFormData, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setTouched(prev => ({ ...prev, [field]: true }));
+
+    const errorMsg = validateSingleField(field, value);
+    setErrors(prev => {
+      const updated = { ...prev };
+      if (errorMsg) {
+        updated[field] = errorMsg;
+      } else {
+        delete updated[field];
+      }
+      return updated;
+    });
+  };
+
+  // OnBlur touch handler
+  const handleFieldBlur = (field: keyof AdmissionFormData) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    const errorMsg = validateSingleField(field, formData[field]);
+    setErrors(prev => {
+      const updated = { ...prev };
+      if (errorMsg) {
+        updated[field] = errorMsg;
+      } else {
+        delete updated[field];
+      }
+      return updated;
+    });
+  };
+
+  // Academic cycle handler
   const handleCycleChange = (level: string) => {
     let cycle: AcademicCycle = 'FONDAMENTAL_CYCLE_1';
     if (level.includes('Préscolaire') || level.includes('Maternelle') || level.includes('Section')) {
@@ -77,45 +171,59 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     } else if (level.includes('Secondaire') || level.includes('NS')) {
       cycle = 'SECONDAIRE';
     }
-    setFormData(prev => ({ ...prev, targetLevel: level, cycle }));
+    handleFieldChange('targetLevel', level);
+    setFormData(prev => ({ ...prev, cycle }));
   };
 
+  // Step validation
   const validateStep = (step: number): boolean => {
-    const errs: Record<string, string> = {};
+    const stepErrors: Record<string, string> = {};
+    const stepTouched: Record<string, boolean> = {};
 
     if (step === 1) {
-      if (!formData.parentFullName.trim()) errs.parentFullName = 'Nom complet requis';
-      if (!formData.parentPhone.trim()) errs.parentPhone = 'Téléphone joignable requis';
-      if (!formData.parentEmail.trim() || !formData.parentEmail.includes('@')) {
-        errs.parentEmail = 'Email valide requis';
-      }
-      if (!formData.parentAddress.trim()) errs.parentAddress = 'Adresse requise';
+      // Step 1: Responsable Légal
+      const fields: (keyof AdmissionFormData)[] = ['parentFullName', 'parentPhone', 'parentEmail', 'parentAddress'];
+      fields.forEach(f => {
+        stepTouched[f] = true;
+        const err = validateSingleField(f, formData[f]);
+        if (err) stepErrors[f] = err;
+      });
     } else if (step === 2) {
-      if (!formData.studentLastName.trim()) errs.studentLastName = 'Nom de famille requis';
-      if (!formData.studentFirstName.trim()) errs.studentFirstName = 'Prénom requis';
-      if (!formData.studentBirthDate.trim()) errs.studentBirthDate = 'Date de naissance requise';
+      // Step 2: Informations de l'Élève
+      const fields: (keyof AdmissionFormData)[] = ['studentLastName', 'studentFirstName', 'studentBirthDate'];
+      fields.forEach(f => {
+        stepTouched[f] = true;
+        const err = validateSingleField(f, formData[f]);
+        if (err) stepErrors[f] = err;
+      });
     } else if (step === 3) {
-      if (!formData.targetLevel.trim()) errs.targetLevel = 'Sélectionnez un niveau';
+      // Step 3: Niveau Scolaire & Classe
+      stepTouched.targetLevel = true;
+      const err = validateSingleField('targetLevel', formData.targetLevel);
+      if (err) stepErrors.targetLevel = err;
     } else if (step === 4) {
-      if (!formData.consentGiven) {
-        errs.consentGiven = 'Veuillez certifier l’exactitude et accepter la politique de confidentialité';
-      }
+      // Step 4: Consentement & Pièces
+      stepTouched.consentGiven = true;
+      const err = validateSingleField('consentGiven', formData.consentGiven);
+      if (err) stepErrors.consentGiven = err;
     }
 
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+    setTouched(prev => ({ ...prev, ...stepTouched }));
+    setErrors(prev => ({ ...prev, ...stepErrors }));
+
+    return Object.keys(stepErrors).length === 0;
   };
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
       setCurrentStep(prev => prev + 1);
-      window.scrollTo({ top: 80, behavior: 'smooth' });
+      window.scrollTo({ top: 60, behavior: 'smooth' });
     }
   };
 
   const handlePrev = () => {
     setCurrentStep(prev => prev - 1);
-    window.scrollTo({ top: 80, behavior: 'smooth' });
+    window.scrollTo({ top: 60, behavior: 'smooth' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -141,36 +249,50 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     }
   };
 
-  // SUCCESS CONFIRMATION SCREEN - Compact & Clear
+  // Helper for input styling with real-time feedback
+  const getInputClasses = (field: keyof AdmissionFormData) => {
+    const hasError = touched[field] && errors[field];
+    const isValid = touched[field] && !errors[field] && Boolean(formData[field]);
+
+    return `w-full px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border text-xs sm:text-sm outline-none transition-all ${
+      hasError 
+        ? 'border-rose-400 bg-rose-50/30 text-rose-950 focus:border-rose-600 focus:ring-1 focus:ring-rose-400' 
+        : isValid
+        ? 'border-emerald-300 bg-emerald-50/15 text-slate-900 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-400'
+        : 'border-slate-300 bg-slate-50/60 text-slate-900 focus:bg-white focus:border-blue-900 focus:ring-1 focus:ring-blue-900'
+    }`;
+  };
+
+  // SUCCESS CONFIRMATION SCREEN
   if (submittedNumber) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 sm:py-10 animate-in fade-in duration-200">
-        <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg border border-slate-200/80 text-center space-y-5">
-          <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
-            <CheckCircle2 className="w-7 h-7" />
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 py-6 sm:py-10 animate-fade-in">
+        <div className="bg-white rounded-2xl p-4 sm:p-7 shadow-lg border border-slate-200/90 text-center space-y-4">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+            <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
 
           <div className="space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-3 py-0.5 rounded-full border border-emerald-200">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
               Dossier enregistré avec succès
             </span>
-            <h1 className="font-serif text-2xl font-bold text-slate-900 mt-2">
+            <h1 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 mt-1.5">
               Demande de Préinscription Transmise
             </h1>
-            <p className="text-xs text-slate-600 max-w-md mx-auto">
-              Le dossier pour <strong className="text-slate-800">{formData.studentFirstName} {formData.studentLastName}</strong> ({formData.targetLevel}) a bien été réceptionné par le secrétariat.
+            <p className="text-[11px] sm:text-xs text-slate-600 max-w-md mx-auto">
+              Le dossier pour <strong className="text-slate-900">{formData.studentFirstName} {formData.studentLastName}</strong> ({formData.targetLevel}) a bien été réceptionné par le secrétariat.
             </p>
           </div>
 
           {/* Dossier Code Box */}
-          <div className="p-4 sm:p-5 rounded-xl bg-slate-900 text-white max-w-sm mx-auto">
-            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Référence unique de dossier</p>
-            <div className="font-mono text-2xl font-bold tracking-wider text-amber-400 mt-0.5">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-slate-900 text-white max-w-sm mx-auto">
+            <p className="text-[9.5px] text-slate-400 uppercase tracking-wider font-semibold">Référence unique de dossier</p>
+            <div className="font-mono text-xl sm:text-2xl font-bold tracking-wider text-amber-400 mt-0.5">
               {submittedNumber}
             </div>
             <button
               onClick={copyToClipboard}
-              className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-slate-200 transition-colors cursor-pointer"
+              className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-slate-200 transition-colors cursor-pointer"
             >
               <Copy className="w-3.5 h-3.5" />
               <span>{copied ? 'Copié !' : 'Copier la référence'}</span>
@@ -178,33 +300,33 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
           </div>
 
           {/* Next steps card */}
-          <div className="text-left bg-slate-50 rounded-xl p-4 border border-slate-200/70 space-y-2 text-xs text-slate-700">
+          <div className="text-left bg-slate-50 rounded-xl p-3 sm:p-4 border border-slate-200/80 space-y-1.5 text-xs text-slate-700">
             <h3 className="font-serif font-bold text-xs text-slate-900 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-blue-900" />
-              <span>Étapes suivantes :</span>
+              <span>Étapes suivantes de l'admission :</span>
             </h3>
-            <ol className="list-decimal pl-4 space-y-1 leading-relaxed text-slate-600">
+            <ol className="list-decimal pl-4 space-y-1 leading-relaxed text-slate-600 text-[11px] sm:text-xs">
               <li>
-                <strong>Étude sous 48-72h :</strong> Le secrétariat examine les informations fournies.
+                <strong>Étude sous 48-72h :</strong> Examen de l'admissibilité administrative.
               </li>
               <li>
-                <strong>Convocation :</strong> Rendez-vous pour le test diagnostique (français & mathématiques).
+                <strong>Test diagnostique :</strong> Convocation de l'élève pour le test d'aptitude.
               </li>
               <li>
-                <strong>Entretien final :</strong> Dépôt des pièces physiques et validation d'inscription.
+                <strong>Entretien final :</strong> Dépôt des pièces physiques et confirmation de la place.
               </li>
             </ol>
-            <div className="pt-2 flex items-center gap-2 text-slate-500 font-mono text-[11px] border-t border-slate-200/60">
+            <div className="pt-2 flex items-center gap-1.5 text-slate-500 font-mono text-[10px] sm:text-[11px] border-t border-slate-200/60">
               <Phone className="w-3 h-3 text-slate-400" />
-              <span>Ligne directe secrétariat : {SCHOOL_INFO.phone}</span>
+              <span>Secrétariat général : {SCHOOL_INFO.phone}</span>
             </div>
           </div>
 
           {/* Action buttons */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+          <div className="pt-1 flex flex-col sm:flex-row items-center justify-center gap-2">
             <button
               onClick={() => window.print()}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Imprimer le récépissé</span>
@@ -212,7 +334,7 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
 
             <button
               onClick={() => onNavigate('home')}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-5 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold transition-colors cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white text-xs font-semibold transition-colors cursor-pointer"
             >
               <span>Retour à l'accueil</span>
             </button>
@@ -222,39 +344,39 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     );
   }
 
-  // WIZARD FORM - Compact, Dense & Ergonomic Rhythm
+  // WIZARD FORM - Clean mobile layout with reduced margins & natural hierarchy
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3.5 sm:py-5 space-y-3 sm:space-y-3.5">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-4 space-y-2 sm:space-y-3">
       
       {/* Header - Compact */}
       <div className="text-center max-w-xl mx-auto space-y-0.5">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-blue-900 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+        <span className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-widest text-blue-900 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
           Admissions Officielles {SCHOOL_INFO.currentYear}
         </span>
-        <h1 className="font-serif text-xl sm:text-2xl font-bold text-slate-900">
+        <h1 className="font-serif text-lg sm:text-2xl font-bold text-slate-900 leading-tight">
           Préinscription en Ligne
         </h1>
-        <p className="text-[11px] sm:text-xs text-slate-600">
-          Processus rapide en 4 étapes pour réserver la place de votre enfant.
+        <p className="text-[10.5px] sm:text-xs text-slate-600">
+          Formulaire officiel en 4 étapes pour réserver la place de votre enfant.
         </p>
       </div>
 
-      {/* Stepper Progress Bar - Compact & Responsive */}
-      <div className="bg-white rounded-xl p-2 sm:p-2.5 shadow-2xs border border-slate-200/80">
+      {/* Stepper Progress Bar - Responsable Légal EN PREMIER, puis Élève */}
+      <div className="bg-white rounded-xl p-1.5 sm:p-2.5 shadow-2xs border border-slate-200/90">
         <div className="grid grid-cols-4 gap-1 text-center text-xs">
           {[
-            { step: 1, label: 'Parent / Tuteur', icon: User },
-            { step: 2, label: 'Élève', icon: GraduationCap },
-            { step: 3, label: 'Niveau & Classe', icon: FileText },
-            { step: 4, label: 'Pièces & Accord', icon: ShieldCheck },
+            { step: 1, label: '1. Responsable Légal', shortLabel: 'Parent', icon: User },
+            { step: 2, label: '2. Élève Candidat', shortLabel: 'Élève', icon: GraduationCap },
+            { step: 3, label: '3. Niveau & Classe', shortLabel: 'Classe', icon: FileText },
+            { step: 4, label: '4. Pièces & Accord', shortLabel: 'Accord', icon: ShieldCheck },
           ].map((item) => {
             const isCompleted = currentStep > item.step;
             const isCurrent = currentStep === item.step;
             const Icon = item.icon;
 
             return (
-              <div key={item.step} className="flex flex-col items-center">
-                <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[11px] font-bold transition-all ${
+              <div key={item.step} className="flex flex-col items-center py-0.5">
+                <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-bold transition-all ${
                   isCompleted 
                     ? 'bg-emerald-600 text-white' 
                     : isCurrent 
@@ -263,10 +385,11 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                 }`}>
                   {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Icon className="w-3 h-3" />}
                 </div>
-                <span className={`mt-0.5 hidden sm:block text-[10px] sm:text-[11px] font-semibold truncate ${
-                  isCurrent ? 'text-blue-900' : 'text-slate-500'
+                <span className={`mt-0.5 text-[9px] sm:text-[10.5px] font-semibold truncate max-w-full px-0.5 ${
+                  isCurrent ? 'text-blue-900 font-bold' : 'text-slate-500'
                 }`}>
-                  {item.label}
+                  <span className="hidden sm:inline">{item.label}</span>
+                  <span className="sm:hidden">{item.shortLabel}</span>
                 </span>
               </div>
             );
@@ -275,214 +398,306 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
       </div>
 
       {/* Form Card - Dense, Ergonomic Spacing */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-3.5 sm:p-5 shadow-xs border border-slate-200/80">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-3 sm:p-4.5 shadow-2xs border border-slate-200/90">
         
-        {/* STEP 1: PARENT / TUTEUR */}
+        {/* =========================================================================
+            SECTION 1 : INFORMATIONS DU RESPONSABLE LÉGAL (PARENT / TUTEUR)
+        ========================================================================= */}
         {currentStep === 1 && (
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3 animate-fade-in">
             <div className="border-b border-slate-100 pb-2">
-              <h2 className="font-serif text-base font-bold text-slate-900">
-                1. Responsable Légal
-              </h2>
-              <p className="text-[11px] text-slate-500">
-                Coordonnées du tuteur qui recevra les notifications administratives.
+              <div className="flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-900 text-[11px] font-bold flex items-center justify-center">1</span>
+                <h2 className="font-serif text-sm sm:text-base font-bold text-slate-900">
+                  Responsable Légal (Parent / Tuteur)
+                </h2>
+              </div>
+              <p className="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5">
+                Coordonnées du souscripteur légal qui recevra la convocation et les notifications.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
-              <div className="sm:col-span-2 lg:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nom et prénom du responsable *
-                </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
+              
+              {/* Nom complet du responsable */}
+              <div className="sm:col-span-2">
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 flex items-center gap-1">
+                    <User className="w-3 h-3 text-blue-900" />
+                    <span>Nom et prénom du responsable *</span>
+                  </label>
+                  {touched.parentFullName && !errors.parentFullName && formData.parentFullName && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={formData.parentFullName}
-                  onChange={(e) => updateField('parentFullName', e.target.value)}
+                  onChange={(e) => handleFieldChange('parentFullName', e.target.value)}
+                  onBlur={() => handleFieldBlur('parentFullName')}
                   placeholder="Ex : Jean-Claude Baptiste"
-                  className={`w-full px-3 py-2 rounded-lg border text-xs sm:text-sm outline-none transition-all ${
-                    errors.parentFullName ? 'border-red-400 bg-red-50/30' : 'border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900'
-                  }`}
+                  className={getInputClasses('parentFullName')}
                 />
-                {errors.parentFullName && (
-                  <p className="text-[10px] text-red-600 mt-0.5">{errors.parentFullName}</p>
+                {touched.parentFullName && errors.parentFullName && (
+                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.parentFullName}</span>
+                  </p>
                 )}
               </div>
 
+              {/* Lien de parenté */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-0.5">
                   Lien de parenté *
                 </label>
                 <select
                   value={formData.parentRelationship}
-                  onChange={(e) => updateField('parentRelationship', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 focus:ring-1 focus:ring-blue-900 outline-none bg-white cursor-pointer"
+                  onChange={(e) => handleFieldChange('parentRelationship', e.target.value)}
+                  className="w-full px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 focus:ring-1 focus:ring-blue-900 outline-none bg-white cursor-pointer"
                 >
                   <option value="Père">Père</option>
                   <option value="Mère">Mère</option>
                   <option value="Tuteur légal">Tuteur légal</option>
-                  <option value="Autre proche">Autre proche</option>
+                  <option value="Autre proche">Autre proche / Mandataire</option>
                 </select>
               </div>
 
+              {/* Téléphone joignable */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Téléphone joignable *
-                </label>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 flex items-center gap-1">
+                    <Phone className="w-3 h-3 text-blue-900" />
+                    <span>Téléphone joignable *</span>
+                  </label>
+                  {touched.parentPhone && !errors.parentPhone && formData.parentPhone && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    </span>
+                  )}
+                </div>
                 <input
                   type="tel"
                   value={formData.parentPhone}
-                  onChange={(e) => updateField('parentPhone', e.target.value)}
+                  onChange={(e) => handleFieldChange('parentPhone', e.target.value)}
+                  onBlur={() => handleFieldBlur('parentPhone')}
                   placeholder="+509 3700-0000"
-                  className={`w-full px-3 py-2 rounded-lg border text-xs sm:text-sm outline-none transition-all ${
-                    errors.parentPhone ? 'border-red-400 bg-red-50/30' : 'border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900'
-                  }`}
+                  className={getInputClasses('parentPhone')}
                 />
-                {errors.parentPhone && (
-                  <p className="text-[10px] text-red-600 mt-0.5">{errors.parentPhone}</p>
+                {touched.parentPhone && errors.parentPhone && (
+                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.parentPhone}</span>
+                  </p>
                 )}
               </div>
 
+              {/* Adresse e-mail */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Adresse e-mail valide *
-                </label>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 flex items-center gap-1">
+                    <Mail className="w-3 h-3 text-blue-900" />
+                    <span>Adresse e-mail valide *</span>
+                  </label>
+                  {touched.parentEmail && !errors.parentEmail && formData.parentEmail && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    </span>
+                  )}
+                </div>
                 <input
                   type="email"
                   value={formData.parentEmail}
-                  onChange={(e) => updateField('parentEmail', e.target.value)}
-                  placeholder="parent@example.com"
-                  className={`w-full px-3 py-2 rounded-lg border text-xs sm:text-sm outline-none transition-all ${
-                    errors.parentEmail ? 'border-red-400 bg-red-50/30' : 'border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900'
-                  }`}
+                  onChange={(e) => handleFieldChange('parentEmail', e.target.value)}
+                  onBlur={() => handleFieldBlur('parentEmail')}
+                  placeholder="parent@exemple.com"
+                  className={getInputClasses('parentEmail')}
                 />
-                {errors.parentEmail && (
-                  <p className="text-[10px] text-red-600 mt-0.5">{errors.parentEmail}</p>
+                {touched.parentEmail && errors.parentEmail && (
+                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.parentEmail}</span>
+                  </p>
                 )}
               </div>
 
+              {/* Profession du responsable */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Profession du responsable
+                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-0.5 flex items-center gap-1">
+                  <Briefcase className="w-3 h-3 text-slate-400" />
+                  <span>Profession (facultatif)</span>
                 </label>
                 <input
                   type="text"
                   value={formData.parentOccupation}
-                  onChange={(e) => updateField('parentOccupation', e.target.value)}
-                  placeholder="Ex : Enseignant, Cadre, Artisan"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none"
+                  onChange={(e) => handleFieldChange('parentOccupation', e.target.value)}
+                  placeholder="Ex : Enseignant, Cadre, Artisan..."
+                  className="w-full px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-slate-300 bg-slate-50/60 text-xs sm:text-sm focus:bg-white focus:border-blue-900 outline-none"
                 />
               </div>
 
+              {/* Adresse de résidence */}
               <div className="sm:col-span-2 lg:col-span-3">
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Adresse de résidence *
-                </label>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 flex items-center gap-1">
+                    <MapPin className="w-3 h-3 text-blue-900" />
+                    <span>Adresse de résidence *</span>
+                  </label>
+                  {touched.parentAddress && !errors.parentAddress && formData.parentAddress && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={formData.parentAddress}
-                  onChange={(e) => updateField('parentAddress', e.target.value)}
-                  placeholder="Numéro, rue, quartier, commune (Ex : Delmas 50, Delmas 33...)"
-                  className={`w-full px-3 py-2 rounded-lg border text-xs sm:text-sm outline-none transition-all ${
-                    errors.parentAddress ? 'border-red-400 bg-red-50/30' : 'border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900'
-                  }`}
+                  onChange={(e) => handleFieldChange('parentAddress', e.target.value)}
+                  onBlur={() => handleFieldBlur('parentAddress')}
+                  placeholder="Numéro, rue, quartier, commune (Ex : Delmas 50, Delmas 33, Tabarre...)"
+                  className={getInputClasses('parentAddress')}
                 />
-                {errors.parentAddress && (
-                  <p className="text-[10px] text-red-600 mt-0.5">{errors.parentAddress}</p>
+                {touched.parentAddress && errors.parentAddress && (
+                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.parentAddress}</span>
+                  </p>
                 )}
               </div>
+
             </div>
           </div>
         )}
 
-        {/* STEP 2: ÉLÈVE */}
+        {/* =========================================================================
+            SECTION 2 : INFORMATIONS DE L'ÉLÈVE CANDIDAT
+        ========================================================================= */}
         {currentStep === 2 && (
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3 animate-fade-in">
             <div className="border-b border-slate-100 pb-2">
-              <h2 className="font-serif text-base font-bold text-slate-900">
-                2. Informations de l’Élève
-              </h2>
-              <p className="text-[11px] text-slate-500">
-                État civil officiel de l'enfant candidat à l'admission.
+              <div className="flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-900 text-[11px] font-bold flex items-center justify-center">2</span>
+                <h2 className="font-serif text-sm sm:text-base font-bold text-slate-900">
+                  Informations de l’Élève Candidat
+                </h2>
+              </div>
+              <p className="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5">
+                Identité officielle et état civil de l'enfant à inscrire.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
+              
+              {/* Nom de famille */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nom de famille de l'élève *
-                </label>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700">
+                    Nom de famille *
+                  </label>
+                  {touched.studentLastName && !errors.studentLastName && formData.studentLastName && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={formData.studentLastName}
-                  onChange={(e) => updateField('studentLastName', e.target.value)}
+                  onChange={(e) => handleFieldChange('studentLastName', e.target.value)}
+                  onBlur={() => handleFieldBlur('studentLastName')}
                   placeholder="Ex : Baptiste"
-                  className={`w-full px-3 py-1.5 rounded-lg border text-xs sm:text-sm outline-none transition-all ${
-                    errors.studentLastName ? 'border-red-400 bg-red-50/30' : 'border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900'
-                  }`}
+                  className={getInputClasses('studentLastName')}
                 />
-                {errors.studentLastName && (
-                  <p className="text-[10px] text-red-600 mt-0.5">{errors.studentLastName}</p>
+                {touched.studentLastName && errors.studentLastName && (
+                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.studentLastName}</span>
+                  </p>
                 )}
               </div>
 
+              {/* Prénom(s) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Prénom(s) de l'élève *
-                </label>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700">
+                    Prénom(s) *
+                  </label>
+                  {touched.studentFirstName && !errors.studentFirstName && formData.studentFirstName && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    </span>
+                  )}
+                </div>
                 <input
                   type="text"
                   value={formData.studentFirstName}
-                  onChange={(e) => updateField('studentFirstName', e.target.value)}
+                  onChange={(e) => handleFieldChange('studentFirstName', e.target.value)}
+                  onBlur={() => handleFieldBlur('studentFirstName')}
                   placeholder="Ex : Alexandre"
-                  className={`w-full px-3 py-1.5 rounded-lg border text-xs sm:text-sm outline-none transition-all ${
-                    errors.studentFirstName ? 'border-red-400 bg-red-50/30' : 'border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900'
-                  }`}
+                  className={getInputClasses('studentFirstName')}
                 />
-                {errors.studentFirstName && (
-                  <p className="text-[10px] text-red-600 mt-0.5">{errors.studentFirstName}</p>
+                {touched.studentFirstName && errors.studentFirstName && (
+                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.studentFirstName}</span>
+                  </p>
                 )}
               </div>
 
+              {/* Date de naissance */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Date de naissance *
-                </label>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-blue-900" />
+                    <span>Date de naissance *</span>
+                  </label>
+                  {touched.studentBirthDate && !errors.studentBirthDate && formData.studentBirthDate && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    </span>
+                  )}
+                </div>
                 <input
                   type="date"
                   value={formData.studentBirthDate}
-                  onChange={(e) => updateField('studentBirthDate', e.target.value)}
-                  className={`w-full px-3 py-1.5 rounded-lg border text-xs sm:text-sm outline-none transition-all ${
-                    errors.studentBirthDate ? 'border-red-400 bg-red-50/30' : 'border-slate-300 focus:border-blue-900 focus:ring-1 focus:ring-blue-900'
-                  }`}
+                  onChange={(e) => handleFieldChange('studentBirthDate', e.target.value)}
+                  onBlur={() => handleFieldBlur('studentBirthDate')}
+                  className={getInputClasses('studentBirthDate')}
                 />
-                {errors.studentBirthDate && (
-                  <p className="text-[10px] text-red-600 mt-0.5">{errors.studentBirthDate}</p>
+                {touched.studentBirthDate && errors.studentBirthDate && (
+                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.studentBirthDate}</span>
+                  </p>
                 )}
               </div>
 
+              {/* Sexe */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-0.5">
                   Sexe *
                 </label>
-                <div className="grid grid-cols-2 gap-2 mt-0.5">
+                <div className="grid grid-cols-2 gap-1.5 mt-0.5">
                   <button
                     type="button"
-                    onClick={() => updateField('studentGender', 'M')}
-                    className={`py-1.5 px-3 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+                    onClick={() => handleFieldChange('studentGender', 'M')}
+                    className={`py-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
                       formData.studentGender === 'M' 
-                        ? 'border-blue-900 bg-blue-900 text-white' 
-                        : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                        ? 'border-blue-900 bg-blue-900 text-white shadow-2xs' 
+                        : 'border-slate-200 text-slate-700 hover:bg-slate-50 bg-white'
                     }`}
                   >
                     Masculin (Garçon)
                   </button>
                   <button
                     type="button"
-                    onClick={() => updateField('studentGender', 'F')}
-                    className={`py-1.5 px-3 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+                    onClick={() => handleFieldChange('studentGender', 'F')}
+                    className={`py-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
                       formData.studentGender === 'F' 
-                        ? 'border-blue-900 bg-blue-900 text-white' 
-                        : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                        ? 'border-blue-900 bg-blue-900 text-white shadow-2xs' 
+                        : 'border-slate-200 text-slate-700 hover:bg-slate-50 bg-white'
                     }`}
                   >
                     Féminin (Fille)
@@ -490,36 +705,44 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                 </div>
               </div>
 
+              {/* Établissement précédent */}
               <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Établissement scolaire précédent (si applicable)
+                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-0.5 flex items-center gap-1">
+                  <BookOpen className="w-3 h-3 text-slate-400" />
+                  <span>Établissement scolaire précédent (si applicable)</span>
                 </label>
                 <input
                   type="text"
                   value={formData.previousSchool}
-                  onChange={(e) => updateField('previousSchool', e.target.value)}
-                  placeholder="Nom de la précédente école fréquentée"
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none"
+                  onChange={(e) => handleFieldChange('previousSchool', e.target.value)}
+                  placeholder="Nom de l'école précédente (ex : Institution Saint-Louis...)"
+                  className="w-full px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-slate-300 bg-slate-50/60 text-xs sm:text-sm focus:bg-white focus:border-blue-900 outline-none"
                 />
               </div>
+
             </div>
           </div>
         )}
 
-        {/* STEP 3: NIVEAU & CLASSE - Compact Responsive Selector */}
+        {/* =========================================================================
+            SECTION 3 : NIVEAU SCOLAIRE & CLASSE VISÉE
+        ========================================================================= */}
         {currentStep === 3 && (
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3 animate-fade-in">
             <div className="border-b border-slate-100 pb-2">
-              <h2 className="font-serif text-base font-bold text-slate-900">
-                3. Niveau Scolaire Souhaité
-              </h2>
-              <p className="text-[11px] text-slate-500">
-                Sélectionnez la classe visée pour l'année {formData.schoolYear}.
+              <div className="flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-900 text-[11px] font-bold flex items-center justify-center">3</span>
+                <h2 className="font-serif text-sm sm:text-base font-bold text-slate-900">
+                  Niveau Scolaire & Classe Souhaitée
+                </h2>
+              </div>
+              <p className="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5">
+                Sélectionnez le cycle et la classe pour l'année académique {formData.schoolYear}.
               </p>
             </div>
 
-            <div className="space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="space-y-2 sm:space-y-2.5">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-2.5">
                 {[
                   { 
                     group: 'Préscolaire (3-5 ans)', 
@@ -534,18 +757,18 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                     levels: ['7ème Année Fondamentale (7e AF)', '8ème AF', '9ème AF (Examens d’État)', 'Secondaire 1 (NS1)', 'Secondaire 2 (NS2)', 'Secondaire 3 (NS3)', 'Secondaire 4 (NS4 Bac)'] 
                   },
                 ].map((cat, idx) => (
-                  <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                    <p className="text-[11px] font-bold text-blue-900 uppercase tracking-wider">{cat.group}</p>
-                    <div className="space-y-1">
+                  <div key={idx} className="p-2 sm:p-2.5 rounded-xl bg-slate-50 border border-slate-200/90 space-y-1">
+                    <p className="text-[10.5px] font-bold text-blue-900 uppercase tracking-wider">{cat.group}</p>
+                    <div className="space-y-0.5">
                       {cat.levels.map((lvl) => (
                         <button
                           key={lvl}
                           type="button"
                           onClick={() => handleCycleChange(lvl)}
-                          className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                          className={`w-full text-left px-2 py-1 sm:py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
                             formData.targetLevel === lvl
-                              ? 'bg-blue-900 text-white font-bold shadow-xs'
-                              : 'text-slate-700 hover:bg-white bg-white/60'
+                              ? 'bg-blue-900 text-white font-bold shadow-2xs'
+                              : 'text-slate-700 hover:bg-white bg-white/70'
                           }`}
                         >
                           {lvl}
@@ -557,12 +780,12 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
               </div>
 
               {/* Selected summary pill */}
-              <div className="p-3 rounded-xl bg-blue-50/80 border border-blue-200/80 flex items-center justify-between text-xs">
+              <div className="p-2.5 rounded-xl bg-blue-50/80 border border-blue-200/80 flex items-center justify-between text-xs flex-wrap gap-1.5">
                 <div>
                   <span className="text-slate-500 font-medium">Classe sélectionnée : </span>
                   <span className="font-bold text-blue-950">{formData.targetLevel}</span>
                 </div>
-                <span className="text-[11px] font-mono text-blue-800 bg-white px-2 py-0.5 rounded border border-blue-200 font-semibold">
+                <span className="text-[10.5px] font-mono text-blue-900 bg-white px-2 py-0.5 rounded border border-blue-200 font-semibold">
                   Cycle : {formData.cycle}
                 </span>
               </div>
@@ -570,102 +793,115 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
           </div>
         )}
 
-        {/* STEP 4: PIÈCES & ACCORD */}
+        {/* =========================================================================
+            SECTION 4 : PIÈCES JUSTIFICATIVES & ENGAGEMENT
+        ========================================================================= */}
         {currentStep === 4 && (
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3 animate-fade-in">
             <div className="border-b border-slate-100 pb-2">
-              <h2 className="font-serif text-base font-bold text-slate-900">
-                4. Pièces Justificatives & Engagement
-              </h2>
-              <p className="text-[11px] text-slate-500">
-                Vérifiez les pièces à fournir lors du dépôt physique au secrétariat.
+              <div className="flex items-center gap-1.5">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-900 text-[11px] font-bold flex items-center justify-center">4</span>
+                <h2 className="font-serif text-sm sm:text-base font-bold text-slate-900">
+                  Pièces Justificatives & Engagement
+                </h2>
+              </div>
+              <p className="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5">
+                Cochez les pièces physiques que vous apporterez lors du rendez-vous d'admission.
               </p>
             </div>
 
-            <div className="space-y-2.5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <label className="flex items-center gap-2.5 p-2 rounded-lg border border-slate-200/80 hover:bg-slate-50 cursor-pointer">
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-xs">
+                <label className="flex items-center gap-2 p-2 rounded-lg border border-slate-200/90 hover:bg-slate-50 bg-white cursor-pointer transition-colors">
                   <input
                     type="checkbox"
                     checked={formData.hasBirthCert}
-                    onChange={(e) => updateField('hasBirthCert', e.target.checked)}
-                    className="w-4 h-4 text-blue-900 rounded"
+                    onChange={(e) => handleFieldChange('hasBirthCert', e.target.checked)}
+                    className="w-4 h-4 text-blue-900 rounded cursor-pointer"
                   />
-                  <span className="text-[11px] sm:text-xs">Extrait d'acte de naissance original ou copie légalisée</span>
+                  <span className="text-[11px] sm:text-xs text-slate-800">Extrait d'acte de naissance original ou copie conforme</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 p-2 rounded-lg border border-slate-200/80 hover:bg-slate-50 cursor-pointer">
+                <label className="flex items-center gap-2 p-2 rounded-lg border border-slate-200/90 hover:bg-slate-50 bg-white cursor-pointer transition-colors">
                   <input
                     type="checkbox"
                     checked={formData.hasReportCards}
-                    onChange={(e) => updateField('hasReportCards', e.target.checked)}
-                    className="w-4 h-4 text-blue-900 rounded"
+                    onChange={(e) => handleFieldChange('hasReportCards', e.target.checked)}
+                    className="w-4 h-4 text-blue-900 rounded cursor-pointer"
                   />
-                  <span className="text-[11px] sm:text-xs">Bulletins scolaires des 2 dernières années</span>
+                  <span className="text-[11px] sm:text-xs text-slate-800">Bulletins scolaires des 2 dernières années</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 p-2 rounded-lg border border-slate-200/80 hover:bg-slate-50 cursor-pointer">
+                <label className="flex items-center gap-2 p-2 rounded-lg border border-slate-200/90 hover:bg-slate-50 bg-white cursor-pointer transition-colors">
                   <input
                     type="checkbox"
                     checked={formData.hasPassCert}
-                    onChange={(e) => updateField('hasPassCert', e.target.checked)}
-                    className="w-4 h-4 text-blue-900 rounded"
+                    onChange={(e) => handleFieldChange('hasPassCert', e.target.checked)}
+                    className="w-4 h-4 text-blue-900 rounded cursor-pointer"
                   />
-                  <span className="text-[11px] sm:text-xs">Certificat de passage officiel (si classe supérieure)</span>
+                  <span className="text-[11px] sm:text-xs text-slate-800">Certificat de passage officiel (si classe supérieure)</span>
                 </label>
 
-                <label className="flex items-center gap-2.5 p-2 rounded-lg border border-slate-200/80 hover:bg-slate-50 cursor-pointer">
+                <label className="flex items-center gap-2 p-2 rounded-lg border border-slate-200/90 hover:bg-slate-50 bg-white cursor-pointer transition-colors">
                   <input
                     type="checkbox"
                     checked={formData.hasIdPhotos}
-                    onChange={(e) => updateField('hasIdPhotos', e.target.checked)}
-                    className="w-4 h-4 text-blue-900 rounded"
+                    onChange={(e) => handleFieldChange('hasIdPhotos', e.target.checked)}
+                    className="w-4 h-4 text-blue-900 rounded cursor-pointer"
                   />
-                  <span className="text-[11px] sm:text-xs">4 photos d'identité récentes</span>
+                  <span className="text-[11px] sm:text-xs text-slate-800">4 photos d'identité récentes</span>
                 </label>
               </div>
 
+              {/* Remarques particulières */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Observations particulières (facultatif)
+                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-0.5">
+                  Observations particulières ou besoins spécifiques (facultatif)
                 </label>
                 <textarea
                   rows={2}
                   value={formData.specialNotes}
-                  onChange={(e) => updateField('specialNotes', e.target.value)}
-                  placeholder="Besoins spécifiques, centres d'intérêt, remarques pour l'équipe pédagogique..."
-                  className="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none"
+                  onChange={(e) => handleFieldChange('specialNotes', e.target.value)}
+                  placeholder="Remarques éventuelles pour l'équipe pédagogique (centres d'intérêt, particularités médicales...)"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-50/60 text-xs sm:text-sm focus:bg-white focus:border-blue-900 outline-none"
                 />
               </div>
 
-              {/* Consent Box */}
-              <div className="p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80">
+              {/* Consent Box with Real-time Error Display */}
+              <div className={`p-2.5 rounded-xl border transition-all ${
+                touched.consentGiven && errors.consentGiven 
+                  ? 'bg-rose-50/60 border-rose-300' 
+                  : 'bg-amber-50/60 border-amber-200/90'
+              }`}>
                 <label className="flex items-start gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.consentGiven}
-                    onChange={(e) => updateField('consentGiven', e.target.checked)}
-                    className="w-4 h-4 text-blue-900 rounded mt-0.5"
+                    onChange={(e) => handleFieldChange('consentGiven', e.target.checked)}
+                    className="w-4 h-4 text-blue-900 rounded mt-0.5 cursor-pointer"
                   />
-                  <span className="text-[11px] text-slate-800 leading-tight">
-                    Je certifie l'exactitude des renseignements et j'autorise le Collège Isaac Newton à traiter ces données pour le suivi du dossier d'admission. *
+                  <span className="text-[10.5px] sm:text-[11px] text-slate-800 leading-tight">
+                    Je certifie sur l'honneur l'exactitude des renseignements fournis ci-dessus et j'autorise la direction du <strong>Collège Isaac Newton</strong> à traiter ces données pour le suivi du dossier d'admission. *
                   </span>
                 </label>
-                {errors.consentGiven && (
-                  <p className="text-[10px] text-red-600 font-semibold pl-6 mt-1">{errors.consentGiven}</p>
+                {touched.consentGiven && errors.consentGiven && (
+                  <p className="text-[10.5px] text-rose-600 font-semibold pl-6 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.consentGiven}</span>
+                  </p>
                 )}
               </div>
             </div>
           </div>
         )}
 
-        {/* WIZARD NAVIGATION CONTROLS - Compact */}
-        <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+        {/* WIZARD NAVIGATION CONTROLS - Compact with reduced mobile margins */}
+        <div className="pt-2.5 mt-2.5 border-t border-slate-100 flex items-center justify-between gap-2">
           {currentStep > 1 ? (
             <button
               type="button"
               onClick={handlePrev}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-slate-300 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Précédent</span>
@@ -678,7 +914,7 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
             <button
               type="button"
               onClick={handleNext}
-              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold transition-colors shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-lg bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold transition-all shadow-2xs hover:shadow-xs active:scale-98 cursor-pointer"
             >
               <span>Continuer</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -687,7 +923,7 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 sm:px-6 sm:py-2.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow-xs transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
             >
               <CheckCircle2 className="w-4 h-4 text-slate-950" />
               <span>{submitting ? 'Enregistrement en cours...' : 'Valider ma préinscription'}</span>
