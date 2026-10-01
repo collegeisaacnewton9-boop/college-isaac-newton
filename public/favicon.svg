@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <rect width="64" height="64" rx="14" fill="#0f172a"/>
   <rect x="2" y="2" width="60" height="60" rx="12" stroke="#f59e0b" stroke-width="2"/>
-  <!-- Graduation Cap -->
+  <!-- Toque de Diplômé / Mortarboard -->
   <path d="M32 10L10 21L32 32L54 21L32 10Z" fill="#f59e0b"/>
   <path d="M18 25V36C18 41 23.5 45 32 45C40.5 45 46 41 46 36V25" stroke="#93c5fd" stroke-width="3" stroke-linecap="round"/>
-  <!-- Tassel -->
+  <!-- Gland / Tassel -->
   <path d="M50 23V36C50 38 48.5 40 46.5 40" stroke="#f59e0b" stroke-width="2.5" stroke-linecap="round"/>
   <circle cx="46.5" cy="40" r="1.5" fill="#f59e0b"/>
-  <!-- Open Academic Book -->
+  <!-- Livre Académique Ouvert -->
   <path d="M14 51C21 47 28 49 32 53C36 49 43 47 50 51V44C43 40 36 42 32 46C28 42 21 40 14 44V51Z" fill="#1e3a8a" stroke="#fbbf24" stroke-width="2" stroke-linejoin="round"/>
 </svg>
