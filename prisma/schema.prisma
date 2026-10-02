@@ -198,3 +198,12 @@ model AuditLog {
   @@index([action])
   @@map("audit_logs")
 }
+
+model SiteSetting {
+  id        String   @id @default("global_settings")
+  data      Json
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+

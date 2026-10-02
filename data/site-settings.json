@@ -1,0 +1,28 @@
+{
+  "announcement": {
+    "enabled": false,
+    "text": "Campagne de préinscription 2026-2027 ouverte · Accueil des familles à Delmas 50",
+    "type": "info",
+    "linkText": "Formulaire de Préinscription",
+    "linkUrl": "pre-registration"
+  },
+  "admissionsStatus": {
+    "isOpen": true,
+    "currentSchoolYear": "2026-2027",
+    "deadlineNotice": "Dépôt des dossiers ouvert jusqu'au 31 août 2026"
+  },
+  "contactInfo": {
+    "phone": "+509 3316-0934",
+    "phoneAlt": "+509 3721-1818",
+    "email": "contact@collegeisaacnewton.com",
+    "address": "Delmas 50, rue Dominique #2 bis, Port-au-Prince, Haïti",
+    "openingHours": "Lun - Ven : 7h30 - 15h30"
+  },
+  "directorInfo": {
+    "name": "Orphe Jean Marie",
+    "title": "Directeur fondateur",
+    "role": "Professeur de Mathématiques & Sciences Physiques"
+  },
+  "schoolMotto": "Savoir aujourd'hui, réussir demain",
+  "directorWelcome": "Bienvenue au Collège Isaac Newton. Sous la direction d'Orphe Jean Marie, notre mission est de forger les bâtisseurs de demain par la rigueur scientifique, la maîtrise des mathématiques, la discipline civique et les technologies."
+}

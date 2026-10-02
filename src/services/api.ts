@@ -381,21 +381,7 @@ export const apiService = {
   // --- SITE SETTINGS & CMS ---
   async getSettings(): Promise<SiteSettings> {
     try {
-      const res = await appFetch('/api/settings');
-      if (res.ok) return await res.json();
-    } catch {
-      // Fallback
-    }
-    return getLocal<SiteSettings>(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
-  },
-
-  async updateSettings(settings: Partial<SiteSettings>): Promise<SiteSettings> {
-    try {
-      const res = await appFetch('/api/settings', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
-      });
+      const res = await appFetch(`/api/settings?_t=${Date.now()}`);
       if (res.ok) {
         const json = await res.json();
         setLocal(STORAGE_KEYS.SETTINGS, json);
@@ -404,10 +390,33 @@ export const apiService = {
     } catch {
       // Fallback
     }
-    const current = getLocal<SiteSettings>(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
-    const updated = { ...current, ...settings };
-    setLocal(STORAGE_KEYS.SETTINGS, updated);
-    return updated;
+    return getLocal<SiteSettings>(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
+  },
+
+  async updateSettings(settings: Partial<SiteSettings>): Promise<SiteSettings> {
+    let finalSettings: SiteSettings;
+    try {
+      const res = await appFetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      if (res.ok) {
+        finalSettings = await res.json();
+      } else {
+        const current = getLocal<SiteSettings>(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
+        finalSettings = { ...current, ...settings } as SiteSettings;
+      }
+    } catch {
+      const current = getLocal<SiteSettings>(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
+      finalSettings = { ...current, ...settings } as SiteSettings;
+    }
+
+    setLocal(STORAGE_KEYS.SETTINGS, finalSettings);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:settings-updated', { detail: finalSettings }));
+    }
+    return finalSettings;
   },
 
   // --- USER ACCESS CONTROL & ROLES ---

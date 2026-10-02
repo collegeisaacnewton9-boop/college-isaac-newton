@@ -138,6 +138,15 @@ export async function initDatabase(): Promise<boolean> {
         );
       `);
 
+      // 6. Table Site Settings (General CMS & Public Banners)
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS site_settings (
+          id TEXT PRIMARY KEY,
+          data JSONB NOT NULL,
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+      `);
+
       // Seed if empty
       const countRes = await client.query('SELECT COUNT(*) FROM admissions');
       if (parseInt(countRes.rows[0].count, 10) === 0) {
@@ -413,4 +422,38 @@ export async function dbDeleteContactMessage(id: string): Promise<boolean> {
     return false;
   }
 }
+
+// --- SITE SETTINGS (CMS & PUBLIC BANNER ALERTS) ---
+export async function dbGetSettings(): Promise<any | null> {
+  const p = getDbPool();
+  if (!p || !isConnected) return null;
+  try {
+    const res = await p.query('SELECT data FROM site_settings WHERE id = $1', ['global_settings']);
+    if (res.rows.length > 0) {
+      return res.rows[0].data;
+    }
+    return null;
+  } catch (err: any) {
+    console.error('[DB Get Settings Error]', err.message);
+    return null;
+  }
+}
+
+export async function dbSaveSettings(settings: any): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query(
+      `INSERT INTO site_settings (id, data, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
+      ['global_settings', JSON.stringify(settings)]
+    );
+    return true;
+  } catch (err: any) {
+    console.error('[DB Save Settings Error]', err.message);
+    return false;
+  }
+}
+
 

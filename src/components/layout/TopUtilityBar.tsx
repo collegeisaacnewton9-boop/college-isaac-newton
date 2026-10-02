@@ -8,14 +8,41 @@ interface TopUtilityBarProps {
   currentLang?: Language;
   onLangChange?: (lang: Language) => void;
   onNavigate?: (page: string) => void;
+  settings?: SiteSettings | null;
 }
 
-export const TopUtilityBar: React.FC<TopUtilityBarProps> = ({ onNavigate }) => {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
+export const TopUtilityBar: React.FC<TopUtilityBarProps> = ({ 
+  onNavigate, 
+  settings: initialSettingsProp 
+}) => {
+  const [settings, setSettings] = useState<SiteSettings | null>(initialSettingsProp || null);
   const [dismissed, setDismissed] = useState(false);
 
+  // Sync when prop changes
   useEffect(() => {
-    apiService.getSettings().then(setSettings).catch(() => {});
+    if (initialSettingsProp) {
+      setSettings(initialSettingsProp);
+    }
+  }, [initialSettingsProp]);
+
+  // Initial fetch and real-time event listener across all tabs & views
+  useEffect(() => {
+    apiService.getSettings().then((s) => {
+      setSettings(s);
+    }).catch(() => {});
+
+    const handleSettingsUpdated = (e: Event) => {
+      const customEvt = e as CustomEvent<SiteSettings>;
+      if (customEvt.detail) {
+        setSettings(customEvt.detail);
+        setDismissed(false); // Reset dismissed state if admin changed settings
+      }
+    };
+
+    window.addEventListener('cin:settings-updated', handleSettingsUpdated);
+    return () => {
+      window.removeEventListener('cin:settings-updated', handleSettingsUpdated);
+    };
   }, []);
 
   return (

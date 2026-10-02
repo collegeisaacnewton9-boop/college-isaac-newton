@@ -1,6 +1,7 @@
 import express, { type Request, type Response, type NextFunction } from 'express';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
@@ -16,7 +17,9 @@ import {
   dbGetContactMessages,
   dbInsertContactMessage,
   dbUpdateContactMessageStatus,
-  dbDeleteContactMessage
+  dbDeleteContactMessage,
+  dbGetSettings,
+  dbSaveSettings
 } from './server-db';
 
 const execPromise = util.promisify(exec);
@@ -453,6 +456,40 @@ let siteSettings = {
   schoolMotto: "Savoir aujourd'hui, réussir demain",
   directorWelcome: "Bienvenue au Collège Isaac Newton. Sous la direction d'Orphe Jean Marie, notre mission est de forger les bâtisseurs de demain par la rigueur scientifique, la maîtrise des mathématiques, la discipline civique et les technologies.",
 };
+
+// Disk Persistence for Site Settings
+const SETTINGS_FILE_PATH = path.join(__dirname, 'data', 'site-settings.json');
+
+function saveSettingsToDisk(settings: any) {
+  try {
+    const dir = path.dirname(SETTINGS_FILE_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(SETTINGS_FILE_PATH, JSON.stringify(settings, null, 2), 'utf-8');
+    console.log('[Settings Disk] Paramètres sauvegardés sur disque :', SETTINGS_FILE_PATH);
+  } catch (err: any) {
+    console.error('[Settings Disk Save Error]', err.message);
+  }
+}
+
+function loadSettingsFromDisk(): any | null {
+  try {
+    if (fs.existsSync(SETTINGS_FILE_PATH)) {
+      const raw = fs.readFileSync(SETTINGS_FILE_PATH, 'utf-8');
+      return JSON.parse(raw);
+    }
+  } catch (err: any) {
+    console.error('[Settings Disk Load Error]', err.message);
+  }
+  return null;
+}
+
+// Initial sync from disk if present
+const cachedDiskSettings = loadSettingsFromDisk();
+if (cachedDiskSettings) {
+  siteSettings = { ...siteSettings, ...cachedDiskSettings };
+}
 
 let contactMessages = [
   {
@@ -927,23 +964,43 @@ app.delete('/api/contact/:id', async (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-// 7. Site Settings & Page CMS
+// 7. Site Settings & Page CMS (Persisted in PostgreSQL and Disk)
 app.get('/api/settings', (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.json(siteSettings);
 });
 
-app.put('/api/settings', (req: Request, res: Response) => {
+app.put('/api/settings', async (req: Request, res: Response) => {
   siteSettings = {
     ...siteSettings,
     ...req.body,
   };
+
+  // 1. Save to local disk cache immediately
+  saveSettingsToDisk(siteSettings);
+
+  // 2. Persist to PostgreSQL database if connected
+  if (isDbActive()) {
+    try {
+      await dbSaveSettings(siteSettings);
+      console.log('[Database] Paramètres du site enregistrés dans PostgreSQL avec succès.');
+    } catch (e: any) {
+      console.error('[Database Settings Save Error]', e.message);
+    }
+  }
+
+  const bannerStatus = siteSettings.announcement?.enabled ? 'ACTIVÉ' : 'DÉSACTIVÉ';
   auditLogs.push({
     id: `log-${Date.now()}`,
     action: 'SETTINGS_UPDATED',
-    user: 'Direction Générale (Admin)',
-    details: 'Mise à jour des paramètres généraux du Collège et annonces du site',
+    user: 'Direction Générale (Super Admin)',
+    details: `Mise à jour des paramètres généraux (Bandeau public d'alerte : ${bannerStatus})`,
     timestamp: new Date().toISOString(),
   });
+
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.json(siteSettings);
 });
 
@@ -1235,6 +1292,15 @@ async function startServer() {
       if (dbMessages.length > 0) {
         contactMessages = dbMessages;
         console.log(`[Database] ${dbMessages.length} messages de contact chargés depuis PostgreSQL.`);
+      }
+      const dbSettings = await dbGetSettings();
+      if (dbSettings) {
+        siteSettings = { ...siteSettings, ...dbSettings };
+        console.log(`[Database] Paramètres généraux du Collège synchronisés depuis PostgreSQL (Bandeau : ${siteSettings.announcement?.enabled ? 'Activé' : 'Désactivé'}).`);
+        saveSettingsToDisk(siteSettings);
+      } else {
+        await dbSaveSettings(siteSettings);
+        console.log('[Database] Paramètres initiaux enregistrés dans la table PostgreSQL site_settings.');
       }
     }
   } catch (err: any) {
