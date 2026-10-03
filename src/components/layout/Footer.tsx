@@ -269,6 +269,15 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
                   <span>Galerie photos campus</span>
                 </button>
               </li>
+              <li>
+                <button 
+                  onClick={() => onNavigate('support')} 
+                  className="hover:text-amber-300 transition-colors flex items-center gap-1.5 text-slate-300 font-medium hover:translate-x-0.5 duration-150 cursor-pointer"
+                >
+                  <ArrowRight className="w-3 h-3 text-amber-500 shrink-0" />
+                  <span>Soutenir le Collège & Partenariats</span>
+                </button>
+              </li>
             </ul>
           </div>
 

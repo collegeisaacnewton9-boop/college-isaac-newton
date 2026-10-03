@@ -121,6 +121,16 @@ export function getPageSEO(page: string, selectedArticleId?: string | null): Pag
         ogImageAlt: 'Façade du Collège Isaac Newton à Delmas 50',
       };
 
+    case 'support':
+      return {
+        title: 'Soutenir le Collège & Devenir Partenaire | Collège Isaac Newton',
+        description: 'Participez à la réussite scolaire des élèves du Collège Isaac Newton à Delmas 50 : parrainage de bourses, dotations pédagogiques, équipements et partenariats.',
+        keywords: ['soutenir collège isaac newton', 'parrainage scolaire haiti', 'bourses scolaires delmas', 'devenir partenaire ecole', 'don education haiti'],
+        canonicalPath: '/soutenir',
+        ogImage: DEFAULT_IMAGE,
+        ogImageAlt: 'Soutenir le Collège Isaac Newton et l’avenir des élèves',
+      };
+
     default:
       return {
         title: 'Collège Isaac Newton | Excellence Académique & Citoyenne à Delmas 50',

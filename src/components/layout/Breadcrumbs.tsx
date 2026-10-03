@@ -151,6 +151,11 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
       items.push({ label: 'Contact & Secrétariat Administratif', isCurrent: true, canonicalPath: '/contact' });
       break;
 
+    case 'support':
+      items.push({ label: 'Le Collège', page: 'college', canonicalPath: '/college' });
+      items.push({ label: 'Soutenir le Collège & Partenariats', isCurrent: true, canonicalPath: '/soutenir' });
+      break;
+
     case 'legal':
       items.push({ label: 'Mentions Légales', isCurrent: true, canonicalPath: '/legal' });
       break;

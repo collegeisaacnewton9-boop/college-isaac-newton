@@ -25,6 +25,7 @@ import { EventsPage } from './pages/EventsPage';
 import { GalleryPage } from './pages/GalleryPage';
 import { ResourcesPage } from './pages/ResourcesPage';
 import { ContactPage } from './pages/ContactPage';
+import { SupportPage } from './pages/SupportPage';
 import { LegalPage } from './pages/LegalPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
@@ -193,6 +194,10 @@ export default function App() {
 
         {currentPage === 'contact' && (
           <ContactPage />
+        )}
+
+        {currentPage === 'support' && (
+          <SupportPage onNavigate={handleNavigate} />
         )}
 
         {currentPage === 'legal' && (

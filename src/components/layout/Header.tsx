@@ -27,7 +27,8 @@ import {
   Image,
   Trophy,
   Download,
-  Award
+  Award,
+  HeartHandshake
 } from 'lucide-react';
 import { SchoolLogo } from '../ui/SchoolLogo';
 import { User } from '../../types';
@@ -73,6 +74,7 @@ const NAV_ITEMS: NavItem[] = [
       { id: 'college', label: 'Mission & Vision pédagogique', subSection: 'mission', icon: Sparkles, description: 'Exigence académique et formation citoyenne' },
       { id: 'college', label: 'Direction & Corps professoral', subSection: 'equipe', icon: Users, description: 'Dirigé par M. Orphe Jean Marie, Directeur fondateur' },
       { id: 'college', label: 'Infrastructures & Campus', subSection: 'infrastructures', icon: Building, description: 'Bâtiments modernes et cour sécurisée à Delmas 50' },
+      { id: 'support', label: 'Soutenir le Collège & Partenariats', icon: HeartHandshake, description: 'Bourses scolaires, équipements et dons de soutien' },
       { id: 'contact', label: 'Localisation & Secrétariat', icon: MapPin, description: 'Delmas 50, rue Dominique #2 bis · Port-au-Prince' },
     ],
   },
