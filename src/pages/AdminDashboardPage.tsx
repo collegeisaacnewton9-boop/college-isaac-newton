@@ -58,6 +58,7 @@ import { MediaLibraryView } from '../components/admin/MediaLibraryView';
 import { ROLE_PERMISSIONS } from '../data/rolePermissions';
 import { appFetch } from '../services/loadingService';
 import { ImageUploadCompressor } from '../components/common/ImageUploadCompressor';
+import { toast } from 'sonner';
 
 interface AdminDashboardPageProps {
   currentUser: User | null;
@@ -180,6 +181,37 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   useEffect(() => {
     loadData();
   }, []);
+
+  // Inactivity timeout watcher driven by database settings (securityConfig)
+  useEffect(() => {
+    if (!currentUser) return;
+    const timeoutMins = cmsSettings?.securityConfig?.inactivityTimeoutMinutes 
+      || (typeof window !== 'undefined' ? parseInt(localStorage.getItem('cin_inactivity_timeout_mins') || '5', 10) : 5);
+    
+    if (!timeoutMins || timeoutMins <= 0) return;
+    const timeoutMs = timeoutMins * 60 * 1000;
+
+    let timer: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        toast.warning('Session verrouillée pour inactivité', {
+          description: `Votre session s'est verrouillée automatiquement après ${timeoutMins} minute${timeoutMins > 1 ? 's' : ''} d'inactivité.`,
+        });
+        onLogout();
+      }, timeoutMs);
+    };
+
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+    activityEvents.forEach(evt => window.addEventListener(evt, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      clearTimeout(timer);
+      activityEvents.forEach(evt => window.removeEventListener(evt, resetTimer));
+    };
+  }, [currentUser, cmsSettings?.securityConfig?.inactivityTimeoutMinutes, onLogout]);
 
   // Access Control Guard - Allow all delegated staff roles: ADMIN, EDITOR, TEACHER, MODERATOR
   const isAuthorizedStaff = currentUser && ['ADMIN', 'EDITOR', 'TEACHER', 'MODERATOR'].includes(currentUser.role);

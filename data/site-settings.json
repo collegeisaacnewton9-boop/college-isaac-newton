@@ -43,5 +43,10 @@
     "smtpUser": "collegeisaacnewton9@gmail.com",
     "smtpPass": "ujwy suyt gjcp fnxf",
     "encryption": "SSL"
+  },
+  "securityConfig": {
+    "inactivityTimeoutMinutes": 15,
+    "sessionLockEnabled": true,
+    "updatedAt": "2026-10-03T10:27:00.000Z"
   }
 }

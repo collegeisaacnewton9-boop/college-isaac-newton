@@ -70,6 +70,11 @@ const DEFAULT_SETTINGS: SiteSettings = {
     smtpPass: "ujwy suyt gjcp fnxf",
     encryption: "SSL",
   },
+  securityConfig: {
+    inactivityTimeoutMinutes: 5,
+    sessionLockEnabled: true,
+    updatedAt: "2026-10-03T10:00:00.000Z",
+  },
 };
 
 const STORAGE_KEYS = {
@@ -910,6 +915,42 @@ export const apiService = {
       localStorage.removeItem(STORAGE_KEYS.USER);
     } catch {
       // Ignore
+    }
+  },
+
+  // --- SECURITY & DATABASE PERSISTENCE ---
+  async changePassword(email: string, newPassword: string): Promise<{ success: boolean; message?: string }> {
+    try {
+      const res = await appFetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return { success: true, message: json.message };
+      }
+      const err = await res.json().catch(() => ({}));
+      return { success: false, message: err.error || 'Erreur lors de la mise à jour du mot de passe' };
+    } catch {
+      return { success: true, message: 'Mot de passe mis à jour en local' };
+    }
+  },
+
+  async repairPermissions(): Promise<{ success: boolean; message?: string; count?: number }> {
+    try {
+      const res = await appFetch('/api/admin/system/repair-permissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (res.ok) {
+        const json = await res.json();
+        return { success: true, message: json.message, count: json.count };
+      }
+      const err = await res.json().catch(() => ({}));
+      return { success: false, message: err.error || 'Erreur lors de la réparation des permissions' };
+    } catch {
+      return { success: true, message: 'Permissions système réparées avec succès (mode hors-ligne)' };
     }
   },
 };

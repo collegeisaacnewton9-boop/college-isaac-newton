@@ -191,6 +191,12 @@ export interface SiteSettings {
     smtpPass: string;
     encryption: 'TLS' | 'SSL' | 'STARTTLS';
   };
+  securityConfig?: {
+    inactivityTimeoutMinutes?: number;
+    sessionLockEnabled?: boolean;
+    twoFactorEnabled?: boolean;
+    updatedAt?: string;
+  };
 }
 
 export interface Testimonial {

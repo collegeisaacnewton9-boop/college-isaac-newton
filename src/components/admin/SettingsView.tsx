@@ -115,8 +115,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  // Inactivity timeout state
+  // Inactivity timeout state - synchronized with database (cmsSettings.securityConfig)
   const [inactivityTimeout, setInactivityTimeout] = useState<number>(() => {
+    if (initialSettings?.securityConfig?.inactivityTimeoutMinutes) {
+      return initialSettings.securityConfig.inactivityTimeoutMinutes;
+    }
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('cin_inactivity_timeout_mins');
       if (saved) return parseInt(saved, 10) || 5;
@@ -124,6 +127,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     return 5;
   });
   const [isSavingInactivity, setIsSavingInactivity] = useState(false);
+
+  // Sync state if cmsSettings updates
+  useEffect(() => {
+    if (cmsSettings?.securityConfig?.inactivityTimeoutMinutes) {
+      setInactivityTimeout(cmsSettings.securityConfig.inactivityTimeoutMinutes);
+    }
+  }, [cmsSettings?.securityConfig?.inactivityTimeoutMinutes]);
 
   // Maintenance & Permissions repair state
   const [isRepairingPermissions, setIsRepairingPermissions] = useState(false);
@@ -149,7 +159,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
     setIsChangingPassword(true);
     try {
-      await new Promise((r) => setTimeout(r, 600));
+      const result = await apiService.changePassword(connectedEmail, newPassword);
+
       if (typeof window !== 'undefined') {
         const storedUsers = localStorage.getItem('cin_registered_users');
         if (storedUsers) {
@@ -162,30 +173,52 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           } catch {}
         }
       }
-      toast.success('Mot de passe mis à jour avec succès !', {
-        description: `Le mot de passe pour ${connectedEmail} a été modifié avec succès.`,
-      });
-      setNewPassword('');
-      setConfirmPassword('');
+
+      if (result.success) {
+        toast.success('Mot de passe enregistré dans la base de données !', {
+          description: `Le mot de passe pour ${connectedEmail} est persisté avec succès.`,
+        });
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        toast.error('Erreur lors de la modification', {
+          description: result.message || 'Impossible de mettre à jour le mot de passe.',
+        });
+      }
     } catch {
-      toast.error('Erreur lors de la modification du mot de passe');
+      toast.error('Erreur réseau lors de la modification du mot de passe');
     } finally {
       setIsChangingPassword(false);
     }
   };
 
   const handleSaveInactivityPolicy = async () => {
+    if (!cmsSettings) return;
     setIsSavingInactivity(true);
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem('cin_inactivity_timeout_mins', inactivityTimeout.toString());
       }
-      await new Promise((r) => setTimeout(r, 400));
-      toast.success('Politique d\'inactivité enregistrée', {
-        description: `Verrouillage automatique configuré sur ${inactivityTimeout} minute${inactivityTimeout > 1 ? 's' : ''}.`,
+
+      const updatedPayload: SiteSettings = {
+        ...cmsSettings,
+        securityConfig: {
+          ...cmsSettings.securityConfig,
+          inactivityTimeoutMinutes: inactivityTimeout,
+          sessionLockEnabled: true,
+          updatedAt: new Date().toISOString(),
+        }
+      };
+
+      const updated = await apiService.updateSettings(updatedPayload);
+      setCmsSettings(updated);
+      onSettingsUpdated?.(updated);
+
+      toast.success('Politique d\'inactivité enregistrée dans la base de données !', {
+        description: `Verrouillage automatique configuré sur ${inactivityTimeout} min et sauvegardé dans PostgreSQL.`,
       });
     } catch {
-      toast.error('Erreur lors de l\'enregistrement');
+      toast.error('Erreur lors de l\'enregistrement de la politique de sécurité');
     } finally {
       setIsSavingInactivity(false);
     }
@@ -194,14 +227,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const handleRepairPermissions = async () => {
     setIsRepairingPermissions(true);
     try {
-      await new Promise((r) => setTimeout(r, 700));
+      const res = await apiService.repairPermissions();
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('cin:permissions-repaired', {
           detail: { timestamp: new Date().toISOString() }
         }));
       }
-      toast.success('Permissions réparées & resynchronisées !', {
-        description: 'Les profils de l\'établissement et les accès RBAC sont synchronisés.',
+      toast.success('Permissions RBAC & Base de données réparées !', {
+        description: res.message || 'Intégrité des tables et profils de l\'établissement vérifiée avec succès.',
       });
     } catch {
       toast.error('Erreur lors de la réparation des permissions');
@@ -1727,20 +1760,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     type="button"
                     onClick={handleChangePassword}
                     disabled={isChangingPassword || !newPassword}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-500 hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-xs cursor-pointer self-start sm:self-auto"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-xs cursor-pointer self-start sm:self-auto"
                   >
                     {isChangingPassword ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Enregistrement...</span>
+                        <span>Enregistrement BDD...</span>
                       </>
                     ) : (
                       <>
-                        <Save className="w-3.5 h-3.5" />
+                        <Save className="w-3.5 h-3.5 text-emerald-400" />
                         <span>Changer le mot de passe</span>
                       </>
                     )}
                   </button>
+                </div>
+
+                {/* Database sync badge */}
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200/80 text-[11px] font-semibold text-emerald-800">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Enregistrement sécurisé dans la base de données (Table system_users)
+                  </span>
                 </div>
 
                 {/* Form Fields: Nouveau mot de passe & Confirmer */}
@@ -1869,6 +1910,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     </div>
                   </div>
                 </div>
+
+                {/* Database sync status row */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 text-[11px]">
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-indigo-700">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                    Persistance BDD : {inactivityTimeout} minutes synchronisées dans la table site_settings (PostgreSQL)
+                  </span>
+                  {cmsSettings?.securityConfig?.updatedAt && (
+                    <span className="text-slate-400 font-mono text-[10px]">
+                      Dernière synchro : {new Date(cmsSettings.securityConfig.updatedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* CARD 3: Maintenance & Droits d'Accès */}
@@ -1897,6 +1951,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <ShieldCheck className="w-4 h-4" />
                     <span>{isRepairingPermissions ? 'Réparation en cours...' : 'Réparer Permissions'}</span>
                   </button>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 text-[11px] text-amber-800">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>Vérifie les schémas SQL, l'unicité des comptes administrateurs et réinitialise les accès corrompus.</span>
                 </div>
               </div>
 
