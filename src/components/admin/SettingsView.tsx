@@ -26,19 +26,21 @@ import {
   GitCommit,
   UploadCloud,
   CheckCheck,
-  X
+  X,
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { githubService, GitHubRepoConfig, DEFAULT_GITHUB_CONFIG } from '../../services/githubService';
 import { SiteSettings } from '../../types';
 import { apiService } from '../../services/api';
+import { AccessControlView } from './AccessControlView';
 
 interface SettingsViewProps {
   initialSettings?: SiteSettings | null;
   onSettingsUpdated?: (settings: SiteSettings) => void;
 }
 
-type SettingsTab = 'profile' | 'academic' | 'finance' | 'payments' | 'gateways' | 'security';
+type SettingsTab = 'profile' | 'academic' | 'finance' | 'payments' | 'gateways' | 'users' | 'security';
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   initialSettings,
@@ -413,6 +415,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               }`}>
                 ACTIF
               </span>
+            </button>
+
+            {/* Utilisateurs & Équipe */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('users')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'users'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <Users className={`w-4 h-4 ${activeTab === 'users' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Utilisateurs & Équipe</span>
             </button>
 
             {/* Sécurité */}
@@ -1321,6 +1337,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">ACTIF</span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 5.5 : UTILISATEURS & ÉQUIPE
+          =========================================================== */}
+          {activeTab === 'users' && (
+            <div className="space-y-4">
+              <AccessControlView hideHeader={false} />
             </div>
           )}
 

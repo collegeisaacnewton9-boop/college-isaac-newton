@@ -147,6 +147,22 @@ export async function initDatabase(): Promise<boolean> {
         );
       `);
 
+      // 7. Table System Users & RBAC Collaborators
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS system_users (
+          id TEXT PRIMARY KEY,
+          full_name TEXT NOT NULL,
+          email TEXT UNIQUE NOT NULL,
+          role TEXT NOT NULL,
+          phone TEXT,
+          department TEXT,
+          status TEXT DEFAULT 'ACTIVE',
+          last_active TEXT,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+      `);
+
       // Seed if empty
       const countRes = await client.query('SELECT COUNT(*) FROM admissions');
       if (parseInt(countRes.rows[0].count, 10) === 0) {
@@ -195,6 +211,17 @@ export async function initDatabase(): Promise<boolean> {
           INSERT INTO contact_messages (id, full_name, email, phone, subject, message, status)
           VALUES 
           ('msg-1', 'Dr. Jean-Baptiste Estimé', 'jbe.estime@example.com', '+509 3899-2341', 'Demande de visite du campus et du laboratoire', 'Bonjour Monsieur le Directeur, je souhaiterais visiter vos installations informatiques.', 'NEW')
+          ON CONFLICT (id) DO NOTHING;
+        `);
+
+        // Seed initial system users
+        await client.query(`
+          INSERT INTO system_users (id, full_name, email, role, phone, department, status, last_active)
+          VALUES 
+          ('user-admin-1', 'Direction Pédagogique (Admin)', 'admin@collegeisaacnewton.com', 'ADMIN', '+509 3800-0001', 'Direction Générale & Rectorat', 'ACTIVE', 'En ligne'),
+          ('user-editor-1', 'Secrétariat & Communication (Éditeur)', 'redaction@collegeisaacnewton.com', 'EDITOR', '+509 3800-0002', 'Pôle Presse, Rédaction & Multimédia', 'ACTIVE', 'Il y a 2 heures'),
+          ('user-teacher-1', 'Prof. Emmanuel Célestin (Enseignant SVT)', 'prof.sciences@collegeisaacnewton.com', 'TEACHER', '+509 3800-0005', 'Département des Sciences & Informatique', 'ACTIVE', 'Il y a 35 minutes'),
+          ('user-moderator-1', 'M. Lucner Bernard (Modérateur)', 'moderation@collegeisaacnewton.com', 'MODERATOR', '+509 3800-0006', 'Vie Scolaire & Relations Familles', 'ACTIVE', 'Il y a 10 minutes')
           ON CONFLICT (id) DO NOTHING;
         `);
       }
@@ -452,6 +479,130 @@ export async function dbSaveSettings(settings: any): Promise<boolean> {
     return true;
   } catch (err: any) {
     console.error('[DB Save Settings Error]', err.message);
+    return false;
+  }
+}
+
+// --- SYSTEM USERS & RBAC ---
+export async function dbGetUsers(): Promise<any[]> {
+  const p = getDbPool();
+  if (!p || !isConnected) return [];
+  try {
+    const res = await p.query('SELECT * FROM system_users ORDER BY created_at ASC');
+    return res.rows.map((r: any) => ({
+      id: r.id,
+      fullName: r.full_name,
+      email: r.email,
+      role: r.role,
+      phone: r.phone || '',
+      department: r.department || 'Pôle Pédagogique',
+      status: r.status || 'ACTIVE',
+      lastActive: r.last_active || 'En ligne',
+      createdAt: r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : '2025-09-01',
+    }));
+  } catch (err: any) {
+    console.error('[DB Get Users Error]', err.message);
+    return [];
+  }
+}
+
+export async function dbInsertUser(user: any): Promise<any | null> {
+  const p = getDbPool();
+  if (!p || !isConnected) return null;
+  try {
+    const res = await p.query(
+      `INSERT INTO system_users (id, full_name, email, role, phone, department, status, last_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        user.id,
+        user.fullName,
+        user.email,
+        user.role,
+        user.phone || '',
+        user.department || 'Non spécifié',
+        user.status || 'ACTIVE',
+        user.lastActive || 'Jamais connecté'
+      ]
+    );
+    const r = res.rows[0];
+    return {
+      id: r.id,
+      fullName: r.full_name,
+      email: r.email,
+      role: r.role,
+      phone: r.phone || '',
+      department: r.department || 'Non spécifié',
+      status: r.status || 'ACTIVE',
+      lastActive: r.last_active || 'Jamais connecté',
+      createdAt: r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    };
+  } catch (err: any) {
+    console.error('[DB Insert User Error]', err.message);
+    return null;
+  }
+}
+
+export async function dbUpdateUserRole(id: string, role: string): Promise<any | null> {
+  const p = getDbPool();
+  if (!p || !isConnected) return null;
+  try {
+    const res = await p.query(
+      `UPDATE system_users SET role = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+      [role, id]
+    );
+    if (res.rows.length === 0) return null;
+    const r = res.rows[0];
+    return {
+      id: r.id,
+      fullName: r.full_name,
+      email: r.email,
+      role: r.role,
+      phone: r.phone || '',
+      department: r.department,
+      status: r.status,
+      lastActive: r.last_active,
+    };
+  } catch (err: any) {
+    console.error('[DB Update Role Error]', err.message);
+    return null;
+  }
+}
+
+export async function dbUpdateUserStatus(id: string, status: string): Promise<any | null> {
+  const p = getDbPool();
+  if (!p || !isConnected) return null;
+  try {
+    const res = await p.query(
+      `UPDATE system_users SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+      [status, id]
+    );
+    if (res.rows.length === 0) return null;
+    const r = res.rows[0];
+    return {
+      id: r.id,
+      fullName: r.full_name,
+      email: r.email,
+      role: r.role,
+      phone: r.phone || '',
+      department: r.department,
+      status: r.status,
+      lastActive: r.last_active,
+    };
+  } catch (err: any) {
+    console.error('[DB Update Status Error]', err.message);
+    return null;
+  }
+}
+
+export async function dbDeleteUser(id: string): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query('DELETE FROM system_users WHERE id = $1', [id]);
+    return true;
+  } catch (err: any) {
+    console.error('[DB Delete User Error]', err.message);
     return false;
   }
 }

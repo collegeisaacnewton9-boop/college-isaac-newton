@@ -20,7 +20,12 @@ import {
   dbUpdateContactMessageStatus,
   dbDeleteContactMessage,
   dbGetSettings,
-  dbSaveSettings
+  dbSaveSettings,
+  dbGetUsers,
+  dbInsertUser,
+  dbUpdateUserRole,
+  dbUpdateUserStatus,
+  dbDeleteUser
 } from './server-db';
 
 const execPromise = util.promisify(exec);
@@ -1403,11 +1408,22 @@ app.post('/api/admin/github/sync', async (req: Request, res: Response) => {
 });
 
 // 11. Access Control & User Roles Management
-app.get('/api/admin/users', (req: Request, res: Response) => {
+app.get('/api/admin/users', async (req: Request, res: Response) => {
+  if (isDbActive()) {
+    try {
+      const dbUsers = await dbGetUsers();
+      if (dbUsers && dbUsers.length > 0) {
+        systemUsers = dbUsers;
+        return res.json(dbUsers);
+      }
+    } catch (e: any) {
+      console.error('[API Users DB Error]', e.message);
+    }
+  }
   res.json(systemUsers);
 });
 
-app.post('/api/admin/users', (req: Request, res: Response) => {
+app.post('/api/admin/users', async (req: Request, res: Response) => {
   const { email, fullName, role, phone, department } = req.body;
   if (!email || !fullName || !role) {
     return res.status(400).json({ error: 'Nom, e-mail et rôle requis' });
@@ -1430,6 +1446,25 @@ app.post('/api/admin/users', (req: Request, res: Response) => {
     createdAt: new Date().toISOString().split('T')[0],
   };
 
+  if (isDbActive()) {
+    try {
+      const saved = await dbInsertUser(newUser);
+      if (saved) {
+        systemUsers.push(saved);
+        auditLogs.push({
+          id: `log-${Date.now()}`,
+          action: 'USER_CREATED_POSTGRES',
+          user: 'Direction (Super-Admin)',
+          details: `Compte enregistré en base PostgreSQL : ${fullName} (${email}) - ${role}`,
+          timestamp: new Date().toISOString(),
+        });
+        return res.status(201).json(saved);
+      }
+    } catch (dbErr: any) {
+      console.error('[API User Insert DB Error]', dbErr.message);
+    }
+  }
+
   systemUsers.push(newUser);
   auditLogs.push({
     id: `log-${Date.now()}`,
@@ -1442,7 +1477,7 @@ app.post('/api/admin/users', (req: Request, res: Response) => {
   res.status(201).json(newUser);
 });
 
-app.patch('/api/admin/users/:id/role', (req: Request, res: Response) => {
+app.patch('/api/admin/users/:id/role', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { role } = req.body;
   if (!role) {
@@ -1452,6 +1487,25 @@ app.patch('/api/admin/users/:id/role', (req: Request, res: Response) => {
   const user = systemUsers.find(u => u.id === id);
   if (!user) {
     return res.status(404).json({ error: 'Utilisateur introuvable' });
+  }
+
+  if (isDbActive()) {
+    try {
+      const updated = await dbUpdateUserRole(id, role);
+      if (updated) {
+        user.role = role;
+        auditLogs.push({
+          id: `log-${Date.now()}`,
+          action: 'ROLE_ASSIGNED_POSTGRES',
+          user: 'Direction (Super-Admin)',
+          details: `Rôle mis à jour dans PostgreSQL pour ${user.fullName} : ${role}`,
+          timestamp: new Date().toISOString(),
+        });
+        return res.json(updated);
+      }
+    } catch (e: any) {
+      console.error('[API User Role DB Error]', e.message);
+    }
   }
 
   const oldRole = user.role;
@@ -1468,13 +1522,33 @@ app.patch('/api/admin/users/:id/role', (req: Request, res: Response) => {
   res.json(user);
 });
 
-app.patch('/api/admin/users/:id/status', (req: Request, res: Response) => {
+app.patch('/api/admin/users/:id/status', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { status } = req.body;
   const user = systemUsers.find(u => u.id === id);
   if (!user) {
     return res.status(404).json({ error: 'Utilisateur introuvable' });
   }
+
+  if (isDbActive()) {
+    try {
+      const updated = await dbUpdateUserStatus(id, status);
+      if (updated) {
+        user.status = status;
+        auditLogs.push({
+          id: `log-${Date.now()}`,
+          action: 'USER_STATUS_UPDATED_POSTGRES',
+          user: 'Direction (Super-Admin)',
+          details: `Statut mis à jour dans PostgreSQL pour ${user.fullName} : ${status}`,
+          timestamp: new Date().toISOString(),
+        });
+        return res.json(updated);
+      }
+    } catch (e: any) {
+      console.error('[API User Status DB Error]', e.message);
+    }
+  }
+
   user.status = status;
   auditLogs.push({
     id: `log-${Date.now()}`,
@@ -1486,7 +1560,7 @@ app.patch('/api/admin/users/:id/status', (req: Request, res: Response) => {
   res.json(user);
 });
 
-app.delete('/api/admin/users/:id', (req: Request, res: Response) => {
+app.delete('/api/admin/users/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const user = systemUsers.find(u => u.id === id);
   if (!user) {
@@ -1495,6 +1569,15 @@ app.delete('/api/admin/users/:id', (req: Request, res: Response) => {
   if (user.role === 'ADMIN' && systemUsers.filter(u => u.role === 'ADMIN').length <= 1) {
     return res.status(400).json({ error: 'Impossible de supprimer le dernier super-administrateur' });
   }
+
+  if (isDbActive()) {
+    try {
+      await dbDeleteUser(id);
+    } catch (e: any) {
+      console.error('[API User Delete DB Error]', e.message);
+    }
+  }
+
   systemUsers = systemUsers.filter(u => u.id !== id);
   auditLogs.push({
     id: `log-${Date.now()}`,
