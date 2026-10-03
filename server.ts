@@ -2266,8 +2266,6 @@ async function startServer() {
   // Static asset serving for images (accessible in dev, preview, docker, and production builds)
   app.use('/images', express.static(path.join(__dirname, 'dist', 'images')));
   app.use('/images', express.static(path.join(__dirname, 'src', 'assets', 'images')));
-  app.use('/src/assets/images', express.static(path.join(__dirname, 'dist', 'images')));
-  app.use('/src/assets/images', express.static(path.join(__dirname, 'src', 'assets', 'images')));
   app.use('/assets/images', express.static(path.join(__dirname, 'src', 'assets', 'images')));
   app.use(express.static(path.join(__dirname, 'public')));
 
