@@ -466,6 +466,132 @@ export async function dbGetSettings(): Promise<any | null> {
   }
 }
 
+// --- NEWS ARTICLES ---
+export async function dbGetNews(): Promise<any[]> {
+  const p = getDbPool();
+  if (!p || !isConnected) return [];
+  try {
+    const res = await p.query('SELECT * FROM news_articles ORDER BY published_at DESC, created_at DESC');
+    return res.rows.map((r: any) => ({
+      id: r.id,
+      slug: r.slug,
+      title: r.title,
+      excerpt: r.excerpt,
+      content: r.content,
+      coverImage: r.cover_image,
+      category: r.category,
+      status: r.status,
+      featured: r.featured,
+      publishedAt: r.published_at,
+      authorName: r.author_name,
+    }));
+  } catch (err: any) {
+    console.error('[DB Get News Error]', err.message);
+    return [];
+  }
+}
+
+export async function dbInsertNews(art: any): Promise<any | null> {
+  const p = getDbPool();
+  if (!p || !isConnected) return null;
+  try {
+    const res = await p.query(`
+      INSERT INTO news_articles (id, slug, title, excerpt, content, cover_image, category, status, featured, published_at, author_name)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      RETURNING *
+    `, [
+      art.id,
+      art.slug,
+      art.title,
+      art.excerpt,
+      art.content,
+      art.coverImage || null,
+      art.category,
+      art.status || 'PUBLISHED',
+      !!art.featured,
+      art.publishedAt || new Date().toISOString().split('T')[0],
+      art.authorName || 'Direction Générale'
+    ]);
+    const r = res.rows[0];
+    return {
+      id: r.id,
+      slug: r.slug,
+      title: r.title,
+      excerpt: r.excerpt,
+      content: r.content,
+      coverImage: r.cover_image,
+      category: r.category,
+      status: r.status,
+      featured: r.featured,
+      publishedAt: r.published_at,
+      authorName: r.author_name,
+    };
+  } catch (err: any) {
+    console.error('[DB Insert News Error]', err.message);
+    return null;
+  }
+}
+
+export async function dbUpdateNews(id: string, art: any): Promise<any | null> {
+  const p = getDbPool();
+  if (!p || !isConnected) return null;
+  try {
+    const res = await p.query(`
+      UPDATE news_articles
+      SET slug = COALESCE($1, slug),
+          title = COALESCE($2, title),
+          excerpt = COALESCE($3, excerpt),
+          content = COALESCE($4, content),
+          cover_image = COALESCE($5, cover_image),
+          category = COALESCE($6, category),
+          status = COALESCE($7, status),
+          featured = COALESCE($8, featured)
+      WHERE id = $9
+      RETURNING *
+    `, [
+      art.slug,
+      art.title,
+      art.excerpt,
+      art.content,
+      art.coverImage,
+      art.category,
+      art.status,
+      art.featured !== undefined ? art.featured : null,
+      id
+    ]);
+    if (res.rows.length === 0) return null;
+    const r = res.rows[0];
+    return {
+      id: r.id,
+      slug: r.slug,
+      title: r.title,
+      excerpt: r.excerpt,
+      content: r.content,
+      coverImage: r.cover_image,
+      category: r.category,
+      status: r.status,
+      featured: r.featured,
+      publishedAt: r.published_at,
+      authorName: r.author_name,
+    };
+  } catch (err: any) {
+    console.error('[DB Update News Error]', err.message);
+    return null;
+  }
+}
+
+export async function dbDeleteNews(id: string): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query('DELETE FROM news_articles WHERE id = $1', [id]);
+    return true;
+  } catch (err: any) {
+    console.error('[DB Delete News Error]', err.message);
+    return false;
+  }
+}
+
 export async function dbSaveSettings(settings: any): Promise<boolean> {
   const p = getDbPool();
   if (!p || !isConnected) return false;

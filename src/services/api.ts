@@ -193,30 +193,74 @@ export const apiService = {
   },
 
   async createNews(article: Omit<NewsArticle, 'id'>): Promise<NewsArticle> {
-    const newArt: NewsArticle = {
-      ...article,
-      id: `news-${Date.now()}`,
-    };
+    let created: NewsArticle;
+    try {
+      const res = await appFetch('/api/news', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(article),
+      });
+      if (res.ok) {
+        created = await res.json();
+      } else {
+        created = { ...article, id: `news-${Date.now()}` } as NewsArticle;
+      }
+    } catch {
+      created = { ...article, id: `news-${Date.now()}` } as NewsArticle;
+    }
+
     const current = getLocal<NewsArticle[]>(STORAGE_KEYS.NEWS, INITIAL_NEWS);
-    const updated = [newArt, ...current];
+    const updated = [created, ...current.filter(n => n.id !== created.id)];
     setLocal(STORAGE_KEYS.NEWS, updated);
-    return newArt;
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:news-updated', { detail: created }));
+    }
+    return created;
   },
 
   async updateNews(id: string, article: Partial<NewsArticle>): Promise<NewsArticle | null> {
+    let updatedArt: NewsArticle | null = null;
+    try {
+      const res = await appFetch(`/api/news/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(article),
+      });
+      if (res.ok) {
+        updatedArt = await res.json();
+      }
+    } catch {
+      // Fallback to local
+    }
+
     const current = getLocal<NewsArticle[]>(STORAGE_KEYS.NEWS, INITIAL_NEWS);
     const target = current.find(a => a.id === id);
-    if (!target) return null;
-    const updatedArt = { ...target, ...article };
-    const updatedList = current.map(a => a.id === id ? updatedArt : a);
+    if (!target && !updatedArt) return null;
+
+    if (!updatedArt) {
+      updatedArt = { ...(target as NewsArticle), ...article };
+    }
+
+    const updatedList = current.map(a => a.id === id ? updatedArt! : a);
     setLocal(STORAGE_KEYS.NEWS, updatedList);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:news-updated', { detail: updatedArt }));
+    }
     return updatedArt;
   },
 
   async deleteNews(id: string): Promise<boolean> {
+    try {
+      await appFetch(`/api/news/${id}`, { method: 'DELETE' });
+    } catch {
+      // Local fallback
+    }
     const current = getLocal<NewsArticle[]>(STORAGE_KEYS.NEWS, INITIAL_NEWS);
     const updatedList = current.filter(a => a.id !== id);
     setLocal(STORAGE_KEYS.NEWS, updatedList);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:news-updated', { detail: { id } }));
+    }
     return true;
   },
 

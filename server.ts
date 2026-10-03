@@ -25,7 +25,11 @@ import {
   dbInsertUser,
   dbUpdateUserRole,
   dbUpdateUserStatus,
-  dbDeleteUser
+  dbDeleteUser,
+  dbGetNews,
+  dbInsertNews,
+  dbUpdateNews,
+  dbDeleteNews
 } from './server-db';
 
 const execPromise = util.promisify(exec);
@@ -902,17 +906,48 @@ app.patch('/api/admissions/:id/status', async (req: Request, res: Response) => {
 });
 
 // 4. News routes
-app.get('/api/news', (req: Request, res: Response) => {
+app.get('/api/news', async (req: Request, res: Response) => {
+  if (isDbActive()) {
+    try {
+      const dbArticles = await dbGetNews();
+      if (dbArticles && dbArticles.length > 0) {
+        newsArticles = dbArticles;
+        return res.json(dbArticles);
+      }
+    } catch (e: any) {
+      console.error('[API News DB Error]', e.message);
+    }
+  }
   res.json(newsArticles);
 });
 
-app.post('/api/news', (req: Request, res: Response) => {
+app.post('/api/news', async (req: Request, res: Response) => {
   const newArt = {
     ...req.body,
     id: `news-${Date.now()}`,
     slug: req.body.slug || `article-${Date.now()}`,
     publishedAt: req.body.publishedAt || new Date().toISOString().split('T')[0],
   };
+
+  if (isDbActive()) {
+    try {
+      const saved = await dbInsertNews(newArt);
+      if (saved) {
+        newsArticles.unshift(saved);
+        auditLogs.push({
+          id: `log-${Date.now()}`,
+          action: 'NEWS_CREATED_POSTGRES',
+          user: 'Direction / Rédaction',
+          details: `Publication de l'article en base PostgreSQL : ${saved.title}`,
+          timestamp: new Date().toISOString(),
+        });
+        return res.status(201).json(saved);
+      }
+    } catch (e: any) {
+      console.error('[API News Insert DB Error]', e.message);
+    }
+  }
+
   newsArticles.unshift(newArt);
   auditLogs.push({
     id: `log-${Date.now()}`,
@@ -924,12 +959,32 @@ app.post('/api/news', (req: Request, res: Response) => {
   res.status(201).json(newArt);
 });
 
-app.put('/api/news/:id', (req: Request, res: Response) => {
+app.put('/api/news/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
   const index = newsArticles.findIndex(a => a.id === id);
   if (index === -1) {
     return res.status(404).json({ error: 'Article introuvable' });
   }
+
+  if (isDbActive()) {
+    try {
+      const updated = await dbUpdateNews(id, req.body);
+      if (updated) {
+        newsArticles[index] = { ...newsArticles[index], ...updated };
+        auditLogs.push({
+          id: `log-${Date.now()}`,
+          action: 'NEWS_UPDATED_POSTGRES',
+          user: 'Direction / Rédaction',
+          details: `Mise à jour dans PostgreSQL de : ${updated.title}`,
+          timestamp: new Date().toISOString(),
+        });
+        return res.json(updated);
+      }
+    } catch (e: any) {
+      console.error('[API News Update DB Error]', e.message);
+    }
+  }
+
   newsArticles[index] = {
     ...newsArticles[index],
     ...req.body,
@@ -944,8 +999,17 @@ app.put('/api/news/:id', (req: Request, res: Response) => {
   res.json(newsArticles[index]);
 });
 
-app.delete('/api/news/:id', (req: Request, res: Response) => {
+app.delete('/api/news/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
+
+  if (isDbActive()) {
+    try {
+      await dbDeleteNews(id);
+    } catch (e: any) {
+      console.error('[API News Delete DB Error]', e.message);
+    }
+  }
+
   newsArticles = newsArticles.filter(a => a.id !== id);
   auditLogs.push({
     id: `log-${Date.now()}`,

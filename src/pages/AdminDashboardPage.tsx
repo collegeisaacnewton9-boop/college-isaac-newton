@@ -55,6 +55,7 @@ import { SettingsView } from '../components/admin/SettingsView';
 import { AccessControlView } from '../components/admin/AccessControlView';
 import { ROLE_PERMISSIONS } from '../data/rolePermissions';
 import { appFetch } from '../services/loadingService';
+import { ImageUploadCompressor } from '../components/common/ImageUploadCompressor';
 
 interface AdminDashboardPageProps {
   currentUser: User | null;
@@ -1730,13 +1731,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               </div>
 
               <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Image de Couverture (URL ou asset) :</label>
-                <input
-                  type="text"
-                  value={articleForm.coverImage}
-                  onChange={(e) => setArticleForm({ ...articleForm, coverImage: e.target.value })}
-                  placeholder="/src/assets/images/campus_facade_real_1790679454540.jpg"
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 font-mono text-[11px] transition-colors"
+                <ImageUploadCompressor
+                  currentImageUrl={articleForm.coverImage}
+                  onImageReady={(compressedUrl) => setArticleForm({ ...articleForm, coverImage: compressedUrl })}
+                  label="Image de Couverture (Optimisation & Compression WebP / JPEG)"
+                  recommendedAspect="Format 16:9 recommandé (Résolution max 1280px)"
                 />
               </div>
 

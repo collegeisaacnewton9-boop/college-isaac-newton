@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowRight, 
   GraduationCap, 
@@ -24,6 +24,8 @@ import { SCHOOL_INFO, SCHOOL_VALUES, INITIAL_NEWS, INITIAL_EVENTS, INITIAL_GALLE
 import { HeroCarousel } from '../components/layout/HeroCarousel';
 import { ActivityGallerySection } from '../components/home/ActivityGallerySection';
 import { TestimonialSection } from '../components/home/TestimonialsSection';
+import { apiService } from '../services/api';
+import { NewsArticle } from '../types';
 
 interface HomePageProps {
   onNavigate: (page: string, subSection?: string) => void;
@@ -114,9 +116,21 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle 
 
   const selectedCycle = cycleDetails[activeCycleTab];
 
-  // Articles for the 3-column section
-  const featuredArticle = INITIAL_NEWS[0]; // Article à la une
-  const secondaryArticles = INITIAL_NEWS.slice(1, 3); // Articles récents
+  // Dynamic news articles state
+  const [newsList, setNewsList] = useState<NewsArticle[]>(INITIAL_NEWS);
+
+  useEffect(() => {
+    apiService.getNews().then(setNewsList).catch(() => {});
+    const onNewsUpdate = () => {
+      apiService.getNews().then(setNewsList).catch(() => {});
+    };
+    window.addEventListener('cin:news-updated', onNewsUpdate);
+    return () => window.removeEventListener('cin:news-updated', onNewsUpdate);
+  }, []);
+
+  const publishedNews = newsList.filter(n => n.status === 'PUBLISHED');
+  const featuredArticle = publishedNews.find(n => n.featured) || publishedNews[0] || INITIAL_NEWS[0];
+  const secondaryArticles = publishedNews.filter(n => n.id !== featuredArticle.id).slice(0, 2);
   const upcomingEvents = INITIAL_EVENTS.slice(0, 4); // Calendrier à venir
 
   return (
