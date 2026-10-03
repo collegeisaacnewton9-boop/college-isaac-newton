@@ -11,15 +11,17 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiService } from '../../services/api';
-import { GalleryItem } from '../../types';
+import { GalleryItem, User } from '../../types';
 import { INITIAL_GALLERY } from '../../data/mockData';
 import { GalleryItemModal } from '../gallery/GalleryItemModal';
 
 interface ActivityGallerySectionProps {
   onNavigate: (page: string, subSection?: string) => void;
+  currentUser?: User | null;
 }
 
-export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ onNavigate }) => {
+export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ onNavigate, currentUser }) => {
+  const canManageGallery = Boolean(currentUser && ['ADMIN', 'EDITOR'].includes(currentUser.role));
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(INITIAL_GALLERY);
   const [activePhoto, setActivePhoto] = useState<GalleryItem | null>(null);
 
@@ -91,17 +93,19 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
           </h2>
         </div>
 
-        {/* Action Controls: Add photo + View full album */}
+        {/* Action Controls: Add photo (staff only) + View full album */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={handleOpenAdd}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
-            title="Ajouter une photo à la galerie"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Ajouter une photo</span>
-          </button>
+          {canManageGallery && (
+            <button
+              type="button"
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
+              title="Ajouter une photo à la galerie"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Ajouter une photo</span>
+            </button>
+          )}
 
           <button
             onClick={() => onNavigate('gallery')}
@@ -135,23 +139,27 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
 
             {/* Quick Action Buttons (Edit, Delete, Zoom) on Hover */}
             <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
-              <button
-                type="button"
-                onClick={(e) => handleOpenEdit(item, e)}
-                className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-blue-900 text-white flex items-center justify-center transition-colors shadow-md backdrop-blur-xs cursor-pointer"
-                title="Modifier cette photo"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
+              {canManageGallery && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => handleOpenEdit(item, e)}
+                    className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-blue-900 text-white flex items-center justify-center transition-colors shadow-md backdrop-blur-xs cursor-pointer"
+                    title="Modifier cette photo"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
 
-              <button
-                type="button"
-                onClick={(e) => handleDeleteItem(item.id, e)}
-                className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition-colors shadow-md backdrop-blur-xs cursor-pointer"
-                title="Supprimer cette photo"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteItem(item.id, e)}
+                    className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition-colors shadow-md backdrop-blur-xs cursor-pointer"
+                    title="Supprimer cette photo"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
 
               <div className="w-8 h-8 rounded-full bg-slate-900/80 text-amber-300 flex items-center justify-center shadow-md backdrop-blur-xs">
                 <ZoomIn className="w-3.5 h-3.5" />
@@ -187,30 +195,34 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
           >
             {/* Top Bar with actions */}
             <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const target = activePhoto;
-                  setActivePhoto(null);
-                  handleOpenEdit(target);
-                }}
-                className="p-2 rounded-full bg-slate-950/80 hover:bg-blue-900 text-white transition-colors cursor-pointer shadow-md"
-                title="Modifier"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
+              {canManageGallery && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = activePhoto;
+                      setActivePhoto(null);
+                      handleOpenEdit(target);
+                    }}
+                    className="p-2 rounded-full bg-slate-950/80 hover:bg-blue-900 text-white transition-colors cursor-pointer shadow-md"
+                    title="Modifier"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  const id = activePhoto.id;
-                  handleDeleteItem(id);
-                }}
-                className="p-2 rounded-full bg-slate-950/80 hover:bg-rose-600 text-white transition-colors cursor-pointer shadow-md"
-                title="Supprimer"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const id = activePhoto.id;
+                      handleDeleteItem(id);
+                    }}
+                    className="p-2 rounded-full bg-slate-950/80 hover:bg-rose-600 text-white transition-colors cursor-pointer shadow-md"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </>
+              )}
 
               <button
                 onClick={() => setActivePhoto(null)}
@@ -274,20 +286,22 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
         </div>
       )}
 
-      {/* FORM MODAL FOR ADDING & EDITING GALLERY ITEMS */}
-      <GalleryItemModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingItem(null);
-        }}
-        editingItem={editingItem}
-        onSaved={handleSaved}
-        onDeleted={(id) => {
-          setGalleryItems((prev) => prev.filter((item) => item.id !== id));
-          if (activePhoto?.id === id) setActivePhoto(null);
-        }}
-      />
+      {/* FORM MODAL FOR ADDING & EDITING GALLERY ITEMS (STAFF ONLY) */}
+      {canManageGallery && (
+        <GalleryItemModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingItem(null);
+          }}
+          editingItem={editingItem}
+          onSaved={handleSaved}
+          onDeleted={(id) => {
+            setGalleryItems((prev) => prev.filter((item) => item.id !== id));
+            if (activePhoto?.id === id) setActivePhoto(null);
+          }}
+        />
+      )}
 
     </section>
   );

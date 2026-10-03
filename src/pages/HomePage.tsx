@@ -25,14 +25,15 @@ import { HeroCarousel } from '../components/layout/HeroCarousel';
 import { ActivityGallerySection } from '../components/home/ActivityGallerySection';
 import { TestimonialSection } from '../components/home/TestimonialsSection';
 import { apiService } from '../services/api';
-import { NewsArticle, SchoolEvent } from '../types';
+import { NewsArticle, SchoolEvent, User } from '../types';
 
 interface HomePageProps {
   onNavigate: (page: string, subSection?: string) => void;
   onSelectArticle: (articleId: string) => void;
+  currentUser?: User | null;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle }) => {
+export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle, currentUser }) => {
   // Interactive cycle explorer tab
   const [activeCycleTab, setActiveCycleTab] = useState<'prescolaire' | 'fondamental' | 'secondaire' | 'numerique'>('fondamental');
 
@@ -426,7 +427,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle 
       <TestimonialSection onNavigate={onNavigate} />
 
       {/* 4.5. GALERIE DES ACTIVITÉS SCOLAIRES & PÉRISCOLAIRES */}
-      <ActivityGallerySection onNavigate={onNavigate} />
+      <ActivityGallerySection onNavigate={onNavigate} currentUser={currentUser} />
 
       {/* 5. INTERACTIVE PEDAGOGICAL CYCLES HUB (Compact & Dense) */}
       <section className="bg-slate-50/80 py-5 sm:py-7 border-y border-slate-200/70">

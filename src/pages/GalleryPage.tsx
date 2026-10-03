@@ -13,10 +13,15 @@ import {
 import { toast } from 'sonner';
 import { apiService } from '../services/api';
 import { INITIAL_GALLERY } from '../data/mockData';
-import { GalleryItem } from '../types';
+import { GalleryItem, User } from '../types';
 import { GalleryItemModal } from '../components/gallery/GalleryItemModal';
 
-export const GalleryPage: React.FC = () => {
+interface GalleryPageProps {
+  currentUser?: User | null;
+}
+
+export const GalleryPage: React.FC<GalleryPageProps> = ({ currentUser }) => {
+  const canManageGallery = Boolean(currentUser && ['ADMIN', 'EDITOR'].includes(currentUser.role));
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(INITIAL_GALLERY);
   const [activeItem, setActiveItem] = useState<GalleryItem | null>(null);
 
@@ -106,15 +111,17 @@ export const GalleryPage: React.FC = () => {
           </h1>
         </div>
 
-        {/* Action Button: Add Photo */}
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 shrink-0 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 text-amber-400" />
-          <span>Ajouter une photo</span>
-        </button>
+        {/* Action Button: Add Photo (Staff only) */}
+        {canManageGallery && (
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95 shrink-0 self-start sm:self-auto"
+          >
+            <Plus className="w-4 h-4 text-amber-400" />
+            <span>Ajouter une photo</span>
+          </button>
+        )}
       </div>
 
       {/* Modern Visual Gallery Grid */}
@@ -139,23 +146,27 @@ export const GalleryPage: React.FC = () => {
 
             {/* Action Buttons Overlay on Hover / Tap */}
             <div className="absolute top-3 right-3 flex items-center gap-1.5 opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10">
-              <button
-                type="button"
-                onClick={(e) => handleOpenEdit(item, e)}
-                className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-blue-900 text-white flex items-center justify-center transition-colors shadow-md backdrop-blur-xs cursor-pointer"
-                title="Modifier cette photo"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
+              {canManageGallery && (
+                <>
+                  <button
+                    type="button"
+                    onClick={(e) => handleOpenEdit(item, e)}
+                    className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-blue-900 text-white flex items-center justify-center transition-colors shadow-md backdrop-blur-xs cursor-pointer"
+                    title="Modifier cette photo"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
 
-              <button
-                type="button"
-                onClick={(e) => handleDeleteItem(item.id, e)}
-                className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition-colors shadow-md backdrop-blur-xs cursor-pointer"
-                title="Supprimer cette photo"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeleteItem(item.id, e)}
+                    className="w-8 h-8 rounded-full bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center transition-colors shadow-md backdrop-blur-xs cursor-pointer"
+                    title="Supprimer cette photo"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </>
+              )}
 
               <div className="w-8 h-8 rounded-full bg-slate-900/80 text-amber-300 flex items-center justify-center shadow-md backdrop-blur-xs">
                 <ZoomIn className="w-3.5 h-3.5" />
@@ -191,30 +202,34 @@ export const GalleryPage: React.FC = () => {
           >
             {/* Top Bar with actions */}
             <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const target = activeItem;
-                  setActiveItem(null);
-                  handleOpenEdit(target);
-                }}
-                className="p-2 rounded-full bg-slate-950/80 hover:bg-blue-900 text-white transition-colors cursor-pointer shadow-md"
-                title="Modifier"
-              >
-                <Edit2 className="w-4 h-4" />
-              </button>
+              {canManageGallery && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = activeItem;
+                      setActiveItem(null);
+                      handleOpenEdit(target);
+                    }}
+                    className="p-2 rounded-full bg-slate-950/80 hover:bg-blue-900 text-white transition-colors cursor-pointer shadow-md"
+                    title="Modifier"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  const id = activeItem.id;
-                  handleDeleteItem(id);
-                }}
-                className="p-2 rounded-full bg-slate-950/80 hover:bg-rose-600 text-white transition-colors cursor-pointer shadow-md"
-                title="Supprimer"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const id = activeItem.id;
+                      handleDeleteItem(id);
+                    }}
+                    className="p-2 rounded-full bg-slate-950/80 hover:bg-rose-600 text-white transition-colors cursor-pointer shadow-md"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </>
+              )}
 
               <button
                 onClick={() => setActiveItem(null)}
@@ -268,39 +283,43 @@ export const GalleryPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const target = activeItem;
-                    setActiveItem(null);
-                    handleOpenEdit(target);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
-                >
-                  <Edit2 className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Modifier</span>
-                </button>
-              </div>
+              {canManageGallery && (
+                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = activeItem;
+                      setActiveItem(null);
+                      handleOpenEdit(target);
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    <Edit2 className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Modifier</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {/* FORM MODAL FOR ADDING & EDITING GALLERY ITEMS */}
-      <GalleryItemModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditingItem(null);
-        }}
-        editingItem={editingItem}
-        onSaved={handleSaved}
-        onDeleted={(id) => {
-          setGalleryItems((prev) => prev.filter((item) => item.id !== id));
-          if (activeItem?.id === id) setActiveItem(null);
-        }}
-      />
+      {/* FORM MODAL FOR ADDING & EDITING GALLERY ITEMS (STAFF ONLY) */}
+      {canManageGallery && (
+        <GalleryItemModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditingItem(null);
+          }}
+          editingItem={editingItem}
+          onSaved={handleSaved}
+          onDeleted={(id) => {
+            setGalleryItems((prev) => prev.filter((item) => item.id !== id));
+            if (activeItem?.id === id) setActiveItem(null);
+          }}
+        />
+      )}
 
     </div>
   );

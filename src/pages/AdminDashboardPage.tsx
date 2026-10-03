@@ -608,8 +608,17 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
               }`}
             >
-              <Github className="w-3.5 h-3.5 text-amber-400" />
-              <span>Paramètres & GitHub</span>
+              {import.meta.env.DEV ? (
+                <>
+                  <Github className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Paramètres & GitHub</span>
+                </>
+              ) : (
+                <>
+                  <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Configuration Système</span>
+                </>
+              )}
             </button>
 
             <button
@@ -817,8 +826,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <div className="w-6 h-6 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
                     <Sliders className="w-3 h-3" />
                   </div>
-                  <h4 className="font-semibold text-slate-900 text-xs">Paramètres & GitHub</h4>
-                  <p className="text-[9.5px] text-slate-500 line-clamp-1">Alertes & Export REST</p>
+                  <h4 className="font-semibold text-slate-900 text-xs">
+                    {import.meta.env.DEV ? 'Paramètres & GitHub' : 'Configuration Système'}
+                  </h4>
+                  <p className="text-[9.5px] text-slate-500 line-clamp-1">
+                    {import.meta.env.DEV ? 'Alertes & Export REST' : 'Alertes & Paramètres Généraux'}
+                  </p>
                 </button>
 
               </div>

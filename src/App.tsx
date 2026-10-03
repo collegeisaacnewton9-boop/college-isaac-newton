@@ -132,6 +132,7 @@ export default function App() {
           <HomePage
             onNavigate={handleNavigate}
             onSelectArticle={handleSelectArticle}
+            currentUser={currentUser}
           />
         )}
 
@@ -180,7 +181,7 @@ export default function App() {
         )}
 
         {currentPage === 'gallery' && (
-          <GalleryPage />
+          <GalleryPage currentUser={currentUser} />
         )}
 
         {currentPage === 'resources' && (

@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   Building2,
   Calendar,
-  DollarSign,
-  CreditCard,
   KeyRound,
   Shield,
   RefreshCw,
@@ -45,7 +43,7 @@ interface SettingsViewProps {
   onSettingsUpdated?: (settings: SiteSettings) => void;
 }
 
-type SettingsTab = 'profile' | 'academic' | 'news' | 'finance' | 'payments' | 'gateways' | 'users' | 'security';
+type SettingsTab = 'profile' | 'academic' | 'news' | 'gateways' | 'users' | 'security';
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   initialSettings,
@@ -489,34 +487,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <span>Actualités (Accueil)</span>
             </button>
 
-            {/* Finance & Taux */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('finance')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
-                activeTab === 'finance'
-                  ? 'bg-slate-900 text-white font-bold shadow-xs'
-                  : 'text-slate-700 hover:bg-slate-100/80'
-              }`}
-            >
-              <DollarSign className={`w-4 h-4 ${activeTab === 'finance' ? 'text-amber-400' : 'text-slate-500'}`} />
-              <span>Finance & Taux</span>
-            </button>
-
-            {/* Modes de Règlement */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('payments')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
-                activeTab === 'payments'
-                  ? 'bg-slate-900 text-white font-bold shadow-xs'
-                  : 'text-slate-700 hover:bg-slate-100/80'
-              }`}
-            >
-              <CreditCard className={`w-4 h-4 ${activeTab === 'payments' ? 'text-amber-400' : 'text-slate-500'}`} />
-              <span>Modes de Règlement</span>
-            </button>
-
             {/* Passerelles & Clés API / SMTP */}
             <button
               type="button"
@@ -568,34 +538,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           </div>
 
-          {/* DÉPÔT GITHUB MINI CARD (BOTTOM OF SIDEBAR - AS IN IMAGE 2) */}
-          <div className="bg-slate-950 text-white rounded-2xl p-3 border border-slate-800 shadow-md space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                  <Github className="w-4 h-4" />
+          {/* DÉPÔT GITHUB MINI CARD (BOTTOM OF SIDEBAR - DEV ONLY) */}
+          {import.meta.env.DEV && (
+            <div className="bg-slate-950 text-white rounded-2xl p-3 border border-slate-800 shadow-md space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                    <Github className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-white">Dépôt GitHub</h4>
+                    <p className="text-[10.5px] text-slate-400 font-mono truncate max-w-[140px]">
+                      {config.owner} / {config.repo}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-xs text-white">Dépôt GitHub</h4>
-                  <p className="text-[10.5px] text-slate-400 font-mono truncate max-w-[140px]">
-                    {config.owner} / {config.repo}
-                  </p>
-                </div>
+                <span className="px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 text-[9px] font-mono font-bold">
+                  DEV ONLY
+                </span>
               </div>
-              <span className="px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 text-[9px] font-mono font-bold">
-                DEV ONLY
-              </span>
-            </div>
 
-            <button
-              type="button"
-              onClick={() => setIsGitHubModalOpen(true)}
-              className="w-full py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer border border-white/10 shadow-xs"
-            >
-              <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
-              <span>Exporter & Synchroniser</span>
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => setIsGitHubModalOpen(true)}
+                className="w-full py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer border border-white/10 shadow-xs"
+              >
+                <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
+                <span>Exporter & Synchroniser</span>
+              </button>
+            </div>
+          )}
 
         </aside>
 
@@ -1612,91 +1584,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
 
           {/* ===========================================================
-              TAB 4 : FINANCE & SCOLARITÉ
-          =========================================================== */}
-          {activeTab === 'finance' && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
-              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-                  <DollarSign className="w-5 h-5 text-emerald-700" />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                    Finance & Barèmes de Scolarité
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    Configuration des cycles, droits d'admission et échéanciers académiques
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="font-bold text-slate-800 block mb-1">Préscolaire</span>
-                  <p className="text-slate-500 text-[11px]">Petite, Moyenne & Grande Section</p>
-                  <div className="text-lg font-black text-slate-900 mt-2 font-mono">Sur Dossier</div>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="font-bold text-slate-800 block mb-1">Fondamental (1er au 3e Cycle)</span>
-                  <p className="text-slate-500 text-[11px]">1ère à la 9ème Année Fondamentale</p>
-                  <div className="text-lg font-black text-slate-900 mt-2 font-mono">Sur Test</div>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <span className="font-bold text-slate-800 block mb-1">Secondaire Rénové</span>
-                  <p className="text-slate-500 text-[11px]">Nouveau Secondaire 1 à 4</p>
-                  <div className="text-lg font-black text-slate-900 mt-2 font-mono">Sur Test & Dossier</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ===========================================================
-              TAB 5 : MODES DE RÈGLEMENT
-          =========================================================== */}
-          {activeTab === 'payments' && (
-            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
-              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-800 flex items-center justify-center shrink-0">
-                  <CreditCard className="w-5 h-5 text-blue-900" />
-                </div>
-                <div>
-                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                    Modes de Règlement
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    Canaux de perception autorisés pour les scolarités et frais de dossiers
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-slate-900 block">Dépôt Bancaire (Sogebank / Unibank)</span>
-                    <span className="text-[11px] text-slate-500">Compte officiel Collège Isaac Newton</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">ACTIF</span>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
-                  <div>
-                    <span className="font-bold text-slate-900 block">Paiement Mobile (MonCash)</span>
-                    <span className="text-[11px] text-slate-500">Numéro marchand dédié</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">ACTIF</span>
-                </div>
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between sm:col-span-2">
-                  <div>
-                    <span className="font-bold text-slate-900 block">Comptabilité du Campus (Delmas 50)</span>
-                    <span className="text-[11px] text-slate-500">Chèque de direction ou espèces aux guichets administratifs</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">ACTIF</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ===========================================================
-              TAB 5.5 : UTILISATEURS & ÉQUIPE
+              TAB 4 : UTILISATEURS & ÉQUIPE
           =========================================================== */}
           {activeTab === 'users' && (
             <div className="space-y-4">
@@ -1741,7 +1629,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* =========================================================================
           MODAL DE SYNCHRONISATION GITHUB (CLEAN & COMPACT)
       ========================================================================= */}
-      {isGitHubModalOpen && (
+      {import.meta.env.DEV && isGitHubModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-4 sm:p-5 space-y-4 animate-scale-in">
             
