@@ -3,13 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Star, 
   Quote, 
-  CheckCircle2, 
+  CheckCircle2,
   ChevronLeft, 
   ChevronRight, 
-  MessageSquare, 
-  PlusCircle,
-  X,
-  Send,
   Award
 } from 'lucide-react';
 import { INITIAL_TESTIMONIALS } from '../../data/mockData';
@@ -19,36 +15,11 @@ interface TestimonialSectionProps {
   onNavigate?: (page: string, subSection?: string) => void;
 }
 
-export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onNavigate }) => {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(INITIAL_TESTIMONIALS);
-  const [activeTab, setActiveTab] = useState<string>('TOUS');
+export const TestimonialSection: React.FC<TestimonialSectionProps> = () => {
+  const [testimonials] = useState<Testimonial[]>(INITIAL_TESTIMONIALS);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
-  // New testimonial form state
-  const [newAuthor, setNewAuthor] = useState('');
-  const [newRole, setNewRole] = useState('Parent d’élève');
-  const [newClass, setNewClass] = useState('');
-  const [newComment, setNewComment] = useState('');
-  const [newRating, setNewRating] = useState(5);
-
-  const categories = [
-    { id: 'TOUS', label: 'Tous les avis' },
-    { id: 'Parent d’élève', label: 'Parents d’élèves' },
-    { id: 'Élève / Lauréat', label: 'Élèves & Lauréats' },
-    { id: 'Enseignant', label: 'Corps professoral' },
-  ];
-
-  const filteredTestimonials = testimonials.filter((t) => {
-    if (activeTab === 'TOUS') return true;
-    if (activeTab === 'Élève / Lauréat') {
-      return t.relationship === 'Ancien élève / Lauréat' || t.relationship === 'Élève';
-    }
-    return t.relationship === activeTab;
-  });
-
-  const total = filteredTestimonials.length;
+  const total = testimonials.length;
 
   // Fluid smooth auto-play slideshow (no pause button)
   useEffect(() => {
@@ -61,11 +32,6 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onNaviga
     return () => clearInterval(timer);
   }, [total, currentIndex]);
 
-  // Reset index when filter changes
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [activeTab]);
-
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + total) % total);
   };
@@ -74,56 +40,15 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onNaviga
     setCurrentIndex((prev) => (prev + 1) % total);
   };
 
-  const currentItem = filteredTestimonials[currentIndex] || filteredTestimonials[0];
-  const nextItem = filteredTestimonials[(currentIndex + 1) % total] || currentItem;
-
-  const handleSubmitNewTestimonial = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newAuthor.trim() || !newComment.trim()) return;
-
-    const initials = newAuthor
-      .split(' ')
-      .map((part) => part[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase() || 'CI';
-
-    const relationshipValue = 
-      newRole.includes('Parent') ? 'Parent d’élève' : 
-      newRole.includes('Prof') ? 'Enseignant' : 'Élève';
-
-    const newEntry: Testimonial = {
-      id: `test-user-${Date.now()}`,
-      authorName: newAuthor.trim(),
-      role: `${newRole}${newClass ? ` (${newClass})` : ''}`,
-      relationship: relationshipValue as any,
-      cycleOrClass: newClass || 'Collège Isaac Newton',
-      comment: newComment.trim(),
-      rating: newRating,
-      avatarInitials: initials,
-      year: '2026',
-      verified: true,
-    };
-
-    setTestimonials([newEntry, ...testimonials]);
-    setSubmittedSuccess(true);
-    setTimeout(() => {
-      setSubmittedSuccess(false);
-      setIsModalOpen(false);
-      setNewAuthor('');
-      setNewComment('');
-      setNewClass('');
-      setActiveTab('TOUS');
-      setCurrentIndex(0);
-    }, 1800);
-  };
+  const currentItem = testimonials[currentIndex] || testimonials[0];
+  const nextItem = testimonials[(currentIndex + 1) % total] || currentItem;
 
   return (
     <section 
       className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6" 
       aria-label="Témoignages et avis de la communauté scolaire"
     >
-      {/* 1. Header with Tabs & Share Review Button - Streamlined & Modern */}
+      {/* 1. Header - Streamlined & Modern */}
       <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-3 border-b border-slate-100 pb-3">
         <div>
           <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-900 mb-1">
@@ -133,35 +58,6 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onNaviga
           <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
             Témoignages & Paroles de notre Communauté
           </h2>
-        </div>
-
-        {/* Filter Tabs & Add Review Button */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex p-1 bg-slate-100 rounded-xl text-xs">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveTab(cat.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                  activeTab === cat.id
-                    ? 'bg-blue-900 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
-            title="Partager votre expérience au collège"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>Donner un avis</span>
-          </button>
         </div>
       </div>
 
@@ -302,7 +198,7 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onNaviga
 
         {/* Carousel Progress Dots */}
         <div className="flex items-center justify-center gap-1.5 pt-4 mt-3 border-t border-white/10 relative z-10">
-          {filteredTestimonials.map((_, idx) => (
+          {testimonials.map((_, idx: number) => (
             <button
               key={idx}
               type="button"
@@ -319,169 +215,6 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ onNaviga
         </div>
 
       </div>
-
-      {/* 3. MODAL: "Donner un avis / Partager un témoignage" */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200"
-            role="dialog"
-            aria-modal="true"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full p-5 sm:p-6 overflow-hidden relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-lg bg-blue-50 text-blue-900">
-                    <MessageSquare className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-serif font-bold text-lg text-slate-900">
-                      Partagez votre expérience
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Votre avis contribue au rayonnement du Collège Isaac Newton.
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {submittedSuccess ? (
-                <div className="py-8 text-center space-y-2">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <h4 className="font-serif font-bold text-lg text-slate-900">
-                    Merci pour votre témoignage !
-                  </h4>
-                  <p className="text-xs text-slate-600 max-w-xs mx-auto">
-                    Votre avis a été certifié et ajouté au carrousel officiel avec succès.
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmitNewTestimonial} className="space-y-3.5">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Votre Nom complet *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Ex: Dr. Jean-Claude Pierre"
-                      value={newAuthor}
-                      onChange={(e) => setNewAuthor(e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-900"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Votre Rôle *
-                      </label>
-                      <select
-                        value={newRole}
-                        onChange={(e) => setNewRole(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-900"
-                      >
-                        <option value="Parent d’élève">Parent d’élève</option>
-                        <option value="Élève">Élève</option>
-                        <option value="Ancien élève / Lauréat">Ancien élève / Lauréat</option>
-                        <option value="Enseignant">Enseignant</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Classe ou Promotion
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Ex: 9ème AF, NS4, Promo 2024..."
-                        value={newClass}
-                        onChange={(e) => setNewClass(e.target.value)}
-                        className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-900"
-                      >
-                      </input>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Votre Note de satisfaction
-                    </label>
-                    <div className="flex items-center gap-1 py-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setNewRating(star)}
-                          className="p-1 cursor-pointer focus:outline-none"
-                        >
-                          <Star
-                            className={`w-5 h-5 ${
-                              star <= newRating 
-                                ? 'fill-amber-400 text-amber-400' 
-                                : 'text-slate-300'
-                            }`}
-                          />
-                        </button>
-                      ))}
-                      <span className="text-xs font-mono font-bold text-slate-700 ml-2">
-                        {newRating} / 5
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Votre Témoignage *
-                    </label>
-                    <textarea
-                      required
-                      rows={3}
-                      placeholder="Partagez vos impressions sur la discipline, l'encadrement, les professeurs ou les examens d'État..."
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-900 resize-none"
-                    />
-                  </div>
-
-                  <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
-                    <button
-                      type="button"
-                      onClick={() => setIsModalOpen(false)}
-                      className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      type="submit"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>Publier mon avis</span>
-                    </button>
-                  </div>
-                </form>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </section>
   );
 };
