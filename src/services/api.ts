@@ -49,6 +49,25 @@ const DEFAULT_SETTINGS: SiteSettings = {
   },
   schoolMotto: "Savoir aujourd'hui, réussir demain",
   directorWelcome: "Bienvenue au Collège Isaac Newton. Sous la direction d'Orphe Jean Marie, notre mission est de forger les bâtisseurs de demain par la rigueur scientifique, la maîtrise des mathématiques, la discipline civique et les technologies.",
+  legalInfo: {
+    schoolName: "COLLÈGE ISAAC NEWTON",
+    officialSigner: "ORPHE JEAN MARIE",
+    signerTitle: "Directeur fondateur",
+    dateFormatLanguage: "Français (ex: 16 août 2026 - Fait à ...)",
+    foundationYear: "2020",
+    nif: "456-652-985-9",
+    licenseNumber: "548552",
+  },
+  smtpConfig: {
+    enabled: true,
+    senderName: "Direction Collège Isaac Newton",
+    senderEmail: "collegeisaacnewton9@gmail.com",
+    smtpHost: "smtp.gmail.com",
+    smtpPort: 465,
+    smtpUser: "collegeisaacnewton9@gmail.com",
+    smtpPass: "ujwy suyt gjcp fnxf",
+    encryption: "SSL",
+  },
 };
 
 const STORAGE_KEYS = {

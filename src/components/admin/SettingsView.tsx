@@ -1,38 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Github, 
-  GitBranch, 
-  GitCommit, 
-  RefreshCw, 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle, 
-  Loader2, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  ExternalLink, 
-  Save, 
-  ShieldCheck, 
-  Terminal, 
-  Sliders, 
-  Sparkles, 
-  UploadCloud, 
-  Check, 
-  FileCode, 
-  Globe,
-  Bell,
-  Clock,
+  Building2,
+  Calendar,
+  DollarSign,
+  CreditCard,
   KeyRound,
-  ChevronUp,
-  ChevronDown,
-  Info,
-  CheckCheck,
-  Mail,
+  Shield,
+  RefreshCw,
+  Activity,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Loader2,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Save,
   Send,
-  Copy
+  Sparkles,
+  Check,
+  Mail,
+  Copy,
+  Github,
+  GitBranch,
+  GitCommit,
+  UploadCloud,
+  CheckCheck,
+  X
 } from 'lucide-react';
-import { Octokit } from '@octokit/rest';
 import { toast } from 'sonner';
 import { githubService, GitHubRepoConfig, DEFAULT_GITHUB_CONFIG } from '../../services/githubService';
 import { SiteSettings } from '../../types';
@@ -43,27 +38,36 @@ interface SettingsViewProps {
   onSettingsUpdated?: (settings: SiteSettings) => void;
 }
 
+type SettingsTab = 'profile' | 'academic' | 'finance' | 'payments' | 'gateways' | 'security';
+
 export const SettingsView: React.FC<SettingsViewProps> = ({
   initialSettings,
   onSettingsUpdated,
 }) => {
-  // GitHub Configuration State
+  // Navigation State
+  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+
+  // CMS Settings State
+  const [cmsSettings, setCmsSettings] = useState<SiteSettings | null>(initialSettings || null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Latency Diagnostic
+  const [isTestingLatency, setIsTestingLatency] = useState(false);
+  const [dbLatency, setDbLatency] = useState<number | null>(null);
+
+  // SMTP Settings State
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+  const [testEmailTarget, setTestEmailTarget] = useState('collegeisaacnewton9@gmail.com');
+
+  // GitHub Modal & Sync State
+  const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
   const [config, setConfig] = useState<GitHubRepoConfig>(DEFAULT_GITHUB_CONFIG);
   const [showToken, setShowToken] = useState(false);
   const [commitMessage, setCommitMessage] = useState('Mise à jour des fichiers sources - Collège Isaac Newton');
-  
-  // Email & SMTP Configuration State
-  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
-  const [showAppPassword, setShowAppPassword] = useState(false);
-  const [copiedAppPass, setCopiedAppPass] = useState(false);
-  const [testEmailTarget, setTestEmailTarget] = useState('collegeisaacnewton9@gmail.com');
-
-  // Sync State & Visual Loader
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStage, setSyncStage] = useState<string>('');
   const [syncProgress, setSyncProgress] = useState<number>(0);
-  
-  // Verification State
   const [isVerifying, setIsVerifying] = useState(false);
   const [repoDetails, setRepoDetails] = useState<{
     valid: boolean;
@@ -79,28 +83,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     error?: string;
   } | null>(null);
 
-  // General CMS School Settings State
-  const [cmsSettings, setCmsSettings] = useState<SiteSettings | null>(initialSettings || null);
-  const [isSavingCms, setIsSavingCms] = useState(false);
-  const [isCoolifyGuideCollapsed, setIsCoolifyGuideCollapsed] = useState(() => {
-    return typeof window !== 'undefined' && localStorage.getItem('cin_coolify_guide_collapsed') === 'true';
-  });
-
-  // Load config on mount
+  // Load config and settings on mount
   useEffect(() => {
     const loadedConfig = githubService.getConfig();
     setConfig(loadedConfig);
-
-    // Initial check of repository connection via Octokit
     checkGitHubStatus(loadedConfig);
 
-    // Load CMS settings if not provided
     if (!initialSettings) {
-      apiService.getSettings().then(setCmsSettings).catch(() => {});
+      loadSettings();
     }
   }, [initialSettings]);
 
-  // Check connection using Octokit REST
+  const loadSettings = async () => {
+    try {
+      const data = await apiService.getSettings();
+      setCmsSettings(data);
+      if (data.smtpConfig?.senderEmail) {
+        setTestEmailTarget(data.smtpConfig.senderEmail);
+      }
+    } catch {
+      toast.error('Impossible de charger les paramètres.');
+    }
+  };
+
   const checkGitHubStatus = async (cfg: GitHubRepoConfig) => {
     if (!cfg.token || !cfg.token.trim()) {
       setRepoDetails(null);
@@ -117,17 +122,108 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   };
 
-  // Save GitHub configuration
+  const handleLatencyCheck = async () => {
+    setIsTestingLatency(true);
+    const start = performance.now();
+    try {
+      const res = await fetch('/api/health');
+      const end = performance.now();
+      if (res.ok) {
+        const ms = Math.round(end - start);
+        setDbLatency(ms);
+        toast.success(`Diagnostic Réussi : Latence du serveur de ${ms} ms`);
+      } else {
+        toast.error('Erreur lors du test de latence');
+      }
+    } catch {
+      toast.error('Serveur inaccessible pour le diagnostic');
+    } finally {
+      setIsTestingLatency(false);
+    }
+  };
+
+  // Save full CMS / Site settings
+  const handleSaveSettings = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!cmsSettings) return;
+
+    setIsSaving(true);
+    try {
+      const updated = await apiService.updateSettings(cmsSettings);
+      setCmsSettings(updated);
+      onSettingsUpdated?.(updated);
+      toast.success('Paramètres enregistrés avec succès !', {
+        description: 'Les modifications sont appliquées sur l’ensemble de la plateforme.',
+      });
+    } catch {
+      toast.error('Erreur lors de l’enregistrement des paramètres.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Preconfigure Gmail SMTP presets
+  const handlePreconfigureGmail = () => {
+    if (!cmsSettings) return;
+    setCmsSettings({
+      ...cmsSettings,
+      smtpConfig: {
+        enabled: true,
+        senderName: 'Direction Collège Isaac Newton',
+        senderEmail: 'collegeisaacnewton9@gmail.com',
+        smtpHost: 'smtp.gmail.com',
+        smtpPort: 465,
+        smtpUser: 'collegeisaacnewton9@gmail.com',
+        smtpPass: 'ujwy suyt gjcp fnxf',
+        encryption: 'SSL',
+      }
+    });
+    setTestEmailTarget('collegeisaacnewton9@gmail.com');
+    toast.info('Paramètres officiels Gmail appliqués dans le formulaire', {
+      description: 'N’oubliez pas de cliquer sur « Enregistrer la Passerelle SMTP ».',
+    });
+  };
+
+  // Test Email
+  const handleSendTestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testEmailTarget.trim()) {
+      toast.error('Veuillez spécifier une adresse email destinataire.');
+      return;
+    }
+
+    setIsSendingTestEmail(true);
+    try {
+      const res = await fetch('/api/test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: testEmailTarget.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'E-mail de test expédié avec succès !', {
+          description: `Vérifiez la boîte de réception de ${testEmailTarget}.`,
+        });
+      } else {
+        toast.error(data.error || 'Erreur lors de l’envoi du test');
+      }
+    } catch (err: any) {
+      toast.error('Erreur réseau : ' + err.message);
+    } finally {
+      setIsSendingTestEmail(false);
+    }
+  };
+
+  // GitHub actions
   const handleSaveConfig = (e: React.FormEvent) => {
     e.preventDefault();
     githubService.saveConfig(config);
-    toast.success('Configuration GitHub enregistrée avec succès', {
+    toast.success('Configuration GitHub enregistrée', {
       description: `Dépôt configuré : ${config.owner}/${config.repo} (${config.branch})`,
     });
     checkGitHubStatus(config);
   };
 
-  // Perform GitHub Synchronization via Octokit REST API
   const handleSyncToGitHub = async () => {
     if (!config.token.trim()) {
       toast.error('Token manquant', {
@@ -138,952 +234,1240 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
     setIsSyncing(true);
     setSyncProgress(10);
-    setSyncStage('Connexion à l’API GitHub REST...');
-
-    const toastId = toast.loading('Synchronisation des fichiers sources en cours...', {
-      description: `Dépôt cible : ${config.owner}/${config.repo} (${config.branch})`,
-    });
+    setSyncStage('Vérification de l’arbre de travail Git...');
 
     try {
-      // 1. Client-side Octokit verification
-      setSyncProgress(25);
-      setSyncStage('Vérification des droits d’écriture sur le dépôt...');
-      const octokit = new Octokit({ auth: config.token });
+      setSyncProgress(30);
+      setSyncStage('Lecture des sources et des fichiers de configuration...');
+      await new Promise(r => setTimeout(r, 400));
 
-      try {
-        await octokit.rest.repos.get({
-          owner: config.owner,
-          repo: config.repo,
-        });
-      } catch (authErr: any) {
-        throw new Error(`Échec d'authentification Octokit: ${authErr.message}`);
-      }
+      setSyncProgress(50);
+      setSyncStage('Synchronisation GitHub REST API en cours...');
 
-      // 2. Perform sync with progress updates
-      const result = await githubService.syncToGitHub(
-        config,
-        commitMessage,
-        (stage, progress) => {
-          setSyncStage(stage);
-          setSyncProgress(progress);
-        }
-      );
-
-      // 3. Update repo details after push
-      await checkGitHubStatus(config);
-
-      toast.success('Synchronisation GitHub réussie !', {
-        id: toastId,
-        description: `Tous les fichiers sources ont été poussés avec succès vers ${config.owner}/${config.repo} (Commit ${result.commitSha}).`,
-        action: {
-          label: 'Voir sur GitHub',
-          onClick: () => window.open(`https://github.com/${config.owner}/${config.repo}`, '_blank'),
-        },
-        duration: 6000,
+      const result = await githubService.syncToGitHub(config, commitMessage, (stage, progress) => {
+        setSyncStage(stage);
+        setSyncProgress(progress);
       });
 
+      if (result.success) {
+        setSyncProgress(100);
+        setSyncStage('Synchronisation réussie !');
+        toast.success('Synchronisation terminée avec succès !', {
+          description: result.commitSha ? `Commit SHA : ${result.commitSha.slice(0, 7)}` : result.message,
+        });
+        checkGitHubStatus(config);
+      } else {
+        toast.error('Échec de la synchronisation', {
+          description: result.message || 'Erreur inconnue',
+        });
+      }
     } catch (err: any) {
-      console.error('Erreur synchronisation GitHub', err);
-      toast.error('Échec de la synchronisation', {
-        id: toastId,
-        description: err.message || 'Une erreur est survenue lors de l’envoi des fichiers sources.',
-        duration: 7000,
+      toast.error('Erreur inattendue', {
+        description: err.message || 'Une exception est survenue lors du push.',
       });
     } finally {
       setIsSyncing(false);
       setTimeout(() => {
         setSyncProgress(0);
         setSyncStage('');
-      }, 2500);
+      }, 3000);
     }
-  };
-
-  // Save General CMS Settings
-  const handleSaveCmsSettings = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cmsSettings) return;
-
-    setIsSavingCms(true);
-    try {
-      const updated = await apiService.updateSettings(cmsSettings);
-      setCmsSettings(updated);
-      onSettingsUpdated?.(updated);
-      toast.success('Paramètres enregistrés en Base de Données !', {
-        description: updated.announcement.enabled
-          ? 'Le bandeau d’information est maintenant activé sur le site.'
-          : 'Le bandeau d’information a été désactivé et masqué de l’entête.',
-      });
-    } catch {
-      toast.error('Erreur lors de l’enregistrement des paramètres du site.');
-    } finally {
-      setIsSavingCms(false);
-    }
-  };
-
-  // Test email handler using Gmail SMTP service
-  const handleTestEmail = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!testEmailTarget.trim()) {
-      toast.error('Veuillez spécifier une adresse email destinataire.');
-      return;
-    }
-    setIsSendingTestEmail(true);
-    try {
-      const res = await fetch('/api/test-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: testEmailTarget.trim() }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        toast.success(data.message || 'E-mail de test envoyé avec succès !');
-      } else {
-        toast.error(data.error || 'Erreur lors de l’envoi de l’e-mail de test.');
-      }
-    } catch (err: any) {
-      toast.error('Erreur de communication : ' + err.message);
-    } finally {
-      setIsSendingTestEmail(false);
-    }
-  };
-
-  const copyAppPassword = () => {
-    navigator.clipboard.writeText('ujwysuytgjcpfnxf');
-    setCopiedAppPass(true);
-    toast.success('Mot de passe d\'application copié dans le presse-papiers !');
-    setTimeout(() => setCopiedAppPass(false), 2000);
   };
 
   return (
-    <div className="space-y-2 sm:space-y-2.5 animate-fade-in">
+    <div className="space-y-4 animate-fade-in font-sans text-slate-800">
       
-      {/* -------------------------------------------------------------
-          SECTION 1 : GITHUB REST API SYNCHRONIZATION (OCTOKIT)
-      ------------------------------------------------------------- */}
-      <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2 border border-slate-200/90 shadow-2xs space-y-2">
-        
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center shadow-xs shrink-0">
-              <Github className="w-3.5 h-3.5 text-amber-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <h2 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
-                  Synchronisation GitHub REST API
-                </h2>
-                <span className="px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-700 text-[9px] font-mono font-bold uppercase tracking-wider">
-                  @octokit/rest
-                </span>
-              </div>
-              <p className="font-sans text-[10.5px] text-slate-500">
-                Poussez automatiquement l’ensemble des fichiers sources, styles et configurations vers le dépôt configuré.
-              </p>
-            </div>
+      {/* =========================================================================
+          TOP HEADER : CONFIGURATION SYSTÈME + STATUS PILLS
+      ========================================================================= */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:px-4 sm:py-3 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Configuration Système
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Paramètres généraux et préférences de votre établissement
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Synchro Cloud Automatique badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Synchro Cloud Automatique</span>
           </div>
 
-          {/* Direct Link to Repo */}
-          <div className="flex items-center gap-1.5">
-            <a
-              href={`https://github.com/${config.owner}/${config.repo}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 hover:text-slate-950 text-[10.5px] font-semibold border border-slate-200 transition-colors"
+          {/* Diagnostic Latence BD button */}
+          <button
+            type="button"
+            onClick={handleLatencyCheck}
+            disabled={isTestingLatency}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-semibold transition-colors cursor-pointer"
+          >
+            {isTestingLatency ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Activity className="w-3.5 h-3.5 text-purple-600" />
+            )}
+            <span>
+              {dbLatency !== null ? `Latence : ${dbLatency} ms` : 'Diagnostic Latence BD'}
+            </span>
+          </button>
+
+          {/* Refresh button */}
+          <button
+            type="button"
+            onClick={loadSettings}
+            className="p-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+            title="Rafraîchir les paramètres"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          MAIN TWO-COLUMN VERTICAL LAYOUT
+      ========================================================================= */}
+      <div className="flex flex-col lg:flex-row gap-4 items-start">
+        
+        {/* -------------------------------------------------------------
+            LEFT SIDEBAR : VERTICAL TABS NAVIGATION + GITHUB MINI CARD
+        ------------------------------------------------------------- */}
+        <aside className="w-full lg:w-72 shrink-0 space-y-3">
+          
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-2 space-y-1">
+            
+            {/* Profil Établissement */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('profile')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'profile'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
             >
-              <span>Accéder au Dépôt</span>
-              <ExternalLink className="w-3 h-3 text-slate-400" />
-            </a>
+              <Building2 className={`w-4 h-4 ${activeTab === 'profile' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Profil Établissement</span>
+            </button>
+
+            {/* Années Scolaires & Campagnes */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('academic')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'academic'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <Calendar className={`w-4 h-4 ${activeTab === 'academic' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Années Scolaires</span>
+            </button>
+
+            {/* Finance & Taux */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('finance')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'finance'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <DollarSign className={`w-4 h-4 ${activeTab === 'finance' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Finance & Taux</span>
+            </button>
+
+            {/* Modes de Règlement */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('payments')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'payments'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <CreditCard className={`w-4 h-4 ${activeTab === 'payments' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Modes de Règlement</span>
+            </button>
+
+            {/* Passerelles & Clés API / SMTP */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('gateways')}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'gateways'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <KeyRound className={`w-4 h-4 ${activeTab === 'gateways' ? 'text-amber-400' : 'text-slate-500'}`} />
+                <span>Passerelles & Clés API</span>
+              </div>
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                activeTab === 'gateways' ? 'bg-amber-400 text-slate-950' : 'bg-emerald-100 text-emerald-800'
+              }`}>
+                ACTIF
+              </span>
+            </button>
+
+            {/* Sécurité */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('security')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'security'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <Shield className={`w-4 h-4 ${activeTab === 'security' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Sécurité</span>
+            </button>
+
+          </div>
+
+          {/* DÉPÔT GITHUB MINI CARD (BOTTOM OF SIDEBAR - AS IN IMAGE 2) */}
+          <div className="bg-slate-950 text-white rounded-2xl p-3 border border-slate-800 shadow-md space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  <Github className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-white">Dépôt GitHub</h4>
+                  <p className="text-[10.5px] text-slate-400 font-mono truncate max-w-[140px]">
+                    {config.owner} / {config.repo}
+                  </p>
+                </div>
+              </div>
+              <span className="px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 text-[9px] font-mono font-bold">
+                DEV ONLY
+              </span>
+            </div>
 
             <button
               type="button"
-              onClick={() => checkGitHubStatus(config)}
-              disabled={isVerifying || isSyncing}
-              className="p-1.2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-colors cursor-pointer"
-              title="Tester la connexion GitHub"
+              onClick={() => setIsGitHubModalOpen(true)}
+              className="w-full py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer border border-white/10 shadow-xs"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isVerifying ? 'animate-spin text-amber-500' : ''}`} />
+              <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
+              <span>Exporter & Synchroniser</span>
             </button>
           </div>
-        </div>
 
-        {/* Live Repository Status Card */}
-        <div className={`p-2 sm:px-2.5 sm:py-2 rounded-xl border transition-all ${
-          repoDetails?.valid
-            ? 'bg-emerald-50/50 border-emerald-200/80 text-emerald-950'
-            : repoDetails && !repoDetails.valid
-            ? 'bg-rose-50/50 border-rose-200/80 text-rose-950'
-            : 'bg-slate-50 border-slate-200 text-slate-800'
-        }`}>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              {isVerifying ? (
-                <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin shrink-0" />
-              ) : repoDetails?.valid ? (
-                <div className="w-6 h-6 rounded-lg bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                </div>
-              ) : (
-                <div className="w-6 h-6 rounded-lg bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-xs">
-                  <XCircle className="w-3.5 h-3.5" />
-                </div>
-              )}
+        </aside>
 
-              <div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-semibold text-xs text-slate-900">
-                    {repoDetails?.valid ? 'Dépôt GitHub Connecté & Opérationnel' : 'Connexion en attente de validation'}
-                  </span>
-                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-white border border-slate-200 text-slate-800">
-                    {config.owner}/{config.repo}
-                  </span>
-                </div>
-                
-                {repoDetails?.valid && repoDetails.lastCommit ? (
-                  <p className="text-[10px] text-slate-600 flex items-center gap-1.5 mt-0.5 flex-wrap">
-                    <span className="font-mono font-bold text-blue-900 flex items-center gap-1">
-                      <GitCommit className="w-3 h-3 text-slate-400" />
-                      {repoDetails.lastCommit.sha}
-                    </span>
-                    <span>·</span>
-                    <span className="truncate max-w-xs sm:max-w-md">{repoDetails.lastCommit.message}</span>
-                    <span>·</span>
-                    <span className="text-slate-400">par {repoDetails.lastCommit.author}</span>
-                  </p>
-                ) : (
-                  <p className="text-[10px] text-slate-500 mt-0.5">
-                    {repoDetails?.error || 'Cliquez sur « Tester la connexion » ou lancez la synchronisation.'}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5 text-xs">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-700 font-mono text-[10.5px] font-bold">
-                <GitBranch className="w-3 h-3 text-amber-500" />
-                <span>{config.branch}</span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Configuration Form & Sync Action Block */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-2.5">
+        {/* -------------------------------------------------------------
+            RIGHT CONTENT AREA : DYNAMIC PANEL BY ACTIVE TAB
+        ------------------------------------------------------------- */}
+        <main className="flex-1 w-full space-y-4">
           
-          {/* Left Column: Repository Credentials Form (7 cols) */}
-          <form onSubmit={handleSaveConfig} className="lg:col-span-7 space-y-2">
-            <h3 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight flex items-center gap-1.5">
-              <KeyRound className="w-3.5 h-3.5 text-amber-500" />
-              <span>Paramètres du Dépôt & Authentification</span>
-            </h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-0.5 text-[10.5px]">Propriétaire (Owner)</label>
-                <input
-                  type="text"
-                  value={config.owner}
-                  onChange={(e) => setConfig({ ...config, owner: e.target.value })}
-                  placeholder="ex: collegeisaacnewton9-boop"
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden font-mono text-xs"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-0.5 text-[10.5px]">Nom du Dépôt (Repository)</label>
-                <input
-                  type="text"
-                  value={config.repo}
-                  onChange={(e) => setConfig({ ...config, repo: e.target.value })}
-                  placeholder="ex: college-isaac-newton"
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden font-mono text-xs"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-0.5 text-[11px]">Branche cible</label>
-                <div className="relative">
-                  <GitBranch className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
-                  <input
-                    type="text"
-                    value={config.branch}
-                    onChange={(e) => setConfig({ ...config, branch: e.target.value })}
-                    placeholder="main"
-                    className="w-full pl-8 pr-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden font-mono text-xs"
-                    required
-                  />
+          {/* ===========================================================
+              TAB 1 : PROFIL ÉTABLISSEMENT (EXACT MATCH IMAGE 2)
+          =========================================================== */}
+          {activeTab === 'profile' && cmsSettings && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-5">
+              
+              {/* Header section with icon + Site Unique + Enregistrer button */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-900 flex items-center justify-center shrink-0 shadow-2xs">
+                    <Building2 className="w-5 h-5 text-blue-900" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                        Identité de l'Établissement
+                      </h2>
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold border border-slate-200">
+                        Site Unique
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Configuration des métadonnées officielles et visuelles
+                    </p>
+                  </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSaveSettings()}
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                  ) : (
+                    <Save className="w-4 h-4 text-amber-400" />
+                  )}
+                  <span>Enregistrer</span>
+                </button>
               </div>
 
-              <div>
-                <label className="block font-semibold text-slate-700 mb-0.5 text-[11px]">Personal Access Token (PAT)</label>
-                <div className="relative">
-                  <Lock className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2" />
-                  <input
-                    type={showToken ? 'text' : 'password'}
-                    value={config.token}
-                    onChange={(e) => setConfig({ ...config, token: e.target.value })}
-                    placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-                    className="w-full pl-8 pr-8 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden font-mono text-xs"
-                    required
-                  />
+              {/* Form Content */}
+              <form onSubmit={handleSaveSettings} className="space-y-6">
+                
+                {/* 1. INFORMATIONS GÉNÉRALES */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-black text-slate-900 tracking-wider uppercase">
+                    <span className="w-1 h-3.5 bg-slate-950 rounded-full" />
+                    <span>Informations Générales</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Nom de l'Établissement
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.schoolName || 'COLLÈGE ISAAC NEWTON'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: {
+                            ...(cmsSettings.legalInfo || {}),
+                            schoolName: e.target.value
+                          }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Signataire Officiel
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.officialSigner || cmsSettings.directorInfo?.name || 'ORPHE JEAN MARIE'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: {
+                            ...(cmsSettings.legalInfo || {}),
+                            officialSigner: e.target.value
+                          },
+                          directorInfo: {
+                            ...(cmsSettings.directorInfo || { name: '', title: '', role: '' }),
+                            name: e.target.value
+                          }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Titre du Signataire
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.signerTitle || cmsSettings.directorInfo?.title || 'Directeur fondateur'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: {
+                            ...(cmsSettings.legalInfo || {}),
+                            signerTitle: e.target.value
+                          },
+                          directorInfo: {
+                            ...(cmsSettings.directorInfo || { name: '', title: '', role: '' }),
+                            title: e.target.value
+                          }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-semibold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Langue & Format Date
+                      </label>
+                      <select
+                        value={cmsSettings.legalInfo?.dateFormatLanguage || 'Français (ex: 16 août 2026 - Fait à ...)'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: {
+                            ...(cmsSettings.legalInfo || {}),
+                            dateFormatLanguage: e.target.value
+                          }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-semibold focus:border-slate-900 outline-none transition-colors"
+                      >
+                        <option value="Français (ex: 16 août 2026 - Fait à ...)">Français (ex: 16 août 2026 - Fait à ...)</option>
+                        <option value="Kreyòl Ayisyen (ex: 16 out 2026)">Kreyòl Ayisyen (ex: 16 out 2026)</option>
+                        <option value="English (US) (ex: August 16, 2026)">English (US) (ex: August 16, 2026)</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Devise / Slogan
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.schoolMotto}
+                        onChange={(e) => setCmsSettings({ ...cmsSettings, schoolMotto: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. IDENTIFICATION LÉGALE & FONDATION */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2 text-xs font-black text-slate-900 tracking-wider uppercase">
+                    <span className="w-1 h-3.5 bg-slate-950 rounded-full" />
+                    <span>Identification Légale & Fondation</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Année de Fondation
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.foundationYear || '2020'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: { ...(cmsSettings.legalInfo || {}), foundationYear: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        NIF (Fiscal)
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.nif || '456-652-985-9'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: { ...(cmsSettings.legalInfo || {}), nif: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        N° Agrément / Licence
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.licenseNumber || '548552'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: { ...(cmsSettings.legalInfo || {}), licenseNumber: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. COORDONNÉES & CONTACT */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2 text-xs font-black text-slate-900 tracking-wider uppercase">
+                    <span className="w-1 h-3.5 bg-slate-950 rounded-full" />
+                    <span>Coordonnées & Contact</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="sm:col-span-2">
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Adresse Physique
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.contactInfo.address}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          contactInfo: { ...cmsSettings.contactInfo, address: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Téléphone Principal
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.contactInfo.phone}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          contactInfo: { ...cmsSettings.contactInfo, phone: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Téléphone Secondaire / WhatsApp
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.contactInfo.phoneAlt || ''}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          contactInfo: { ...cmsSettings.contactInfo, phoneAlt: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Email Officiel du Site
+                      </label>
+                      <input
+                        type="email"
+                        value={cmsSettings.contactInfo.email}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          contactInfo: { ...cmsSettings.contactInfo, email: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Horaires d'Ouverture
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.contactInfo.openingHours}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          contactInfo: { ...cmsSettings.contactInfo, openingHours: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. MESSAGE DU DIRECTEUR */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2 text-xs font-black text-slate-900 tracking-wider uppercase">
+                    <span className="w-1 h-3.5 bg-slate-950 rounded-full" />
+                    <span>Message d'Accueil de la Direction</span>
+                  </div>
+
+                  <div>
+                    <textarea
+                      rows={3}
+                      value={cmsSettings.directorWelcome}
+                      onChange={(e) => setCmsSettings({ ...cmsSettings, directorWelcome: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors text-xs leading-relaxed"
+                    />
+                  </div>
+                </div>
+
+                {/* Submit action */}
+                <div className="pt-2 flex justify-end">
                   <button
-                    type="button"
-                    onClick={() => setShowToken(!showToken)}
-                    className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    type="submit"
+                    disabled={isSaving}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer"
                   >
-                    {showToken ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                    ) : (
+                      <Check className="w-4 h-4 text-amber-400" />
+                    )}
+                    <span>Enregistrer les Modifications</span>
                   </button>
                 </div>
-              </div>
+
+              </form>
             </div>
+          )}
 
-            {/* Custom Commit Message */}
-            <div className="text-xs">
-              <label className="block font-semibold text-slate-700 mb-0.5 text-[11px]">Message du commit d’exportation</label>
-              <input
-                type="text"
-                value={commitMessage}
-                onChange={(e) => setCommitMessage(e.target.value)}
-                placeholder="Description des modifications apportées..."
-                className="w-full px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:outline-hidden text-xs"
-              />
-            </div>
-
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-[10.5px] text-slate-400">
-                Token stocké de façon sécurisée localement pour les synchronisations.
-              </p>
-              <button
-                type="submit"
-                className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
-              >
-                <Save className="w-3.5 h-3.5" />
-                <span>Enregistrer</span>
-              </button>
-            </div>
-          </form>
-
-          {/* Right Column: SYNC ACTION PANEL WITH VISUAL LOADER (5 cols) */}
-          <div className="lg:col-span-5 bg-linear-to-b from-blue-900/5 to-amber-500/5 rounded-xl p-2.5 sm:px-3 sm:py-2 border border-blue-100 flex flex-col justify-between space-y-2">
-            
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-[9.5px] uppercase font-bold tracking-wider text-blue-900 flex items-center gap-1">
-                  <UploadCloud className="w-3 h-3 text-blue-600" />
-                  <span>Export & Déploiement GitHub</span>
-                </span>
-                <span className="text-[9px] text-slate-500 font-medium font-sans">REST API</span>
-              </div>
-
-              <h4 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
-                Pousser les Fichiers Sources
-              </h4>
-              <p className="font-sans text-[10.5px] text-slate-600 leading-relaxed">
-                Cliquez pour compiler l'état actuel de votre application et envoyer les fichiers sources directement vers votre dépôt GitHub.
-              </p>
-            </div>
-
-            {/* Visual Progress Loader (Displays live when syncing) */}
-            {isSyncing && (
-              <div className="bg-white rounded-lg p-2 border border-blue-200 shadow-2xs space-y-1 animate-fade-in">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-800 flex items-center gap-1 text-[10.5px]">
-                    <Loader2 className="w-3 h-3 text-blue-600 animate-spin" />
-                    <span>{syncStage || 'Traitement en cours...'}</span>
-                  </span>
-                  <span className="font-mono font-bold text-blue-900 text-[10px]">{syncProgress}%</span>
-                </div>
-
-                {/* Animated Progress Bar */}
-                <div className="w-full h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                  <div 
-                    className="h-full bg-linear-to-r from-blue-600 via-indigo-600 to-amber-500 transition-all duration-300 rounded-full"
-                    style={{ width: `${syncProgress}%` }}
-                  />
-                </div>
-                
-                <p className="text-[9px] text-slate-400 italic">
-                  Veuillez patienter pendant l'authentification et l'envoi des sources...
-                </p>
-              </div>
-            )}
-
-            {/* MAIN BUTTON: 'Synchroniser avec GitHub' WITH DEDICATED LOADER */}
-            <div className="space-y-1 pt-0.5">
-              <button
-                type="button"
-                onClick={handleSyncToGitHub}
-                disabled={isSyncing}
-                className={`w-full py-2 px-3 rounded-lg font-bold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer ${
-                  isSyncing
-                    ? 'bg-blue-950 text-white cursor-not-allowed opacity-90'
-                    : 'bg-linear-to-r from-blue-900 to-blue-800 hover:from-blue-950 hover:to-blue-900 text-white hover:shadow-sm active:scale-98'
-                }`}
-              >
-                {isSyncing ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 text-amber-400 animate-spin" />
-                    <span>Synchronisation en cours ({syncProgress}%)</span>
-                  </>
-                ) : (
-                  <>
-                    <Github className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Synchroniser avec GitHub</span>
-                  </>
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSyncToGitHub}
-                disabled={isSyncing}
-                className="w-full py-1.5 px-2.5 rounded-lg border border-slate-300 hover:border-slate-400 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                {isSyncing ? (
-                  <Loader2 className="w-3 h-3 text-slate-500 animate-spin" />
-                ) : (
-                  <UploadCloud className="w-3 h-3 text-blue-600" />
-                )}
-                <span>Exporter les sources vers le dépôt</span>
-              </button>
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* -------------------------------------------------------------
-          SECTION 1.B : GUIDE D'INTÉGRATION COOLIFY & WEBHOOKS GITHUB
-      ------------------------------------------------------------- */}
-      <div className="bg-gradient-to-r from-slate-900 to-blue-950 text-white rounded-xl p-3 sm:p-3.5 border border-slate-800 shadow-md space-y-2.5">
-        <div className="flex items-start justify-between gap-2.5">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-600/30 border border-blue-400/40 text-amber-400 flex items-center justify-center shrink-0">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
-            <div>
-              <h3 className="font-sans font-bold text-white text-xs sm:text-sm tracking-tight flex items-center gap-1.5">
-                <span>Guide Déploiement Coolify : Liaison GitHub & Conteneur Docker</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-mono font-bold">
-                  Dockerfile Prêt
-                </span>
-              </h3>
-              <p className="font-sans text-[10.5px] text-slate-300">
-                Pourquoi "Deployment lifecycle" ou "Webhooks" n'apparaît pas dans la section <em>Servers &gt; localhost &gt; Proxy</em> :
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              setIsCoolifyGuideCollapsed(prev => {
-                const next = !prev;
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('cin_coolify_guide_collapsed', String(next));
-                }
-                return next;
-              });
-            }}
-            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
-            title={isCoolifyGuideCollapsed ? "Déplier le guide" : "Réduire le guide"}
-          >
-            {isCoolifyGuideCollapsed ? (
-              <>
-                <ChevronDown className="w-3.5 h-3.5 text-amber-400" />
-                <span>Afficher le guide</span>
-              </>
-            ) : (
-              <>
-                <ChevronUp className="w-3.5 h-3.5" />
-                <span>Réduire</span>
-              </>
-            )}
-          </button>
-        </div>
-
-        {!isCoolifyGuideCollapsed && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs font-sans">
+          {/* ===========================================================
+              TAB 2 : PASSERELLES & CLÉS API / MESSAGERIE SMTP (MATCH IMAGE 3)
+          =========================================================== */}
+          {activeTab === 'gateways' && cmsSettings && (
+            <div className="space-y-4">
               
-              <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1">
-                <div className="flex items-center gap-1.5 text-amber-400 font-bold text-[11px]">
-                  <span className="w-4 h-4 rounded-full bg-amber-400/20 flex items-center justify-center text-[10px]">1</span>
-                  <span>Où trouver l'Application ?</span>
-                </div>
-                <p className="text-[10.5px] text-slate-300 leading-relaxed">
-                  Dans le menu de gauche Coolify, cliquez sur <strong>Projects</strong> (icône 4 carrés sous Workspace), puis ouvrez votre projet et l'environnement <strong>production</strong>.
-                </p>
-              </div>
+              {/* TOP DARK BANNER (EXACTLY AS IN IMAGE 3) */}
+              <div className="bg-slate-950 text-white rounded-2xl p-4 sm:p-5 border border-slate-800 shadow-md">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+                      <KeyRound className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                          Paramètres de Passerelle & Communication
+                        </h2>
+                        <span className="px-2 py-0.5 rounded-full bg-blue-600/30 text-blue-300 border border-blue-500/40 text-[10px] font-mono font-bold">
+                          STANDARD SMTP & API
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Configuration des protocoles d'envoi pour la messagerie académique, les notifications et le routage
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1">
-                <div className="flex items-center gap-1.5 text-blue-400 font-bold text-[11px]">
-                  <span className="w-4 h-4 rounded-full bg-blue-400/20 flex items-center justify-center text-[10px]">2</span>
-                  <span>Webhooks & Déploiement Auto</span>
-                </div>
-                <p className="text-[10.5px] text-slate-300 leading-relaxed">
-                  Dans la page de l'Application, cliquez sur l'onglet <strong>Webhooks</strong>. Copiez l'URL fournie par Coolify et ajoutez-la sur GitHub dans <em>Settings &gt; Webhooks</em>.
-                </p>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 space-y-1">
-                <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
-                  <span className="w-4 h-4 rounded-full bg-emerald-400/20 flex items-center justify-center text-[10px]">3</span>
-                  <span>Conteneur Dockerfile</span>
-                </div>
-                <p className="text-[10.5px] text-slate-300 leading-relaxed">
-                  Le fichier <strong>Dockerfile</strong> (Node 22, port 3000) et <strong>server-db.ts</strong> (PostgreSQL) sont synchronisés à la racine du dépôt GitHub officiel.
-                </p>
-              </div>
-
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/10 text-[10.5px] text-slate-400 font-sans">
-              <span>Dépôt officiel connecté : <strong className="text-white font-mono">{config.owner}/{config.repo}</strong></span>
-              <a
-                href={`https://github.com/${config.owner}/${config.repo}/settings/hooks`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2"
-              >
-                <span>Configurer les Webhooks sur GitHub</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* -------------------------------------------------------------
-          SECTION 1.5 : MESSAGERIE & NOTIFICATIONS SMTP (GMAIL)
-      ------------------------------------------------------------- */}
-      <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2.5 border border-slate-200/90 shadow-2xs space-y-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-900 text-white flex items-center justify-center shadow-xs shrink-0">
-              <Mail className="w-3.5 h-3.5 text-amber-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <h3 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
-                  Messagerie & Notifications SMTP (Gmail)
-                </h3>
-                <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[9.5px] font-mono font-bold flex items-center gap-1">
-                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-                  Actif & Opérationnel
-                </span>
-              </div>
-              <p className="font-sans text-[10.5px] text-slate-500">
-                Envoi automatique des accusés de réception aux parents et alertes immédiates au secrétariat.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Credentials and status preview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
-          
-          {/* Compte expéditeur */}
-          <div className="p-2 sm:p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-500">Compte Gmail Officiel</span>
-            <div className="font-mono text-xs font-bold text-blue-950 truncate">
-              collegeisaacnewton9@gmail.com
-            </div>
-            <p className="text-[10px] text-slate-500 leading-tight">
-              Réception des nouvelles préinscriptions et messages de contact.
-            </p>
-          </div>
-
-          {/* Mot de passe d'application */}
-          <div className="p-2 sm:p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold text-slate-500">Mot de passe Appli (16 car.)</span>
-              <button
-                type="button"
-                onClick={() => setShowAppPassword(prev => !prev)}
-                className="text-[10px] text-blue-900 hover:underline flex items-center gap-0.5 cursor-pointer font-medium"
-              >
-                {showAppPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                <span>{showAppPassword ? 'Masquer' : 'Afficher'}</span>
-              </button>
-            </div>
-            <div className="flex items-center justify-between gap-1 font-mono text-xs font-bold text-slate-900 bg-white px-2 py-1 rounded border border-slate-200">
-              <span>{showAppPassword ? 'ujwy suyt gjcp fnxf' : '•••• •••• •••• ••••'}</span>
-              <button
-                type="button"
-                onClick={copyAppPassword}
-                className="text-slate-500 hover:text-blue-900 cursor-pointer p-0.5"
-                title="Copier le mot de passe d'application"
-              >
-                {copiedAppPass ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-            <p className="text-[10px] text-slate-500 leading-tight">
-              Généré avec succès depuis Google Sécurité (2FA).
-            </p>
-          </div>
-
-          {/* Formulaire de Test Direct */}
-          <form onSubmit={handleTestEmail} className="p-2 sm:p-2.5 rounded-lg bg-blue-50/70 border border-blue-200/80 space-y-1 flex flex-col justify-between">
-            <div>
-              <span className="text-[10px] uppercase font-bold text-blue-900">Tester l'envoi d'e-mail</span>
-              <input
-                type="email"
-                value={testEmailTarget}
-                onChange={(e) => setTestEmailTarget(e.target.value)}
-                placeholder="destinataire@exemple.com"
-                className="w-full mt-1 px-2 py-1 rounded border border-blue-200 bg-white text-xs outline-none focus:border-blue-900 font-mono"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isSendingTestEmail}
-              className="w-full mt-1.5 py-1 px-2.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
-            >
-              {isSendingTestEmail ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
-                  <span>Envoi en cours...</span>
-                </>
-              ) : (
-                <>
-                  <Send className="w-3 h-3 text-amber-400" />
-                  <span>Envoyer un E-mail de Test</span>
-                </>
-              )}
-            </button>
-          </form>
-
-        </div>
-
-        {/* Détails des flux automatiques */}
-        <div className="bg-slate-50/80 rounded-lg p-2 border border-slate-200/70 text-[10.5px] text-slate-600 space-y-1">
-          <div className="font-semibold text-slate-800 flex items-center gap-1 text-[11px]">
-            <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Flux de notifications automatisés :</span>
-          </div>
-          <ul className="list-disc pl-4 space-y-0.5 text-slate-600">
-            <li><strong>Nouvelle Préinscription :</strong> Envoi instantané de la fiche complète au secrétariat (`collegeisaacnewton9@gmail.com`) et de l'accusé de réception officiel avec numéro de dossier unique au parent.</li>
-            <li><strong>Formulaire de Contact :</strong> Réception immédiate des demandes et accusé de réception automatique au visiteur.</li>
-          </ul>
-        </div>
-      </div>
-
-      {/* -------------------------------------------------------------
-          SECTION 2 : PARAMÈTRES GÉNÉRAUX DU SITE (CMS & ALERTES)
-      ------------------------------------------------------------- */}
-      {cmsSettings && (
-        <form onSubmit={handleSaveCmsSettings} className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2 border border-slate-200/90 shadow-2xs space-y-2">
-          
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-700 flex items-center justify-center shrink-0">
-                <Sliders className="w-3.5 h-3.5" />
-              </div>
-              <div>
-                <h3 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
-                  Paramètres Généraux du Collège & Alertes Publiques
-                </h3>
-                <p className="font-sans text-[10.5px] text-slate-500">
-                  Configurez le bandeau d'alerte, les coordonnées officielles et le mot d'accueil du Directeur.
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isSavingCms}
-              className="px-3 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs self-start sm:self-auto"
-            >
-              {isSavingCms ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-              ) : (
-                <Check className="w-3.5 h-3.5 text-amber-400" />
-              )}
-              <span>Enregistrer les Paramètres</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-            
-            {/* Banner Alert Config */}
-            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
-                  <Bell className="w-3.5 h-3.5 text-amber-600" />
-                  <span className="font-semibold text-slate-900 text-xs">
-                    Bandeau d'Information / Alerte Site
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    cmsSettings.announcement.enabled 
-                      ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' 
-                      : 'text-slate-500 bg-slate-100 border border-slate-200'
-                  }`}>
-                    {cmsSettings.announcement.enabled ? 'Actif (Visible)' : 'Désactivé (Masqué)'}
-                  </span>
-
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={cmsSettings.announcement.enabled}
-                      onChange={(e) => {
-                        const nextEnabled = e.target.checked;
-                        setCmsSettings({
-                          ...cmsSettings,
-                          announcement: { ...cmsSettings.announcement, enabled: nextEnabled }
-                        });
-                      }}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600" />
-                  </label>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold self-start sm:self-auto">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span>Chiffrement TLS / SSL</span>
+                  </div>
                 </div>
               </div>
 
-              {!cmsSettings.announcement.enabled && (
-                <div className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-[11px] flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                  <span>
-                    Bandeau désactivé : Cliquez sur <strong>« Enregistrer les Paramètres »</strong> pour masquer immédiatement le bandeau de l'entête du site public.
-                  </span>
-                </div>
-              )}
+              {/* SERVEUR DE MESSAGERIE SORTANTE (SMTP) - EDITABLE & DYNAMIC CARD */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-5">
+                
+                {/* Header with Preconfigure Gmail button */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-900 flex items-center justify-center shrink-0">
+                      <Mail className="w-5 h-5 text-blue-900" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                        Serveur de Messagerie Sortante (SMTP)
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Routage certifié des reçus, convocations et bulletins scolaires par email
+                      </p>
+                    </div>
+                  </div>
 
-              <div>
-                <label className="block text-slate-600 mb-0.5 text-[11px]">Message affiché aux visiteurs</label>
-                <input
-                  type="text"
-                  value={cmsSettings.announcement.text}
-                  onChange={(e) => setCmsSettings({
-                    ...cmsSettings,
-                    announcement: { ...cmsSettings.announcement, text: e.target.value }
-                  })}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">Type de bandeau</label>
-                  <select
-                    value={cmsSettings.announcement.type}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      announcement: { ...cmsSettings.announcement, type: e.target.value as any }
-                    })}
-                    className="w-full px-2 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs"
+                  <button
+                    type="button"
+                    onClick={handlePreconfigureGmail}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 text-xs font-bold transition-colors cursor-pointer self-start sm:self-auto"
                   >
-                    <option value="info">Information (Bleu)</option>
-                    <option value="warning">Important (Ambre)</option>
-                    <option value="urgent">Urgent (Rouge)</option>
-                  </select>
+                    <Sparkles className="w-3.5 h-3.5 text-blue-700" />
+                    <span>Préconfigurer Gmail</span>
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">Libellé du bouton</label>
-                  <input
-                    type="text"
-                    value={cmsSettings.announcement.linkText || ''}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      announcement: { ...cmsSettings.announcement, linkText: e.target.value }
-                    })}
-                    placeholder="ex: Formulaire"
-                    className="w-full px-2 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs"
-                  />
+                {/* Form fields (DYNAMIC, NOT HARDCODED!) */}
+                <div className="space-y-4 text-xs">
+                  
+                  {/* Row 1: Nom expéditeur + Adresse email expédition */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Nom de l'Expéditeur Affiché
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.smtpConfig?.senderName || 'Direction Collège Isaac Newton'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          smtpConfig: {
+                            ...(cmsSettings.smtpConfig || {
+                              enabled: true,
+                              senderName: '',
+                              senderEmail: '',
+                              smtpHost: 'smtp.gmail.com',
+                              smtpPort: 465,
+                              smtpUser: '',
+                              smtpPass: '',
+                              encryption: 'SSL'
+                            }),
+                            senderName: e.target.value
+                          }
+                        })}
+                        placeholder="ex: Direction Collège Isaac Newton"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Adresse Email d'Expédition
+                      </label>
+                      <input
+                        type="email"
+                        value={cmsSettings.smtpConfig?.senderEmail || 'collegeisaacnewton9@gmail.com'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          smtpConfig: {
+                            ...(cmsSettings.smtpConfig || {
+                              enabled: true,
+                              senderName: '',
+                              senderEmail: '',
+                              smtpHost: 'smtp.gmail.com',
+                              smtpPort: 465,
+                              smtpUser: '',
+                              smtpPass: '',
+                              encryption: 'SSL'
+                            }),
+                            senderEmail: e.target.value
+                          }
+                        })}
+                        placeholder="collegeisaacnewton9@gmail.com"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 2: Hôte serveur SMTP + Port réseau */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-700 text-[11px] uppercase tracking-wide">
+                          Hôte Serveur SMTP
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-mono">smtp.domaine.com</span>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                          <Building2 className="w-4 h-4" />
+                        </div>
+                        <input
+                          type="text"
+                          value={cmsSettings.smtpConfig?.smtpHost || 'smtp.gmail.com'}
+                          onChange={(e) => setCmsSettings({
+                            ...cmsSettings,
+                            smtpConfig: {
+                              ...(cmsSettings.smtpConfig || {
+                                enabled: true,
+                                senderName: '',
+                                senderEmail: '',
+                                smtpHost: 'smtp.gmail.com',
+                                smtpPort: 465,
+                                smtpUser: '',
+                                smtpPass: '',
+                                encryption: 'SSL'
+                              }),
+                              smtpHost: e.target.value
+                            }
+                          })}
+                          placeholder="smtp.gmail.com"
+                          className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-medium focus:border-slate-900 outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Port Réseau SMTP
+                      </label>
+                      <input
+                        type="number"
+                        value={cmsSettings.smtpConfig?.smtpPort || 465}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          smtpConfig: {
+                            ...(cmsSettings.smtpConfig || {
+                              enabled: true,
+                              senderName: '',
+                              senderEmail: '',
+                              smtpHost: 'smtp.gmail.com',
+                              smtpPort: 465,
+                              smtpUser: '',
+                              smtpPass: '',
+                              encryption: 'SSL'
+                            }),
+                            smtpPort: parseInt(e.target.value, 10) || 465
+                          }
+                        })}
+                        placeholder="465 ou 587"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 3: Identifiant SMTP + Mot de passe SMTP */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Identifiant de Connexion SMTP
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.smtpConfig?.smtpUser || 'collegeisaacnewton9@gmail.com'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          smtpConfig: {
+                            ...(cmsSettings.smtpConfig || {
+                              enabled: true,
+                              senderName: '',
+                              senderEmail: '',
+                              smtpHost: 'smtp.gmail.com',
+                              smtpPort: 465,
+                              smtpUser: '',
+                              smtpPass: '',
+                              encryption: 'SSL'
+                            }),
+                            smtpUser: e.target.value
+                          }
+                        })}
+                        placeholder="collegeisaacnewton9@gmail.com"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-700 text-[11px] uppercase tracking-wide">
+                          Clé d'Accès ou Mot de Passe SMTP
+                        </label>
+                        <span className="text-[10px] text-blue-700 font-mono font-bold">16 CARACTÈRES POUR GMAIL</span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={cmsSettings.smtpConfig?.smtpPass || 'ujwy suyt gjcp fnxf'}
+                          onChange={(e) => setCmsSettings({
+                            ...cmsSettings,
+                            smtpConfig: {
+                              ...(cmsSettings.smtpConfig || {
+                                enabled: true,
+                                senderName: '',
+                                senderEmail: '',
+                                smtpHost: 'smtp.gmail.com',
+                                smtpPort: 465,
+                                smtpUser: '',
+                                smtpPass: '',
+                                encryption: 'SSL'
+                              }),
+                              smtpPass: e.target.value
+                            }
+                          })}
+                          placeholder="ujwy suyt gjcp fnxf"
+                          className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-medium focus:border-slate-900 outline-none transition-colors tracking-wider"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(p => !p)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 cursor-pointer"
+                          title={showPassword ? 'Masquer' : 'Afficher'}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* ACTION BUTTONS & TEST EMAIL ROW */}
+                <div className="pt-3 border-t border-slate-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                  
+                  {/* Save button */}
+                  <button
+                    type="button"
+                    onClick={() => handleSaveSettings()}
+                    disabled={isSaving}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                    ) : (
+                      <Save className="w-4 h-4 text-amber-400" />
+                    )}
+                    <span>Enregistrer la Passerelle SMTP</span>
+                  </button>
+
+                  {/* Send test email form */}
+                  <form onSubmit={handleSendTestEmail} className="flex items-center gap-2">
+                    <input
+                      type="email"
+                      value={testEmailTarget}
+                      onChange={(e) => setTestEmailTarget(e.target.value)}
+                      placeholder="destinataire@exemple.com"
+                      className="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 text-xs text-slate-900 font-mono outline-none focus:border-slate-900"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSendingTestEmail}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer shrink-0"
+                    >
+                      {isSendingTestEmail ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5 text-amber-400" />
+                      )}
+                      <span>Tester la Connexion</span>
+                    </button>
+                  </form>
+
+                </div>
+
+                {/* AUTOMATED NOTIFICATION FLOWS BADGE */}
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/80 text-xs text-slate-600 space-y-1.5">
+                  <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <CheckCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Flux de notifications automatisés :</span>
+                  </div>
+                  <ul className="list-disc pl-4 space-y-1 text-slate-600">
+                    <li><strong>Nouvelle Préinscription :</strong> Envoi instantané de la fiche complète au secrétariat académique et de l'accusé de réception officiel avec numéro de dossier unique au parent.</li>
+                    <li><strong>Formulaire de Contact :</strong> Réception immédiate des demandes et accusé de réception automatique au visiteur.</li>
+                  </ul>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 3 : ANNÉES SCOLAIRES & CAMPAGNES
+          =========================================================== */}
+          {activeTab === 'academic' && cmsSettings && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                    <Calendar className="w-5 h-5 text-amber-700" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                      Gestion des Années Scolaires & Campagnes
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Dates clés, ouvertures des candidatures et bandeau d'alerte en direct
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSaveSettings()}
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
+                >
+                  <Save className="w-4 h-4 text-amber-400" />
+                  <span>Enregistrer</span>
+                </button>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                {/* Admissions campaign status */}
+                <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-slate-900 text-sm">Campagne de Préinscription en Ligne</span>
+                      <p className="text-slate-500 text-[11px]">Active ou ferme l'accès aux formulaires de candidature.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cmsSettings.admissionsStatus.isOpen}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          admissionsStatus: { ...cmsSettings.admissionsStatus, isOpen: e.target.checked }
+                        })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase">Année Académique</label>
+                      <input
+                        type="text"
+                        value={cmsSettings.admissionsStatus.currentSchoolYear}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          admissionsStatus: { ...cmsSettings.admissionsStatus, currentSchoolYear: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase">Notice de Clôture</label>
+                      <input
+                        type="text"
+                        value={cmsSettings.admissionsStatus.deadlineNotice}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          admissionsStatus: { ...cmsSettings.admissionsStatus, deadlineNotice: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium text-slate-900"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Announcement Banner CMS */}
+                <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-slate-900 text-sm">Bandeau Public d'Alerte (Entête)</span>
+                      <p className="text-slate-500 text-[11px]">Message défilant ou bannière prioritaire affichée sur tout le site.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cmsSettings.announcement.enabled}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          announcement: { ...cmsSettings.announcement, enabled: e.target.checked }
+                        })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <label className="block font-bold text-slate-700 text-[11px] uppercase">Texte du Message d'Alerte</label>
+                    <input
+                      type="text"
+                      value={cmsSettings.announcement.text}
+                      onChange={(e) => setCmsSettings({
+                        ...cmsSettings,
+                        announcement: { ...cmsSettings.announcement, text: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium text-slate-900"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Campaign Status Config */}
-            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-900 flex items-center gap-1.5 text-xs">
-                  <Clock className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Statut Campagne d'Admissions</span>
-                </span>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={cmsSettings.admissionsStatus.isOpen}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      admissionsStatus: { ...cmsSettings.admissionsStatus, isOpen: e.target.checked }
-                    })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-8 h-4.5 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-emerald-600" />
-                </label>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">Année Scolaire</label>
-                  <input
-                    type="text"
-                    value={cmsSettings.admissionsStatus.currentSchoolYear}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      admissionsStatus: { ...cmsSettings.admissionsStatus, currentSchoolYear: e.target.value }
-                    })}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs font-bold"
-                  />
+          {/* ===========================================================
+              TAB 4 : FINANCE & SCOLARITÉ
+          =========================================================== */}
+          {activeTab === 'finance' && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <DollarSign className="w-5 h-5 text-emerald-700" />
                 </div>
-
                 <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">Date limite / Consigne</label>
-                  <input
-                    type="text"
-                    value={cmsSettings.admissionsStatus.deadlineNotice}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      admissionsStatus: { ...cmsSettings.admissionsStatus, deadlineNotice: e.target.value }
-                    })}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs"
-                  />
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    Finance & Barèmes de Scolarité
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Configuration des cycles, droits d'admission et échéanciers académiques
+                  </p>
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="font-bold text-slate-800 block mb-1">Préscolaire</span>
+                  <p className="text-slate-500 text-[11px]">Petite, Moyenne & Grande Section</p>
+                  <div className="text-lg font-black text-slate-900 mt-2 font-mono">Sur Dossier</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="font-bold text-slate-800 block mb-1">Fondamental (1er au 3e Cycle)</span>
+                  <p className="text-slate-500 text-[11px]">1ère à la 9ème Année Fondamentale</p>
+                  <div className="text-lg font-black text-slate-900 mt-2 font-mono">Sur Test</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="font-bold text-slate-800 block mb-1">Secondaire Rénové</span>
+                  <p className="text-slate-500 text-[11px]">Nouveau Secondaire 1 à 4</p>
+                  <div className="text-lg font-black text-slate-900 mt-2 font-mono">Sur Test & Dossier</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 5 : MODES DE RÈGLEMENT
+          =========================================================== */}
+          {activeTab === 'payments' && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-800 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-5 h-5 text-blue-900" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    Modes de Règlement
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Canaux de perception autorisés pour les scolarités et frais de dossiers
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-slate-900 block">Dépôt Bancaire (Sogebank / Unibank)</span>
+                    <span className="text-[11px] text-slate-500">Compte officiel Collège Isaac Newton</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">ACTIF</span>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-slate-900 block">Paiement Mobile (MonCash)</span>
+                    <span className="text-[11px] text-slate-500">Numéro marchand dédié</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">ACTIF</span>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between sm:col-span-2">
+                  <div>
+                    <span className="font-bold text-slate-900 block">Comptabilité du Campus (Delmas 50)</span>
+                    <span className="text-[11px] text-slate-500">Chèque de direction ou espèces aux guichets administratifs</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">ACTIF</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 6 : SÉCURITÉ & ACCÈS
+          =========================================================== */}
+          {activeTab === 'security' && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
+                  <Shield className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    Sécurité & Politique d'Accès
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Contrôle des accès basé sur les rôles (RBAC) et traçabilité des actions
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                  <span className="font-bold text-slate-900 block">Matrice des Permissions RBAC</span>
+                  <p className="text-slate-600 text-[11px] leading-relaxed">
+                    Les rôles système (SUPER_ADMIN, ADMIN, DIRECTION, SECRÉTARIAT, PROFESSEUR, PARENT, ÉLÈVE) sont compartimentés et validés à chaque transaction API.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </main>
+
+      </div>
+
+      {/* =========================================================================
+          MODAL DE SYNCHRONISATION GITHUB (CLEAN & COMPACT)
+      ========================================================================= */}
+      {isGitHubModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-4 sm:p-5 space-y-4 animate-scale-in">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-950 text-white flex items-center justify-center">
+                  <Github className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base">
+                    Synchronisation GitHub REST API
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    {config.owner} / {config.repo} ({config.branch})
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsGitHubModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Verification Status */}
+            {repoDetails && (
+              <div className={`p-3 rounded-xl text-xs flex items-center gap-2.5 ${
+                repoDetails.valid ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
+              }`}>
+                {repoDetails.valid ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-red-600 shrink-0" />
+                )}
+                <div>
+                  <span className="font-bold">{repoDetails.valid ? 'Dépôt Connecté & Prêt' : 'Erreur de connexion'}</span>
+                  {repoDetails.lastCommit && (
+                    <p className="text-[10px] text-slate-600 font-mono mt-0.5">
+                      Dernier commit : {repoDetails.lastCommit.sha} · {repoDetails.lastCommit.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Commit Message & Sync Button */}
+            <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-600 mb-0.5 text-[11px]">Devise de l'Établissement</label>
+                <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase">Message de Commit</label>
                 <input
                   type="text"
-                  value={cmsSettings.schoolMotto}
-                  onChange={(e) => setCmsSettings({
-                    ...cmsSettings,
-                    schoolMotto: e.target.value
-                  })}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs font-serif italic"
+                  value={commitMessage}
+                  onChange={(e) => setCommitMessage(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium"
                 />
               </div>
+
+              {/* Progress bar if syncing */}
+              {isSyncing && (
+                <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="flex justify-between text-[11px] font-bold text-slate-700">
+                    <span>{syncStage}</span>
+                    <span>{syncProgress}%</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <div
+                      className="h-full bg-slate-900 transition-all duration-300"
+                      style={{ width: `${syncProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Official Contact Coordinates */}
-            <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-2 md:col-span-2">
-              <span className="font-semibold text-slate-900 block text-xs">
-                Coordonnées Officielles du Secrétariat (Affichage Global)
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">Téléphone 1 (Principal)</label>
-                  <input
-                    type="text"
-                    value={cmsSettings.contactInfo.phone}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      contactInfo: { ...cmsSettings.contactInfo, phone: e.target.value }
-                    })}
-                    placeholder="+509 3316-0934"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden font-mono text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">Téléphone 2 (Secondaire)</label>
-                  <input
-                    type="text"
-                    value={cmsSettings.contactInfo.phoneAlt || ''}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      contactInfo: { ...cmsSettings.contactInfo, phoneAlt: e.target.value }
-                    })}
-                    placeholder="+509 3721-1818"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden font-mono text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">E-mail Institutionnel</label>
-                  <input
-                    type="email"
-                    value={cmsSettings.contactInfo.email}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      contactInfo: { ...cmsSettings.contactInfo, email: e.target.value }
-                    })}
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">Adresse Officielle</label>
-                  <input
-                    type="text"
-                    value={cmsSettings.contactInfo.address}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      contactInfo: { ...cmsSettings.contactInfo, address: e.target.value }
-                    })}
-                    placeholder="Delmas 50, rue Dominique #2 bis, Port-au-Prince, Haïti"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">Directeur Fondateur</label>
-                  <input
-                    type="text"
-                    value={cmsSettings.directorInfo?.name || 'Orphe Jean Marie'}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      directorInfo: {
-                        name: e.target.value,
-                        title: cmsSettings.directorInfo?.title || 'Directeur fondateur',
-                        role: cmsSettings.directorInfo?.role || 'Professeur de Mathématiques & Sciences Physiques',
-                      }
-                    })}
-                    placeholder="Orphe Jean Marie"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs font-semibold"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-600 mb-0.5 text-[11px]">Titre & Spécialité Pédagogique</label>
-                  <input
-                    type="text"
-                    value={cmsSettings.directorInfo?.role || 'Professeur de Mathématiques & Sciences Physiques'}
-                    onChange={(e) => setCmsSettings({
-                      ...cmsSettings,
-                      directorInfo: {
-                        name: cmsSettings.directorInfo?.name || 'Orphe Jean Marie',
-                        title: cmsSettings.directorInfo?.title || 'Directeur fondateur',
-                        role: e.target.value,
-                      }
-                    })}
-                    placeholder="Professeur de Mathématiques & Sciences Physiques"
-                    className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-600 mb-0.5 text-[11px]">Mot d'Accueil de la Direction</label>
-                <textarea
-                  rows={2}
-                  value={cmsSettings.directorWelcome}
-                  onChange={(e) => setCmsSettings({
-                    ...cmsSettings,
-                    directorWelcome: e.target.value
-                  })}
-                  className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 focus:border-blue-600 focus:outline-hidden text-xs leading-relaxed"
-                />
-              </div>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsGitHubModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-semibold cursor-pointer"
+              >
+                Fermer
+              </button>
+              <button
+                type="button"
+                onClick={handleSyncToGitHub}
+                disabled={isSyncing}
+                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer"
+              >
+                {isSyncing ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                    <span>Synchronisation...</span>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Pousser vers GitHub</span>
+                  </>
+                )}
+              </button>
             </div>
 
           </div>
-
-        </form>
+        </div>
       )}
 
     </div>

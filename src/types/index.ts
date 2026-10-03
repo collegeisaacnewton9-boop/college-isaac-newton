@@ -171,6 +171,25 @@ export interface SiteSettings {
   };
   schoolMotto: string;
   directorWelcome: string;
+  legalInfo?: {
+    schoolName?: string;
+    officialSigner?: string;
+    signerTitle?: string;
+    dateFormatLanguage?: string;
+    foundationYear?: string;
+    nif?: string;
+    licenseNumber?: string;
+  };
+  smtpConfig?: {
+    enabled?: boolean;
+    senderName: string;
+    senderEmail: string;
+    smtpHost: string;
+    smtpPort: number;
+    smtpUser: string;
+    smtpPass: string;
+    encryption: 'TLS' | 'SSL' | 'STARTTLS';
+  };
 }
 
 export interface Testimonial {

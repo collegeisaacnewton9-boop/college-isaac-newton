@@ -28,23 +28,42 @@ const execPromise = util.promisify(exec);
 dotenv.config();
 
 // ==============================================================================
-// GMAIL SMTP NOTIFICATION SERVICE (Collège Isaac Newton)
+// GMAIL SMTP NOTIFICATION SERVICE (Collège Isaac Newton) - DYNAMIQUE & MODIFIABLE
 // ==============================================================================
-const SMTP_USER = process.env.SMTP_USER || 'collegeisaacnewton9@gmail.com';
-const SMTP_PASS = (process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || 'ujwysuytgjcpfnxf').replace(/\s+/g, '');
+function getEmailTransporter() {
+  const cfg = siteSettings?.smtpConfig;
+  const user = (cfg?.smtpUser || process.env.SMTP_USER || 'collegeisaacnewton9@gmail.com').trim();
+  const pass = (cfg?.smtpPass || process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || 'ujwysuytgjcpfnxf').replace(/\s+/g, '');
+  const host = (cfg?.smtpHost || 'smtp.gmail.com').trim();
+  const port = Number(cfg?.smtpPort) || 465;
+  const isSecure = port === 465;
+  const senderName = cfg?.senderName || 'Direction Collège Isaac Newton';
+  const senderEmail = cfg?.senderEmail || user;
 
-const emailTransporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  },
-});
+  const transporter = (host === 'smtp.gmail.com' || host.includes('gmail'))
+    ? nodemailer.createTransport({
+        service: 'gmail',
+        auth: { user, pass },
+      })
+    : nodemailer.createTransport({
+        host,
+        port,
+        secure: isSecure,
+        auth: { user, pass },
+      });
+
+  return {
+    transporter,
+    from: `"${senderName}" <${senderEmail}>`,
+    user,
+  };
+}
 
 async function sendNotificationEmail(options: { to: string; subject: string; html: string; text?: string }) {
   try {
-    const info = await emailTransporter.sendMail({
-      from: `"Collège Isaac Newton" <${SMTP_USER}>`,
+    const { transporter, from } = getEmailTransporter();
+    const info = await transporter.sendMail({
+      from,
       to: options.to,
       subject: options.subject,
       text: options.text || options.subject,
@@ -460,7 +479,7 @@ let schoolEvents = [
   }
 ];
 
-let siteSettings = {
+let siteSettings: any = {
   announcement: {
     enabled: true,
     text: 'Campagne de préinscription 2026-2027 ouverte · Accueil des familles à Delmas 50',
@@ -487,6 +506,25 @@ let siteSettings = {
   },
   schoolMotto: "Savoir aujourd'hui, réussir demain",
   directorWelcome: "Bienvenue au Collège Isaac Newton. Sous la direction d'Orphe Jean Marie, notre mission est de forger les bâtisseurs de demain par la rigueur scientifique, la maîtrise des mathématiques, la discipline civique et les technologies.",
+  legalInfo: {
+    schoolName: "COLLÈGE ISAAC NEWTON",
+    officialSigner: "ORPHE JEAN MARIE",
+    signerTitle: "Directeur fondateur",
+    dateFormatLanguage: "Français (ex: 16 août 2026 - Fait à ...)",
+    foundationYear: "2020",
+    nif: "456-652-985-9",
+    licenseNumber: "548552",
+  },
+  smtpConfig: {
+    enabled: true,
+    senderName: "Direction Collège Isaac Newton",
+    senderEmail: "collegeisaacnewton9@gmail.com",
+    smtpHost: "smtp.gmail.com",
+    smtpPort: 465,
+    smtpUser: "collegeisaacnewton9@gmail.com",
+    smtpPass: "ujwy suyt gjcp fnxf",
+    encryption: "SSL",
+  },
 };
 
 // Disk Persistence for Site Settings
@@ -711,9 +749,10 @@ app.post('/api/admissions', async (req: Request, res: Response) => {
 
     // Dispatch email notifications asynchronously
     (async () => {
+      const recipientSecretariat = siteSettings?.smtpConfig?.smtpUser || process.env.SMTP_USER || 'collegeisaacnewton9@gmail.com';
       // 1. Notification to the school secretariat
       await sendNotificationEmail({
-        to: SMTP_USER,
+        to: recipientSecretariat,
         subject: `[Nouvelle Préinscription] Dossier ${appNum} - ${newRecord.studentFirstName} ${newRecord.studentLastName} (${newRecord.targetLevel})`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
@@ -999,9 +1038,10 @@ app.post('/api/contact', async (req: Request, res: Response) => {
 
   // Dispatch contact email notifications asynchronously
   (async () => {
+    const recipientSecretariat = siteSettings?.smtpConfig?.smtpUser || process.env.SMTP_USER || 'collegeisaacnewton9@gmail.com';
     // 1. Notification to the school secretariat
     await sendNotificationEmail({
-      to: SMTP_USER,
+      to: recipientSecretariat,
       subject: `[Nouveau Contact] ${subject} - de ${fullName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
@@ -1217,17 +1257,24 @@ app.get('/api/admin/stats', (req: Request, res: Response) => {
 
 // 9b. Email Service Status & Test Endpoints
 app.get('/api/email-status', (req: Request, res: Response) => {
+  const cfg = siteSettings?.smtpConfig;
+  const user = cfg?.smtpUser || process.env.SMTP_USER || 'collegeisaacnewton9@gmail.com';
+  const pass = cfg?.smtpPass || process.env.SMTP_PASS || 'ujwysuytgjcpfnxf';
   res.json({
-    configured: Boolean(SMTP_USER && SMTP_PASS),
-    smtpUser: SMTP_USER,
-    smtpHost: 'smtp.gmail.com',
-    smtpPort: 465,
-    service: 'Gmail SMTP (App Password)',
+    configured: Boolean(user && pass),
+    smtpUser: user,
+    smtpHost: cfg?.smtpHost || 'smtp.gmail.com',
+    smtpPort: cfg?.smtpPort || 465,
+    senderName: cfg?.senderName || 'Direction Collège Isaac Newton',
+    senderEmail: cfg?.senderEmail || user,
+    service: 'Serveur SMTP Sortant',
   });
 });
 
 app.post('/api/test-email', async (req: Request, res: Response) => {
-  const targetEmail = req.body?.to || SMTP_USER;
+  const cfg = siteSettings?.smtpConfig;
+  const defaultTo = cfg?.smtpUser || process.env.SMTP_USER || 'collegeisaacnewton9@gmail.com';
+  const targetEmail = req.body?.to || defaultTo;
   try {
     const result = await sendNotificationEmail({
       to: targetEmail,
@@ -1240,8 +1287,8 @@ app.post('/api/test-email', async (req: Request, res: Response) => {
           </div>
           <div style="padding: 16px 0; color: #334155; font-size: 14px;">
             <p>Bonjour,</p>
-            <p>Ce message confirme que la connexion SMTP avec votre compte <strong>${SMTP_USER}</strong> et votre mot de passe d'application fonctionne parfaitement !</p>
-            <p>Les notifications pour les <strong>préinscriptions</strong> et les <strong>messages de contact</strong> seront désormais expédiées automatiquement.</p>
+            <p>Ce message confirme que la connexion SMTP avec votre compte <strong>${defaultTo}</strong> fonctionne parfaitement !</p>
+            <p>Les notifications pour les <strong>préinscriptions</strong> et les <strong>messages de contact</strong> sont actives.</p>
           </div>
           <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 11px; color: #94a3b8; text-align: center;">
             Test effectué le ${new Date().toLocaleString('fr-FR')} depuis l'espace d'administration.
