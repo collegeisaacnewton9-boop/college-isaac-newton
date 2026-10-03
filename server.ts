@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { Octokit } from '@octokit/rest';
 import { exec } from 'child_process';
 import util from 'util';
+import nodemailer from 'nodemailer';
 import { 
   initDatabase, 
   isDbActive, 
@@ -25,6 +26,37 @@ import {
 const execPromise = util.promisify(exec);
 
 dotenv.config();
+
+// ==============================================================================
+// GMAIL SMTP NOTIFICATION SERVICE (Collège Isaac Newton)
+// ==============================================================================
+const SMTP_USER = process.env.SMTP_USER || 'collegeisaacnewton9@gmail.com';
+const SMTP_PASS = (process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD || 'ujwysuytgjcpfnxf').replace(/\s+/g, '');
+
+const emailTransporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: SMTP_USER,
+    pass: SMTP_PASS,
+  },
+});
+
+async function sendNotificationEmail(options: { to: string; subject: string; html: string; text?: string }) {
+  try {
+    const info = await emailTransporter.sendMail({
+      from: `"Collège Isaac Newton" <${SMTP_USER}>`,
+      to: options.to,
+      subject: options.subject,
+      text: options.text || options.subject,
+      html: options.html,
+    });
+    console.log(`[Email] Notification envoyée avec succès à ${options.to} (${info.messageId})`);
+    return { success: true, messageId: info.messageId };
+  } catch (error: any) {
+    console.warn(`[Email Warning] Impossible d'envoyer à ${options.to}:`, error.message);
+    return { success: false, error: error.message };
+  }
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -677,6 +709,75 @@ app.post('/api/admissions', async (req: Request, res: Response) => {
       updatedAt: new Date().toISOString(),
     };
 
+    // Dispatch email notifications asynchronously
+    (async () => {
+      // 1. Notification to the school secretariat
+      await sendNotificationEmail({
+        to: SMTP_USER,
+        subject: `[Nouvelle Préinscription] Dossier ${appNum} - ${newRecord.studentFirstName} ${newRecord.studentLastName} (${newRecord.targetLevel})`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+            <div style="background-color: #0f274a; color: white; padding: 15px 20px; border-radius: 6px; text-align: center;">
+              <h2 style="margin: 0; font-size: 20px;">Collège Isaac Newton</h2>
+              <p style="margin: 4px 0 0 0; font-size: 13px; color: #fbbf24;">Nouvelle Préinscription en Ligne</p>
+            </div>
+            <div style="padding: 20px 0;">
+              <div style="background-color: #f8fafc; border-left: 4px solid #f59e0b; padding: 10px 14px; margin-bottom: 16px;">
+                <p style="margin: 0; font-size: 11px; color: #64748b; text-transform: uppercase;">Référence du Dossier</p>
+                <p style="margin: 2px 0 0 0; font-size: 20px; font-weight: bold; color: #0f274a;">${appNum}</p>
+              </div>
+              <h3 style="color: #0f274a; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">Informations de l'Élève</h3>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Nom & Prénom :</strong> ${newRecord.studentFirstName} ${newRecord.studentLastName}</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Classe visée :</strong> ${newRecord.targetLevel} (${newRecord.cycle})</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Date de naissance :</strong> ${newRecord.studentBirthDate}</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Sexe :</strong> ${newRecord.studentGender === 'M' ? 'Masculin' : 'Féminin'}</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>École précédente :</strong> ${newRecord.previousSchool || 'Non renseignée'}</p>
+              
+              <h3 style="color: #0f274a; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-top: 16px;">Responsable Légal</h3>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Nom :</strong> ${newRecord.parentFullName} (${newRecord.parentRelationship})</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Téléphone :</strong> ${newRecord.parentPhone}</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Email :</strong> ${newRecord.parentEmail}</p>
+              <p style="margin: 4px 0; font-size: 13px;"><strong>Adresse :</strong> ${newRecord.parentAddress}</p>
+            </div>
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 11px; color: #94a3b8; text-align: center;">
+              Consultable depuis le panneau d'administration du Collège Isaac Newton.
+            </div>
+          </div>
+        `
+      });
+
+      // 2. Accusé de réception au parent
+      if (newRecord.parentEmail && newRecord.parentEmail.includes('@')) {
+        await sendNotificationEmail({
+          to: newRecord.parentEmail,
+          subject: `Accusé de réception - Préinscription au Collège Isaac Newton (${appNum})`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+              <div style="background-color: #0f274a; color: white; padding: 15px 20px; border-radius: 6px; text-align: center;">
+                <h2 style="margin: 0; font-size: 20px;">Collège Isaac Newton</h2>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #fbbf24;">Savoir aujourd'hui, réussir demain</p>
+              </div>
+              <div style="padding: 20px 0; color: #334155; font-size: 14px; line-height: 1.6;">
+                <p>Chère famille <strong>${newRecord.parentFullName}</strong>,</p>
+                <p>Nous avons bien reçu le dossier de préinscription pour <strong>${newRecord.studentFirstName} ${newRecord.studentLastName}</strong> en classe de <strong>${newRecord.targetLevel}</strong> pour l'année académique 2026-2027.</p>
+                <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 15px; margin: 15px 0; text-align: center;">
+                  <p style="margin: 0; font-size: 11px; color: #64748b; text-transform: uppercase;">Référence officielle de dossier</p>
+                  <p style="margin: 4px 0 0 0; font-size: 22px; font-weight: bold; color: #0f274a;">${appNum}</p>
+                </div>
+                <p><strong>Prochaines étapes :</strong></p>
+                <ul style="padding-left: 20px; font-size: 13px; color: #475569;">
+                  <li>Examen administratif du dossier sous 48 à 72 heures.</li>
+                  <li>Convocation de l'élève pour le test d'évaluation diagnostique.</li>
+                  <li>Dépôt des pièces physiques et confirmation d'inscription au campus.</li>
+                </ul>
+                <p style="margin-top: 15px;">Secrétariat : <strong>+509 3316-0934 / +509 3721-1818</strong> · Delmas 50, rue Dominique #2 bis.</p>
+              </div>
+            </div>
+          `
+        });
+      }
+    })().catch(e => console.warn('[Async Email Error]', e.message));
+
     if (isDbActive()) {
       try {
         const saved = await dbInsertAdmission(newRecord);
@@ -896,6 +997,54 @@ app.post('/api/contact', async (req: Request, res: Response) => {
     createdAt: new Date().toISOString(),
   };
 
+  // Dispatch contact email notifications asynchronously
+  (async () => {
+    // 1. Notification to the school secretariat
+    await sendNotificationEmail({
+      to: SMTP_USER,
+      subject: `[Nouveau Contact] ${subject} - de ${fullName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+          <div style="background-color: #0f274a; color: white; padding: 12px 16px; border-radius: 6px;">
+            <h3 style="margin: 0; font-size: 16px;">Nouveau Message depuis le Site Web</h3>
+          </div>
+          <div style="padding: 16px 0; color: #334155; font-size: 14px;">
+            <p><strong>Expéditeur :</strong> ${fullName}</p>
+            <p><strong>Email :</strong> ${email}</p>
+            <p><strong>Téléphone :</strong> ${phone || 'Non renseigné'}</p>
+            <p><strong>Objet :</strong> ${subject}</p>
+            <div style="background-color: #f8fafc; border-left: 3px solid #0f274a; padding: 12px; margin-top: 12px;">
+              <p style="margin: 0; font-weight: bold; font-size: 12px; color: #64748b;">Message :</p>
+              <p style="margin: 6px 0 0 0; white-space: pre-wrap;">${message}</p>
+            </div>
+          </div>
+        </div>
+      `
+    });
+
+    // 2. Accusé de réception automatique au visiteur
+    if (email && email.includes('@')) {
+      await sendNotificationEmail({
+        to: email,
+        subject: `Accusé de réception : votre message au Collège Isaac Newton`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h3 style="color: #0f274a; margin-top: 0;">Bonjour ${fullName},</h3>
+            <p style="color: #334155; font-size: 14px; line-height: 1.6;">
+              Nous vous confirmons la bonne réception de votre message concernant <em>« ${subject} »</em>.
+            </p>
+            <p style="color: #334155; font-size: 14px; line-height: 1.6;">
+              Notre secrétariat traite les demandes avec soin et reviendra vers vous si nécessaire.
+            </p>
+            <div style="margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 12px; color: #64748b;">
+              <strong>Collège Isaac Newton</strong> · Delmas 50, rue Dominique #2 bis · Tél : +509 3316-0934 / +509 3721-1818
+            </div>
+          </div>
+        `
+      });
+    }
+  })().catch(e => console.warn('[Async Contact Email Error]', e.message));
+
   if (isDbActive()) {
     try {
       const saved = await dbInsertContactMessage(newMsg);
@@ -1064,6 +1213,51 @@ app.get('/api/admin/stats', (req: Request, res: Response) => {
       announcementActive: siteSettings.announcement.enabled,
     }
   });
+});
+
+// 9b. Email Service Status & Test Endpoints
+app.get('/api/email-status', (req: Request, res: Response) => {
+  res.json({
+    configured: Boolean(SMTP_USER && SMTP_PASS),
+    smtpUser: SMTP_USER,
+    smtpHost: 'smtp.gmail.com',
+    smtpPort: 465,
+    service: 'Gmail SMTP (App Password)',
+  });
+});
+
+app.post('/api/test-email', async (req: Request, res: Response) => {
+  const targetEmail = req.body?.to || SMTP_USER;
+  try {
+    const result = await sendNotificationEmail({
+      to: targetEmail,
+      subject: `[Test Réussi] Validation du service de messagerie Collège Isaac Newton`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #10b981; border-radius: 8px;">
+          <div style="background-color: #0f274a; color: white; padding: 12px 16px; border-radius: 6px; text-align: center;">
+            <h2 style="margin: 0; font-size: 18px;">Collège Isaac Newton</h2>
+            <p style="margin: 4px 0 0 0; font-size: 12px; color: #34d399;">Test du Service de Messagerie Réussi</p>
+          </div>
+          <div style="padding: 16px 0; color: #334155; font-size: 14px;">
+            <p>Bonjour,</p>
+            <p>Ce message confirme que la connexion SMTP avec votre compte <strong>${SMTP_USER}</strong> et votre mot de passe d'application fonctionne parfaitement !</p>
+            <p>Les notifications pour les <strong>préinscriptions</strong> et les <strong>messages de contact</strong> seront désormais expédiées automatiquement.</p>
+          </div>
+          <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; font-size: 11px; color: #94a3b8; text-align: center;">
+            Test effectué le ${new Date().toLocaleString('fr-FR')} depuis l'espace d'administration.
+          </div>
+        </div>
+      `,
+    });
+
+    if (result.success) {
+      return res.json({ success: true, message: `E-mail de test envoyé avec succès à ${targetEmail} !` });
+    } else {
+      return res.status(500).json({ success: false, error: result.error });
+    }
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // 10. GitHub Synchronization via Octokit REST API

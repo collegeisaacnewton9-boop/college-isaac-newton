@@ -27,7 +27,10 @@ import {
   ChevronUp,
   ChevronDown,
   Info,
-  CheckCheck
+  CheckCheck,
+  Mail,
+  Send,
+  Copy
 } from 'lucide-react';
 import { Octokit } from '@octokit/rest';
 import { toast } from 'sonner';
@@ -49,6 +52,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [showToken, setShowToken] = useState(false);
   const [commitMessage, setCommitMessage] = useState('Mise à jour des fichiers sources - Collège Isaac Newton');
   
+  // Email & SMTP Configuration State
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+  const [showAppPassword, setShowAppPassword] = useState(false);
+  const [copiedAppPass, setCopiedAppPass] = useState(false);
+  const [testEmailTarget, setTestEmailTarget] = useState('collegeisaacnewton9@gmail.com');
+
   // Sync State & Visual Loader
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStage, setSyncStage] = useState<string>('');
@@ -209,6 +218,40 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     } finally {
       setIsSavingCms(false);
     }
+  };
+
+  // Test email handler using Gmail SMTP service
+  const handleTestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testEmailTarget.trim()) {
+      toast.error('Veuillez spécifier une adresse email destinataire.');
+      return;
+    }
+    setIsSendingTestEmail(true);
+    try {
+      const res = await fetch('/api/test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: testEmailTarget.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'E-mail de test envoyé avec succès !');
+      } else {
+        toast.error(data.error || 'Erreur lors de l’envoi de l’e-mail de test.');
+      }
+    } catch (err: any) {
+      toast.error('Erreur de communication : ' + err.message);
+    } finally {
+      setIsSendingTestEmail(false);
+    }
+  };
+
+  const copyAppPassword = () => {
+    navigator.clipboard.writeText('ujwysuytgjcpfnxf');
+    setCopiedAppPass(true);
+    toast.success('Mot de passe d\'application copié dans le presse-papiers !');
+    setTimeout(() => setCopiedAppPass(false), 2000);
   };
 
   return (
@@ -614,6 +657,121 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           </>
         )}
+      </div>
+
+      {/* -------------------------------------------------------------
+          SECTION 1.5 : MESSAGERIE & NOTIFICATIONS SMTP (GMAIL)
+      ------------------------------------------------------------- */}
+      <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2.5 border border-slate-200/90 shadow-2xs space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-blue-900 text-white flex items-center justify-center shadow-xs shrink-0">
+              <Mail className="w-3.5 h-3.5 text-amber-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h3 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
+                  Messagerie & Notifications SMTP (Gmail)
+                </h3>
+                <span className="px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[9.5px] font-mono font-bold flex items-center gap-1">
+                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                  Actif & Opérationnel
+                </span>
+              </div>
+              <p className="font-sans text-[10.5px] text-slate-500">
+                Envoi automatique des accusés de réception aux parents et alertes immédiates au secrétariat.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Credentials and status preview */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+          
+          {/* Compte expéditeur */}
+          <div className="p-2 sm:p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1">
+            <span className="text-[10px] uppercase font-bold text-slate-500">Compte Gmail Officiel</span>
+            <div className="font-mono text-xs font-bold text-blue-950 truncate">
+              collegeisaacnewton9@gmail.com
+            </div>
+            <p className="text-[10px] text-slate-500 leading-tight">
+              Réception des nouvelles préinscriptions et messages de contact.
+            </p>
+          </div>
+
+          {/* Mot de passe d'application */}
+          <div className="p-2 sm:p-2.5 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase font-bold text-slate-500">Mot de passe Appli (16 car.)</span>
+              <button
+                type="button"
+                onClick={() => setShowAppPassword(prev => !prev)}
+                className="text-[10px] text-blue-900 hover:underline flex items-center gap-0.5 cursor-pointer font-medium"
+              >
+                {showAppPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                <span>{showAppPassword ? 'Masquer' : 'Afficher'}</span>
+              </button>
+            </div>
+            <div className="flex items-center justify-between gap-1 font-mono text-xs font-bold text-slate-900 bg-white px-2 py-1 rounded border border-slate-200">
+              <span>{showAppPassword ? 'ujwy suyt gjcp fnxf' : '•••• •••• •••• ••••'}</span>
+              <button
+                type="button"
+                onClick={copyAppPassword}
+                className="text-slate-500 hover:text-blue-900 cursor-pointer p-0.5"
+                title="Copier le mot de passe d'application"
+              >
+                {copiedAppPass ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-500 leading-tight">
+              Généré avec succès depuis Google Sécurité (2FA).
+            </p>
+          </div>
+
+          {/* Formulaire de Test Direct */}
+          <form onSubmit={handleTestEmail} className="p-2 sm:p-2.5 rounded-lg bg-blue-50/70 border border-blue-200/80 space-y-1 flex flex-col justify-between">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-blue-900">Tester l'envoi d'e-mail</span>
+              <input
+                type="email"
+                value={testEmailTarget}
+                onChange={(e) => setTestEmailTarget(e.target.value)}
+                placeholder="destinataire@exemple.com"
+                className="w-full mt-1 px-2 py-1 rounded border border-blue-200 bg-white text-xs outline-none focus:border-blue-900 font-mono"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSendingTestEmail}
+              className="w-full mt-1.5 py-1 px-2.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              {isSendingTestEmail ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin text-amber-400" />
+                  <span>Envoi en cours...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3 h-3 text-amber-400" />
+                  <span>Envoyer un E-mail de Test</span>
+                </>
+              )}
+            </button>
+          </form>
+
+        </div>
+
+        {/* Détails des flux automatiques */}
+        <div className="bg-slate-50/80 rounded-lg p-2 border border-slate-200/70 text-[10.5px] text-slate-600 space-y-1">
+          <div className="font-semibold text-slate-800 flex items-center gap-1 text-[11px]">
+            <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Flux de notifications automatisés :</span>
+          </div>
+          <ul className="list-disc pl-4 space-y-0.5 text-slate-600">
+            <li><strong>Nouvelle Préinscription :</strong> Envoi instantané de la fiche complète au secrétariat (`collegeisaacnewton9@gmail.com`) et de l'accusé de réception officiel avec numéro de dossier unique au parent.</li>
+            <li><strong>Formulaire de Contact :</strong> Réception immédiate des demandes et accusé de réception automatique au visiteur.</li>
+          </ul>
+        </div>
       </div>
 
       {/* -------------------------------------------------------------
