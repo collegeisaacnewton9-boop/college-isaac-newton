@@ -1653,6 +1653,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         {activeTab === 'cms' && (
           <SettingsView
             initialSettings={cmsSettings}
+            currentUser={currentUser}
             onSettingsUpdated={(updated) => {
               setCmsSettings(updated);
               setSettings(updated);
