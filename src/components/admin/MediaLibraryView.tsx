@@ -20,7 +20,10 @@ import {
   ExternalLink,
   Zap,
   Tag,
-  Camera
+  Camera,
+  Laptop,
+  Smartphone,
+  Monitor
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { MediaItem, HeroSlide, GalleryItem } from '../../types';
@@ -49,6 +52,7 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
   const [editingSlide, setEditingSlide] = useState<HeroSlide | null>(null);
   const [isSlideModalOpen, setIsSlideModalOpen] = useState(false);
   const [isSavingSlide, setIsSavingSlide] = useState(false);
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
 
   // Gallery items state (Form for adding, editing, deleting items)
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
@@ -390,69 +394,79 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
             </button>
           </div>
 
-          {/* Slides List Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Slides List Grid - Fluid Responsive on Mobile, Tablet & PC 14" */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-4">
             {slides.map((slide, index) => (
               <div 
                 key={slide.id}
-                className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden flex flex-col justify-between group hover:border-slate-300 transition-all"
+                className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col justify-between group hover:border-blue-900/40 hover:shadow-xs transition-all"
               >
                 <div>
-                  <div className="relative aspect-[16/8] bg-slate-950 overflow-hidden">
+                  <div className="relative aspect-[16/9] bg-slate-950 overflow-hidden">
                     <img 
                       src={slide.image} 
                       alt={slide.title}
                       className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-500"
                       style={{ objectPosition: slide.objectPosition || 'center 35%' }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent" />
                     
-                    <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                      <span className="bg-amber-400 text-slate-950 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">
-                        #{index + 1}
-                      </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                        slide.isActive 
-                          ? 'bg-emerald-500/90 text-white border-emerald-400/40' 
-                          : 'bg-slate-700/90 text-slate-300 border-white/20'
-                      }`}>
-                        {slide.isActive ? 'En ligne' : 'Masquée'}
+                    <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="bg-amber-400 text-slate-950 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shadow-xs">
+                          #{index + 1}
+                        </span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-2xs ${
+                          slide.isActive 
+                            ? 'bg-emerald-500/95 text-white border-emerald-400/50' 
+                            : 'bg-slate-800/90 text-slate-300 border-white/20'
+                        }`}>
+                          {slide.isActive ? 'En ligne' : 'Masquée'}
+                        </span>
+                      </div>
+                      
+                      <span className="bg-black/60 backdrop-blur-xs text-white text-[9.5px] font-mono px-2 py-0.5 rounded-full border border-white/10">
+                        16:9 WebP
                       </span>
                     </div>
 
                     <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white">
-                      <span className="text-[10px] font-bold text-amber-300 tracking-wide uppercase block truncate">
+                      <span className="text-[10px] font-bold text-amber-300 tracking-wide uppercase block truncate mb-0.5">
                         {slide.badge}
                       </span>
-                      <h4 className="font-bold text-sm sm:text-base leading-snug truncate">
+                      <h4 className="font-bold text-xs sm:text-sm leading-snug line-clamp-1">
                         {slide.title}
                       </h4>
                     </div>
                   </div>
 
-                  <div className="p-3.5 space-y-2">
-                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                  <div className="p-3 sm:p-3.5 space-y-2">
+                    <p className="text-[11.5px] sm:text-xs text-slate-600 line-clamp-2 leading-relaxed">
                       {slide.subtitle}
                     </p>
 
-                    <div className="flex items-center gap-2 pt-1 border-t border-slate-100 text-[11px] text-slate-500 flex-wrap">
-                      <span className="font-bold text-slate-700">CTA:</span>
-                      <span className="bg-slate-100 px-2 py-0.5 rounded text-blue-900 font-medium">{slide.ctaText}</span>
+                    <div className="flex items-center gap-1.5 pt-1.5 border-t border-slate-100 text-[10.5px] text-slate-500 flex-wrap">
+                      <span className="font-bold text-slate-700">Actions :</span>
+                      <span className="bg-blue-50 text-blue-900 border border-blue-100 px-2 py-0.5 rounded font-semibold truncate max-w-[120px]">
+                        {slide.ctaText}
+                      </span>
                       {slide.secondaryCtaText && (
-                        <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-700">{slide.secondaryCtaText}</span>
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded truncate max-w-[120px]">
+                          {slide.secondaryCtaText}
+                        </span>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                <div className="p-2.5 sm:p-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between gap-2">
                   <button
                     type="button"
                     onClick={() => handleToggleSlideActive(slide.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       slide.isActive 
                         ? 'bg-slate-200 text-slate-700 hover:bg-slate-300' 
-                        : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                        : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 shadow-2xs'
                     }`}
                   >
                     {slide.isActive ? 'Désactiver' : 'Activer'}
@@ -464,7 +478,7 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                       onClick={() => handleOpenEditSlide(slide)}
                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-blue-900 hover:border-blue-900 font-bold text-xs transition-colors cursor-pointer shadow-2xs"
                     >
-                      <Edit3 className="w-3.5 h-3.5" />
+                      <Edit3 className="w-3.5 h-3.5 text-blue-900" />
                       <span>Modifier</span>
                     </button>
 
@@ -472,9 +486,9 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                       type="button"
                       onClick={() => handleDeleteSlide(slide.id)}
                       className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                      title="Supprimer"
+                      title="Supprimer la diapositive"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -696,12 +710,18 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
           MODAL: AJOUTER / MODIFIER UNE PHOTO DE LA GALERIE (FORMULAIRE CRUD)
       ========================================================================= */}
       {isGalleryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 overflow-y-auto">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-4 sm:p-5 space-y-4 animate-scale-in my-8">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div 
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="relative bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-2xl max-w-lg w-full my-auto flex flex-col max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2.5rem)] overflow-hidden animate-scale-in">
+            <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white rounded-t-2xl sm:rounded-t-3xl">
               <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-blue-900" />
-                <h3 className="font-black text-slate-900 text-base">
+                <div className="w-8 h-8 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-xs shrink-0">
+                  <Camera className="w-4 h-4 text-amber-400" />
+                </div>
+                <h3 className="font-black text-slate-900 text-sm sm:text-base">
                   {editingGalleryItem ? 'Modifier la Photo de la Galerie' : 'Ajouter une Photo à la Galerie'}
                 </h3>
               </div>
@@ -709,12 +729,13 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                 type="button"
                 onClick={() => setIsGalleryModalOpen(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                title="Fermer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveGallerySubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleSaveGallerySubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 text-xs overscroll-contain">
               <div>
                 <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
                   Titre de la Photo *
@@ -725,7 +746,7 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                   value={galleryForm.title}
                   onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })}
                   placeholder="ex: Travaux pratiques en laboratoire informatique"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-bold focus:border-blue-900 outline-none"
                 />
               </div>
 
@@ -736,6 +757,7 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                   onImageReady={(url) => setGalleryForm({ ...galleryForm, imageUrl: url })}
                   label="Photo de l'Activité (Compression WebP automatique)"
                   recommendedAspect="Format 16:9 ou 4:3 recommandé"
+                  compact={true}
                 />
               </div>
 
@@ -748,22 +770,22 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                   value={galleryForm.caption}
                   onChange={(e) => setGalleryForm({ ...galleryForm, caption: e.target.value })}
                   placeholder="ex: Postes connectés sous onduleurs et encadrement pédagogique..."
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-800 outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-800 outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="sticky bottom-0 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-4 px-4 py-3 sm:px-5 sm:py-3.5 border-t border-slate-200 bg-white/95 backdrop-blur-md flex items-center justify-end gap-2 shrink-0 rounded-b-2xl sm:rounded-b-3xl shadow-sm z-10">
                 <button
                   type="button"
                   onClick={() => setIsGalleryModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer text-xs"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingGallery || !galleryForm.imageUrl}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold transition-colors cursor-pointer shadow-xs disabled:opacity-50 text-xs"
                 >
                   {isSavingGallery ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
@@ -782,12 +804,18 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
           MODAL: TÉLÉVERSER & COMPRESSER UNE IMAGE DANS LA MÉDIATHÈQUE
       ========================================================================= */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 overflow-y-auto">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-4 sm:p-5 space-y-4 animate-scale-in my-8">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div 
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="relative bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-2xl max-w-lg w-full my-auto flex flex-col max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2.5rem)] overflow-hidden animate-scale-in">
+            <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white rounded-t-2xl sm:rounded-t-3xl">
               <div className="flex items-center gap-2">
-                <Upload className="w-4 h-4 text-blue-900" />
-                <h3 className="font-black text-slate-900 text-base">
+                <div className="w-8 h-8 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-xs shrink-0">
+                  <Upload className="w-4 h-4 text-amber-400" />
+                </div>
+                <h3 className="font-black text-slate-900 text-sm sm:text-base">
                   Ajouter une Photo à la Médiathèque
                 </h3>
               </div>
@@ -795,12 +823,13 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                 type="button"
                 onClick={() => setShowUploadModal(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                title="Fermer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUploadMediaSubmit} className="space-y-3.5 text-xs">
+            <form onSubmit={handleUploadMediaSubmit} className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 text-xs overscroll-contain">
               <div>
                 <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
                   Titre du média *
@@ -811,7 +840,7 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                   value={uploadTitle}
                   onChange={(e) => setUploadTitle(e.target.value)}
                   placeholder="ex: Bâtiment principal Delmas 50"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-bold focus:border-blue-900 outline-none text-xs"
                 />
               </div>
 
@@ -822,7 +851,7 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                 <select
                   value={uploadCategory}
                   onChange={(e) => setUploadCategory(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-semibold focus:border-slate-900 outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-semibold focus:border-blue-900 outline-none text-xs"
                 >
                   <option value="CAMPUS">Campus & Bâtiments</option>
                   <option value="SLIDESHOW">Diaporama d'Entête</option>
@@ -837,21 +866,22 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                   currentImageUrl={uploadedUrl}
                   onImageReady={(url) => setUploadedUrl(url)}
                   label="Sélectionner & Compresser la Photo (WebP Auto)"
+                  compact={true}
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+              <div className="sticky bottom-0 -mx-4 -mb-4 sm:-mx-5 sm:-mb-5 mt-4 px-4 py-3 sm:px-5 sm:py-3.5 border-t border-slate-200 bg-white/95 backdrop-blur-md flex items-center justify-end gap-2 shrink-0 rounded-b-2xl sm:rounded-b-3xl shadow-sm z-10">
                 <button
                   type="button"
                   onClick={() => setShowUploadModal(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer text-xs"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   disabled={!uploadedUrl}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold transition-colors cursor-pointer shadow-xs disabled:opacity-50 text-xs"
                 >
                   <Check className="w-3.5 h-3.5 text-amber-400" />
                   <span>Enregistrer dans la Médiathèque</span>
@@ -863,164 +893,373 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
       )}
 
       {/* =========================================================================
-          MODAL: ÉDITION COMPLÈTE D'UNE DIAPOSITIVE DU DIAPORAMA
+          MODAL: ÉDITION COMPLÈTE D'UNE DIAPOSITIVE DU DIAPORAMA (RESPONSIVE PC 14", TABLETTE & MOBILE)
       ========================================================================= */}
       {isSlideModalOpen && editingSlide && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3 overflow-y-auto">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-4 sm:p-5 space-y-4 animate-scale-in my-8">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-blue-900" />
-                <h3 className="font-black text-slate-900 text-base">
-                  Configuration de la Diapositive d'Entête
-                </h3>
+        <div 
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 lg:p-6 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="relative bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-2xl w-full max-w-5xl my-auto flex flex-col max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100dvh-2.5rem)] overflow-hidden animate-scale-in">
+            
+            {/* STICKY HEADER */}
+            <div className="px-4 py-3 sm:px-6 sm:py-3.5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white rounded-t-2xl sm:rounded-t-3xl gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-xs shrink-0">
+                  <SlidersHorizontal className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base truncate">
+                      Configuration de la Diapositive d'Entête
+                    </h3>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
+                      editingSlide.isActive 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                        : 'bg-slate-100 text-slate-600 border-slate-200'
+                    }`}>
+                      {editingSlide.isActive ? 'Active en ligne' : 'Masquée'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 hidden sm:block truncate">
+                    Mise en page dynamique responsive pour mobile, tablette et écran 14 pouces
+                  </p>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsSlideModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
+
+              {/* Responsive Device Preview Switcher (Desktop 14" / Mobile) */}
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="hidden sm:inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('desktop')}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                      previewDevice === 'desktop'
+                        ? 'bg-white text-blue-950 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Laptop className="w-3.5 h-3.5 text-blue-900" />
+                    <span>PC 14" / Bureau</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDevice('mobile')}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+                      previewDevice === 'mobile'
+                        ? 'bg-white text-blue-950 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Smartphone className="w-3.5 h-3.5 text-amber-600" />
+                    <span>Mobile</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSlideModalOpen(false)}
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                  title="Fermer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleSaveSlideSubmit} className="space-y-3.5 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
-                  Titre Principal *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editingSlide.title}
-                  onChange={(e) => setEditingSlide({ ...editingSlide, title: e.target.value })}
-                  placeholder="ex: Collège Isaac Newton"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none"
-                />
-              </div>
+            {/* SCROLLABLE BODY FORM */}
+            <form onSubmit={handleSaveSlideSubmit} className="flex-1 overflow-y-auto p-3.5 sm:p-5 lg:p-6 text-xs space-y-4 overscroll-contain">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
+                
+                {/* LEFT COLUMN: TEXTS & CTAS (7 cols on Desktop/14" PC) */}
+                <div className="lg:col-span-7 space-y-3.5">
+                  
+                  {/* Card 1: Main Texts */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                        <Tag className="w-3.5 h-3.5 text-blue-900" />
+                        <span>Titres & Accroches Institutionnelles</span>
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">Champs obligatoires *</span>
+                    </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
-                  Badge Supérieur (Ex : Campus Principal, Laboratoire Tech...) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={editingSlide.badge}
-                  onChange={(e) => setEditingSlide({ ...editingSlide, badge: e.target.value })}
-                  placeholder="ex: Campus Principal · Delmas 50, rue Dominique #2 bis"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none"
-                />
-              </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Titre Principal *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editingSlide.title}
+                        onChange={(e) => setEditingSlide({ ...editingSlide, title: e.target.value })}
+                        placeholder="ex: Collège Isaac Newton"
+                        className="w-full px-3 py-2 sm:py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-bold focus:border-blue-900 focus:ring-1 focus:ring-blue-900 outline-none text-xs"
+                      />
+                    </div>
 
-              {/* COMPRESSED IMAGE SELECTOR */}
-              <div>
-                <ImageUploadCompressor
-                  currentImageUrl={editingSlide.image}
-                  onImageReady={(url) => setEditingSlide({ ...editingSlide, image: url })}
-                  label="Image Réelle de la Diapositive (Compression WebP 1280px)"
-                  recommendedAspect="Format 16:9 panoramique d'entête"
-                />
-              </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Badge Supérieur (Ex : Campus Principal, Pôle Technologies...) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={editingSlide.badge}
+                        onChange={(e) => setEditingSlide({ ...editingSlide, badge: e.target.value })}
+                        placeholder="ex: Campus Principal · Delmas 50, rue Dominique #2 bis"
+                        className="w-full px-3 py-2 sm:py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 font-medium focus:border-blue-900 focus:ring-1 focus:ring-blue-900 outline-none text-xs"
+                      />
+                    </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
-                  Sous-titre Explicatif *
-                </label>
-                <textarea
-                  rows={2}
-                  required
-                  value={editingSlide.subtitle}
-                  onChange={(e) => setEditingSlide({ ...editingSlide, subtitle: e.target.value })}
-                  placeholder="Description percutante affichée sur la diapositive..."
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-800 leading-relaxed outline-none"
-                />
-              </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Sous-titre Explicatif *
+                      </label>
+                      <textarea
+                        rows={2}
+                        required
+                        value={editingSlide.subtitle}
+                        onChange={(e) => setEditingSlide({ ...editingSlide, subtitle: e.target.value })}
+                        placeholder="Description percutante affichée sur la diapositive..."
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-800 leading-relaxed outline-none focus:border-blue-900 focus:ring-1 focus:ring-blue-900 resize-y min-h-[54px] text-xs"
+                      />
+                    </div>
+                  </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
-                    Texte Bouton Principal
-                  </label>
-                  <input
-                    type="text"
-                    value={editingSlide.ctaText}
-                    onChange={(e) => setEditingSlide({ ...editingSlide, ctaText: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-semibold"
-                  />
+                  {/* Card 2: Action Buttons */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-3">
+                    <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                      <ArrowRight className="w-3.5 h-3.5 text-blue-900" />
+                      <span>Boutons d'Appel à l'Action (CTA)</span>
+                    </span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                          Texte Bouton Principal
+                        </label>
+                        <input
+                          type="text"
+                          value={editingSlide.ctaText}
+                          onChange={(e) => setEditingSlide({ ...editingSlide, ctaText: e.target.value })}
+                          placeholder="ex: Préinscription en ligne"
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 font-semibold focus:border-blue-900 outline-none text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                          Destination Bouton Principal
+                        </label>
+                        <select
+                          value={editingSlide.ctaTarget}
+                          onChange={(e) => setEditingSlide({ ...editingSlide, ctaTarget: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 font-medium focus:border-blue-900 outline-none text-xs"
+                        >
+                          <option value="pre-registration">Formulaire de Préinscription</option>
+                          <option value="programs">Programmes & Cursus</option>
+                          <option value="college">Le Collège</option>
+                          <option value="contact">Contact & Secrétariat</option>
+                          <option value="gallery">Galerie Photos</option>
+                          <option value="news">Actualités</option>
+                          <option value="events">Agenda Officiel</option>
+                          <option value="resources">Palmarès & Règlement</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                          Texte Bouton Secondaire (Optionnel)
+                        </label>
+                        <input
+                          type="text"
+                          value={editingSlide.secondaryCtaText || ''}
+                          onChange={(e) => setEditingSlide({ ...editingSlide, secondaryCtaText: e.target.value })}
+                          placeholder="ex: Secrétariat (+509 3316-0934)"
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 focus:border-blue-900 outline-none text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                          Destination Secondaire
+                        </label>
+                        <select
+                          value={editingSlide.secondaryCtaTarget || 'contact'}
+                          onChange={(e) => setEditingSlide({ ...editingSlide, secondaryCtaTarget: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-900 font-medium focus:border-blue-900 outline-none text-xs"
+                        >
+                          <option value="contact">Contact & Secrétariat</option>
+                          <option value="pre-registration">Préinscription en ligne</option>
+                          <option value="college">Le Collège</option>
+                          <option value="programs">Programmes & Cursus</option>
+                          <option value="resources">Palmarès & Règlement</option>
+                          <option value="gallery">Galerie Photos</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Cadrage & Alignement vertical (objectPosition) */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                        <Eye className="w-3.5 h-3.5 text-blue-900" />
+                        <span>Cadrage & Alignement de la Photo</span>
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {editingSlide.objectPosition || 'center 35%'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                      {[
+                        { label: 'Haut (Enseigne)', pos: 'center 20%' },
+                        { label: 'Équilibré (14")', pos: 'center 35%' },
+                        { label: 'Centré (Standard)', pos: 'center center' },
+                        { label: 'Bas (Cour/Élèves)', pos: 'center 65%' },
+                      ].map((preset) => (
+                        <button
+                          key={preset.pos}
+                          type="button"
+                          onClick={() => setEditingSlide({ ...editingSlide, objectPosition: preset.pos })}
+                          className={`px-2.5 py-1.5 rounded-lg border text-center transition-all cursor-pointer text-[11px] font-semibold ${
+                            (editingSlide.objectPosition || 'center 35%') === preset.pos
+                              ? 'bg-blue-900 text-white border-blue-900 shadow-2xs font-bold'
+                              : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                 </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
-                    Destination Bouton Principal
-                  </label>
-                  <select
-                    value={editingSlide.ctaTarget}
-                    onChange={(e) => setEditingSlide({ ...editingSlide, ctaTarget: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-medium"
-                  >
-                    <option value="pre-registration">Préinscription en ligne</option>
-                    <option value="programs">Programmes & Cursus</option>
-                    <option value="college">Le Collège</option>
-                    <option value="contact">Contact & Secrétariat</option>
-                  </select>
+                {/* RIGHT COLUMN: IMAGE COMPRESSOR & LIVE SIMULATOR (5 cols on Desktop/14" PC) */}
+                <div className="lg:col-span-5 space-y-3.5">
+                  
+                  {/* Card 4: Compressed Image Selector */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80">
+                    <ImageUploadCompressor
+                      currentImageUrl={editingSlide.image}
+                      onImageReady={(url) => setEditingSlide({ ...editingSlide, image: url })}
+                      label="Photo Réelle de la Diapositive (WebP)"
+                      recommendedAspect="Panoramique 16:9 (1280px)"
+                      compact={true}
+                    />
+                  </div>
+
+                  {/* Card 5: Real-time Responsive Preview Simulator */}
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-900 text-white space-y-3 shadow-md">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <span className="font-bold text-xs">Simulateur en Direct</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-slate-400 font-mono">
+                        <span>{previewDevice === 'desktop' ? 'Format PC 14"' : 'Format Mobile'}</span>
+                      </div>
+                    </div>
+
+                    {/* LIVE CARD PREVIEW */}
+                    {previewDevice === 'desktop' ? (
+                      <div className="relative aspect-[16/9] w-full rounded-xl overflow-hidden bg-slate-950 border border-white/10 shadow-xs flex flex-col justify-end p-3 text-left">
+                        <img
+                          src={editingSlide.image}
+                          alt="Aperçu diapositive"
+                          className="absolute inset-0 w-full h-full object-cover"
+                          style={{ objectPosition: editingSlide.objectPosition || 'center 35%' }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/40 to-transparent" />
+                        
+                        <div className="relative z-10 space-y-1">
+                          <span className="bg-amber-400 text-slate-950 text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider inline-block">
+                            {editingSlide.badge || 'Campus Principal'}
+                          </span>
+                          <h4 className="font-bold text-xs sm:text-sm text-white leading-tight truncate">
+                            {editingSlide.title || 'Titre de la Diapositive'}
+                          </h4>
+                          <p className="text-[10px] text-slate-300 line-clamp-1 leading-snug">
+                            {editingSlide.subtitle || 'Sous-titre descriptif...'}
+                          </p>
+                          <div className="flex items-center gap-1.5 pt-1">
+                            <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold text-[9px]">
+                              {editingSlide.ctaText || 'Bouton'}
+                            </span>
+                            {editingSlide.secondaryCtaText && (
+                              <span className="px-2 py-0.5 rounded bg-white/20 text-white text-[9px]">
+                                {editingSlide.secondaryCtaText}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="max-w-[220px] mx-auto rounded-xl overflow-hidden bg-slate-950 border-2 border-slate-700 aspect-[9/13] relative p-2.5 flex flex-col justify-end text-left shadow-lg">
+                        <img
+                          src={editingSlide.image}
+                          alt="Aperçu smartphone"
+                          className="absolute inset-0 w-full h-full object-cover"
+                          style={{ objectPosition: editingSlide.objectPosition || 'center 35%' }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent" />
+                        
+                        <div className="relative z-10 space-y-1">
+                          <span className="bg-amber-400 text-slate-950 text-[8px] font-bold px-1 py-0.2 rounded-full uppercase tracking-wider inline-block truncate max-w-full">
+                            {editingSlide.badge || 'Campus'}
+                          </span>
+                          <h4 className="font-bold text-xs text-white leading-tight line-clamp-2">
+                            {editingSlide.title || 'Titre Diapositive'}
+                          </h4>
+                          <p className="text-[9.5px] text-slate-300 line-clamp-2 leading-tight">
+                            {editingSlide.subtitle || 'Description sur smartphone...'}
+                          </p>
+                          <div className="pt-0.5">
+                            <span className="block text-center w-full px-2 py-1 rounded bg-amber-400 text-slate-950 font-bold text-[9px]">
+                              {editingSlide.ctaText || 'Action'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                 </div>
+
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
-                    Texte Bouton Secondaire
-                  </label>
-                  <input
-                    type="text"
-                    value={editingSlide.secondaryCtaText || ''}
-                    onChange={(e) => setEditingSlide({ ...editingSlide, secondaryCtaText: e.target.value })}
-                    placeholder="Secrétariat (+509 3316-0934)"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
-                    Destination Secondaire
-                  </label>
-                  <select
-                    value={editingSlide.secondaryCtaTarget || 'contact'}
-                    onChange={(e) => setEditingSlide({ ...editingSlide, secondaryCtaTarget: e.target.value })}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white text-slate-900 font-medium"
-                  >
-                    <option value="contact">Contact & Secrétariat</option>
-                    <option value="pre-registration">Préinscription en ligne</option>
-                    <option value="college">Le Collège</option>
-                    <option value="resources">Palmarès & Résultats</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-                <label className="flex items-center gap-2 cursor-pointer">
+              {/* STICKY FOOTER ACTIONS */}
+              <div className="sticky bottom-0 -mx-3.5 -mb-3.5 sm:-mx-5 sm:-mb-5 lg:-mx-6 lg:-mb-6 mt-4 px-4 py-3 sm:px-6 sm:py-3.5 border-t border-slate-200 bg-white/95 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 shrink-0 rounded-b-2xl sm:rounded-b-3xl shadow-sm z-10">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={editingSlide.isActive}
                     onChange={(e) => setEditingSlide({ ...editingSlide, isActive: e.target.checked })}
-                    className="w-4 h-4 text-blue-900 rounded-sm"
+                    className="w-4 h-4 text-blue-900 rounded-sm focus:ring-blue-900 cursor-pointer"
                   />
-                  <span className="font-bold text-slate-900 text-xs">Diapositive active en ligne</span>
+                  <span className="font-bold text-slate-900 text-xs">
+                    Diapositive active en ligne sur le site
+                  </span>
                 </label>
 
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setIsSlideModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer text-xs transition-colors"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
                     disabled={isSavingSlide}
-                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold transition-colors cursor-pointer shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold transition-all cursor-pointer shadow-xs text-xs"
                   >
                     {isSavingSlide ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
@@ -1031,6 +1270,7 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                   </button>
                 </div>
               </div>
+
             </form>
           </div>
         </div>

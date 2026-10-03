@@ -190,8 +190,8 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
       onMouseLeave={() => setIsHovered(false)}
       aria-label="Diaporama officiel du campus et des laboratoires du Collège Isaac Newton"
     >
-      {/* Full-width responsive hero height */}
-      <div className="relative h-[480px] sm:h-[540px] md:h-[600px] lg:h-[660px] xl:h-[700px] w-full overflow-hidden">
+      {/* Full-width responsive hero height tailored for mobile, tablets, PC 14" & desktop */}
+      <div className="relative h-[420px] sm:h-[480px] md:h-[520px] lg:h-[560px] xl:h-[620px] w-full overflow-hidden">
         
         {/* Framer-motion image slides */}
         <AnimatePresence initial={false} custom={direction} mode="wait">
@@ -207,7 +207,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
             <img
               src={activeSlide.image}
               alt={activeSlide.title}
-              style={{ objectPosition: activeSlide.objectPosition }}
+              style={{ objectPosition: activeSlide.objectPosition || 'center 35%' }}
               className="w-full h-full object-cover select-none"
               loading="eager"
             />
@@ -222,7 +222,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
 
         {/* Content Overlay: Aligned to container, full bleed backdrop */}
         <div className="absolute inset-x-0 bottom-0 z-20 pointer-events-none">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 lg:pb-16 flex flex-col justify-end pointer-events-auto">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 lg:pb-10 flex flex-col justify-end pointer-events-auto">
             <motion.div
               key={`text-${activeSlide.id}`}
               initial={{ opacity: 0, y: 15 }}
