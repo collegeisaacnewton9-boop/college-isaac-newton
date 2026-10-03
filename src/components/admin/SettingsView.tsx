@@ -1,0 +1,1855 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Building2,
+  Calendar,
+  DollarSign,
+  CreditCard,
+  KeyRound,
+  Shield,
+  RefreshCw,
+  Activity,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Loader2,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  Save,
+  Send,
+  Sparkles,
+  Check,
+  Mail,
+  Copy,
+  Github,
+  GitBranch,
+  GitCommit,
+  UploadCloud,
+  CheckCheck,
+  X,
+  Users,
+  Newspaper,
+  Edit3,
+  Plus,
+  Trash2
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { githubService, GitHubRepoConfig, DEFAULT_GITHUB_CONFIG } from '../../services/githubService';
+import { SiteSettings, NewsArticle } from '../../types';
+import { apiService } from '../../services/api';
+import { AccessControlView } from './AccessControlView';
+import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
+
+interface SettingsViewProps {
+  initialSettings?: SiteSettings | null;
+  onSettingsUpdated?: (settings: SiteSettings) => void;
+}
+
+type SettingsTab = 'profile' | 'academic' | 'news' | 'finance' | 'payments' | 'gateways' | 'users' | 'security';
+
+export const SettingsView: React.FC<SettingsViewProps> = ({
+  initialSettings,
+  onSettingsUpdated,
+}) => {
+  // Navigation State
+  const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
+
+  // CMS Settings State
+  const [cmsSettings, setCmsSettings] = useState<SiteSettings | null>(initialSettings || null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Latency Diagnostic
+  const [isTestingLatency, setIsTestingLatency] = useState(false);
+  const [dbLatency, setDbLatency] = useState<number | null>(null);
+
+  // SMTP Settings State
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+  const [testEmailTarget, setTestEmailTarget] = useState('collegeisaacnewton9@gmail.com');
+
+  // News Articles (Home Page) State
+  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
+  const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
+  const [isNewsFormOpen, setIsNewsFormOpen] = useState(false);
+  const [isSavingNews, setIsSavingNews] = useState(false);
+  const [newsForm, setNewsForm] = useState({
+    title: '',
+    category: 'Admissions',
+    excerpt: '',
+    content: '',
+    coverImage: '/src/assets/images/campus_facade_real_1790679454540.jpg',
+    status: 'PUBLISHED' as 'PUBLISHED' | 'DRAFT',
+    featured: true,
+  });
+
+  // GitHub Modal & Sync State
+  const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
+  const [config, setConfig] = useState<GitHubRepoConfig>(DEFAULT_GITHUB_CONFIG);
+  const [showToken, setShowToken] = useState(false);
+  const [commitMessage, setCommitMessage] = useState('Mise à jour des fichiers sources - Collège Isaac Newton');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStage, setSyncStage] = useState<string>('');
+  const [syncProgress, setSyncProgress] = useState<number>(0);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [repoDetails, setRepoDetails] = useState<{
+    valid: boolean;
+    user?: string;
+    repoName?: string;
+    defaultBranch?: string;
+    lastCommit?: {
+      sha: string;
+      message: string;
+      date: string;
+      author: string;
+    };
+    error?: string;
+  } | null>(null);
+
+  // Load config and settings on mount
+  useEffect(() => {
+    const loadedConfig = githubService.getConfig();
+    setConfig(loadedConfig);
+    checkGitHubStatus(loadedConfig);
+
+    if (!initialSettings) {
+      loadSettings();
+    }
+  }, [initialSettings]);
+
+  const loadSettings = async () => {
+    try {
+      const data = await apiService.getSettings();
+      setCmsSettings(data);
+      if (data.smtpConfig?.senderEmail) {
+        setTestEmailTarget(data.smtpConfig.senderEmail);
+      }
+    } catch {
+      toast.error('Impossible de charger les paramètres.');
+    }
+
+    try {
+      const newsData = await apiService.getNews();
+      setNewsArticles(newsData);
+    } catch {
+      // Non-blocking
+    }
+  };
+
+  // News CRUD Handlers
+  const handleOpenNewArticle = () => {
+    setEditingArticleId(null);
+    setNewsForm({
+      title: '',
+      category: 'Admissions',
+      excerpt: '',
+      content: '',
+      coverImage: '/src/assets/images/campus_facade_real_1790679454540.jpg',
+      status: 'PUBLISHED',
+      featured: true,
+    });
+    setIsNewsFormOpen(true);
+  };
+
+  const handleEditArticle = (art: NewsArticle) => {
+    setEditingArticleId(art.id);
+    setNewsForm({
+      title: art.title,
+      category: art.category,
+      excerpt: art.excerpt,
+      content: art.content,
+      coverImage: art.coverImage,
+      status: art.status as 'PUBLISHED' | 'DRAFT',
+      featured: !!art.featured,
+    });
+    setIsNewsFormOpen(true);
+  };
+
+  const handleSaveArticle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsForm.title.trim()) {
+      toast.error('Veuillez renseigner le titre de l’article');
+      return;
+    }
+
+    setIsSavingNews(true);
+    const slug = newsForm.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+    try {
+      if (editingArticleId) {
+        const updated = await apiService.updateNews(editingArticleId, {
+          ...newsForm,
+          slug,
+        });
+        if (updated) {
+          setNewsArticles(prev => prev.map(n => n.id === editingArticleId ? updated : n));
+          toast.success('Actualité mise à jour avec succès !', {
+            description: 'Les modifications sont visibles sur la Page Accueil.',
+          });
+        }
+      } else {
+        const created = await apiService.createNews({
+          ...newsForm,
+          slug,
+          publishedAt: new Date().toISOString().split('T')[0],
+          authorName: 'Direction Générale',
+        });
+        setNewsArticles(prev => [created, ...prev]);
+        toast.success('Nouvelle actualité publiée sur la Page Accueil !');
+      }
+      setIsNewsFormOpen(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de l’enregistrement de l’article');
+    } finally {
+      setIsSavingNews(false);
+    }
+  };
+
+  const handleDeleteArticle = async (id: string) => {
+    if (!window.confirm('Supprimer cet article d’actualité ?')) return;
+    try {
+      await apiService.deleteNews(id);
+      setNewsArticles(prev => prev.filter(n => n.id !== id));
+      toast.success('Article supprimé');
+    } catch (err: any) {
+      toast.error(err.message || 'Erreur lors de la suppression');
+    }
+  };
+
+  const checkGitHubStatus = async (cfg: GitHubRepoConfig) => {
+    if (!cfg.token || !cfg.token.trim()) {
+      setRepoDetails(null);
+      return;
+    }
+    setIsVerifying(true);
+    try {
+      const details = await githubService.verifyConnection(cfg);
+      setRepoDetails(details);
+    } catch {
+      // Handled in service
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleLatencyCheck = async () => {
+    setIsTestingLatency(true);
+    const start = performance.now();
+    try {
+      const res = await fetch('/api/health');
+      const end = performance.now();
+      if (res.ok) {
+        const ms = Math.round(end - start);
+        setDbLatency(ms);
+        toast.success(`Diagnostic Réussi : Latence du serveur de ${ms} ms`);
+      } else {
+        toast.error('Erreur lors du test de latence');
+      }
+    } catch {
+      toast.error('Serveur inaccessible pour le diagnostic');
+    } finally {
+      setIsTestingLatency(false);
+    }
+  };
+
+  // Save full CMS / Site settings
+  const handleSaveSettings = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!cmsSettings) return;
+
+    setIsSaving(true);
+    try {
+      const updated = await apiService.updateSettings(cmsSettings);
+      setCmsSettings(updated);
+      onSettingsUpdated?.(updated);
+      toast.success('Paramètres enregistrés avec succès !', {
+        description: 'Les modifications sont appliquées sur l’ensemble de la plateforme.',
+      });
+    } catch {
+      toast.error('Erreur lors de l’enregistrement des paramètres.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Preconfigure Gmail SMTP presets
+  const handlePreconfigureGmail = () => {
+    if (!cmsSettings) return;
+    setCmsSettings({
+      ...cmsSettings,
+      smtpConfig: {
+        enabled: true,
+        senderName: 'Direction Collège Isaac Newton',
+        senderEmail: 'collegeisaacnewton9@gmail.com',
+        smtpHost: 'smtp.gmail.com',
+        smtpPort: 465,
+        smtpUser: 'collegeisaacnewton9@gmail.com',
+        smtpPass: 'ujwy suyt gjcp fnxf',
+        encryption: 'SSL',
+      }
+    });
+    setTestEmailTarget('collegeisaacnewton9@gmail.com');
+    toast.info('Paramètres officiels Gmail appliqués dans le formulaire', {
+      description: 'N’oubliez pas de cliquer sur « Enregistrer la Passerelle SMTP ».',
+    });
+  };
+
+  // Test Email
+  const handleSendTestEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!testEmailTarget.trim()) {
+      toast.error('Veuillez spécifier une adresse email destinataire.');
+      return;
+    }
+
+    setIsSendingTestEmail(true);
+    try {
+      const res = await fetch('/api/test-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: testEmailTarget.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || 'E-mail de test expédié avec succès !', {
+          description: `Vérifiez la boîte de réception de ${testEmailTarget}.`,
+        });
+      } else {
+        toast.error(data.error || 'Erreur lors de l’envoi du test');
+      }
+    } catch (err: any) {
+      toast.error('Erreur réseau : ' + err.message);
+    } finally {
+      setIsSendingTestEmail(false);
+    }
+  };
+
+  // GitHub actions
+  const handleSaveConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    githubService.saveConfig(config);
+    toast.success('Configuration GitHub enregistrée', {
+      description: `Dépôt configuré : ${config.owner}/${config.repo} (${config.branch})`,
+    });
+    checkGitHubStatus(config);
+  };
+
+  const handleSyncToGitHub = async () => {
+    if (!config.token.trim()) {
+      toast.error('Token manquant', {
+        description: 'Veuillez saisir un Personal Access Token (PAT) GitHub valide.',
+      });
+      return;
+    }
+
+    setIsSyncing(true);
+    setSyncProgress(10);
+    setSyncStage('Vérification de l’arbre de travail Git...');
+
+    try {
+      setSyncProgress(30);
+      setSyncStage('Lecture des sources et des fichiers de configuration...');
+      await new Promise(r => setTimeout(r, 400));
+
+      setSyncProgress(50);
+      setSyncStage('Synchronisation GitHub REST API en cours...');
+
+      const result = await githubService.syncToGitHub(config, commitMessage, (stage, progress) => {
+        setSyncStage(stage);
+        setSyncProgress(progress);
+      });
+
+      if (result.success) {
+        setSyncProgress(100);
+        setSyncStage('Synchronisation réussie !');
+        toast.success('Synchronisation terminée avec succès !', {
+          description: result.commitSha ? `Commit SHA : ${result.commitSha.slice(0, 7)}` : result.message,
+        });
+        checkGitHubStatus(config);
+      } else {
+        toast.error('Échec de la synchronisation', {
+          description: result.message || 'Erreur inconnue',
+        });
+      }
+    } catch (err: any) {
+      toast.error('Erreur inattendue', {
+        description: err.message || 'Une exception est survenue lors du push.',
+      });
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => {
+        setSyncProgress(0);
+        setSyncStage('');
+      }, 3000);
+    }
+  };
+
+  return (
+    <div className="space-y-4 animate-fade-in font-sans text-slate-800">
+      
+      {/* =========================================================================
+          TOP HEADER : CONFIGURATION SYSTÈME + STATUS PILLS
+      ========================================================================= */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 sm:px-4 sm:py-3 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Configuration Système
+          </h1>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Paramètres généraux et préférences de votre établissement
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Synchro Cloud Automatique badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Synchro Cloud Automatique</span>
+          </div>
+
+          {/* Diagnostic Latence BD button */}
+          <button
+            type="button"
+            onClick={handleLatencyCheck}
+            disabled={isTestingLatency}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-semibold transition-colors cursor-pointer"
+          >
+            {isTestingLatency ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Activity className="w-3.5 h-3.5 text-purple-600" />
+            )}
+            <span>
+              {dbLatency !== null ? `Latence : ${dbLatency} ms` : 'Diagnostic Latence BD'}
+            </span>
+          </button>
+
+          {/* Refresh button */}
+          <button
+            type="button"
+            onClick={loadSettings}
+            className="p-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+            title="Rafraîchir les paramètres"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* =========================================================================
+          MAIN TWO-COLUMN VERTICAL LAYOUT
+      ========================================================================= */}
+      <div className="flex flex-col lg:flex-row gap-4 items-start">
+        
+        {/* -------------------------------------------------------------
+            LEFT SIDEBAR : VERTICAL TABS NAVIGATION + GITHUB MINI CARD
+        ------------------------------------------------------------- */}
+        <aside className="w-full lg:w-72 shrink-0 space-y-3">
+          
+          <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-2 space-y-1">
+            
+            {/* Profil Établissement */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('profile')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'profile'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <Building2 className={`w-4 h-4 ${activeTab === 'profile' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Profil Établissement</span>
+            </button>
+
+            {/* Années Scolaires & Campagnes */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('academic')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'academic'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <Calendar className={`w-4 h-4 ${activeTab === 'academic' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Années Scolaires</span>
+            </button>
+
+            {/* Actualités (Page Accueil) */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('news')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'news'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <Newspaper className={`w-4 h-4 ${activeTab === 'news' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Actualités (Accueil)</span>
+            </button>
+
+            {/* Finance & Taux */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('finance')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'finance'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <DollarSign className={`w-4 h-4 ${activeTab === 'finance' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Finance & Taux</span>
+            </button>
+
+            {/* Modes de Règlement */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('payments')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'payments'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <CreditCard className={`w-4 h-4 ${activeTab === 'payments' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Modes de Règlement</span>
+            </button>
+
+            {/* Passerelles & Clés API / SMTP */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('gateways')}
+              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'gateways'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <KeyRound className={`w-4 h-4 ${activeTab === 'gateways' ? 'text-amber-400' : 'text-slate-500'}`} />
+                <span>Passerelles & Clés API</span>
+              </div>
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                activeTab === 'gateways' ? 'bg-amber-400 text-slate-950' : 'bg-emerald-100 text-emerald-800'
+              }`}>
+                ACTIF
+              </span>
+            </button>
+
+            {/* Utilisateurs & Équipe */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('users')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'users'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <Users className={`w-4 h-4 ${activeTab === 'users' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Utilisateurs & Équipe</span>
+            </button>
+
+            {/* Sécurité */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('security')}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                activeTab === 'security'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'text-slate-700 hover:bg-slate-100/80'
+              }`}
+            >
+              <Shield className={`w-4 h-4 ${activeTab === 'security' ? 'text-amber-400' : 'text-slate-500'}`} />
+              <span>Sécurité</span>
+            </button>
+
+          </div>
+
+          {/* DÉPÔT GITHUB MINI CARD (BOTTOM OF SIDEBAR - AS IN IMAGE 2) */}
+          <div className="bg-slate-950 text-white rounded-2xl p-3 border border-slate-800 shadow-md space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  <Github className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-white">Dépôt GitHub</h4>
+                  <p className="text-[10.5px] text-slate-400 font-mono truncate max-w-[140px]">
+                    {config.owner} / {config.repo}
+                  </p>
+                </div>
+              </div>
+              <span className="px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 text-[9px] font-mono font-bold">
+                DEV ONLY
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsGitHubModalOpen(true)}
+              className="w-full py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer border border-white/10 shadow-xs"
+            >
+              <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
+              <span>Exporter & Synchroniser</span>
+            </button>
+          </div>
+
+        </aside>
+
+        {/* -------------------------------------------------------------
+            RIGHT CONTENT AREA : DYNAMIC PANEL BY ACTIVE TAB
+        ------------------------------------------------------------- */}
+        <main className="flex-1 w-full space-y-4">
+          
+          {/* ===========================================================
+              TAB 1 : PROFIL ÉTABLISSEMENT (EXACT MATCH IMAGE 2)
+          =========================================================== */}
+          {activeTab === 'profile' && cmsSettings && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-5">
+              
+              {/* Header section with icon + Site Unique + Enregistrer button */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-900 flex items-center justify-center shrink-0 shadow-2xs">
+                    <Building2 className="w-5 h-5 text-blue-900" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                        Identité de l'Établissement
+                      </h2>
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold border border-slate-200">
+                        Site Unique
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Configuration des métadonnées officielles et visuelles
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSaveSettings()}
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                  ) : (
+                    <Save className="w-4 h-4 text-amber-400" />
+                  )}
+                  <span>Enregistrer</span>
+                </button>
+              </div>
+
+              {/* Form Content */}
+              <form onSubmit={handleSaveSettings} className="space-y-6">
+                
+                {/* 1. INFORMATIONS GÉNÉRALES */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-black text-slate-900 tracking-wider uppercase">
+                    <span className="w-1 h-3.5 bg-slate-950 rounded-full" />
+                    <span>Informations Générales</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Nom de l'Établissement
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.schoolName || 'COLLÈGE ISAAC NEWTON'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: {
+                            ...(cmsSettings.legalInfo || {}),
+                            schoolName: e.target.value
+                          }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Signataire Officiel
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.officialSigner || cmsSettings.directorInfo?.name || 'ORPHE JEAN MARIE'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: {
+                            ...(cmsSettings.legalInfo || {}),
+                            officialSigner: e.target.value
+                          },
+                          directorInfo: {
+                            ...(cmsSettings.directorInfo || { name: '', title: '', role: '' }),
+                            name: e.target.value
+                          }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Titre du Signataire
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.signerTitle || cmsSettings.directorInfo?.title || 'Directeur fondateur'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: {
+                            ...(cmsSettings.legalInfo || {}),
+                            signerTitle: e.target.value
+                          },
+                          directorInfo: {
+                            ...(cmsSettings.directorInfo || { name: '', title: '', role: '' }),
+                            title: e.target.value
+                          }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-semibold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Langue & Format Date
+                      </label>
+                      <select
+                        value={cmsSettings.legalInfo?.dateFormatLanguage || 'Français (ex: 16 août 2026 - Fait à ...)'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: {
+                            ...(cmsSettings.legalInfo || {}),
+                            dateFormatLanguage: e.target.value
+                          }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-semibold focus:border-slate-900 outline-none transition-colors"
+                      >
+                        <option value="Français (ex: 16 août 2026 - Fait à ...)">Français (ex: 16 août 2026 - Fait à ...)</option>
+                        <option value="Kreyòl Ayisyen (ex: 16 out 2026)">Kreyòl Ayisyen (ex: 16 out 2026)</option>
+                        <option value="English (US) (ex: August 16, 2026)">English (US) (ex: August 16, 2026)</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Devise / Slogan
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.schoolMotto}
+                        onChange={(e) => setCmsSettings({ ...cmsSettings, schoolMotto: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. IDENTIFICATION LÉGALE & FONDATION */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2 text-xs font-black text-slate-900 tracking-wider uppercase">
+                    <span className="w-1 h-3.5 bg-slate-950 rounded-full" />
+                    <span>Identification Légale & Fondation</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Année de Fondation
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.foundationYear || '2020'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: { ...(cmsSettings.legalInfo || {}), foundationYear: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        NIF (Fiscal)
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.nif || '456-652-985-9'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: { ...(cmsSettings.legalInfo || {}), nif: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        N° Agrément / Licence
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.legalInfo?.licenseNumber || '548552'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          legalInfo: { ...(cmsSettings.legalInfo || {}), licenseNumber: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-bold focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. COORDONNÉES & CONTACT */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2 text-xs font-black text-slate-900 tracking-wider uppercase">
+                    <span className="w-1 h-3.5 bg-slate-950 rounded-full" />
+                    <span>Coordonnées & Contact</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="sm:col-span-2">
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Adresse Physique
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.contactInfo.address}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          contactInfo: { ...cmsSettings.contactInfo, address: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Téléphone Principal
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.contactInfo.phone}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          contactInfo: { ...cmsSettings.contactInfo, phone: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Téléphone Secondaire / WhatsApp
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.contactInfo.phoneAlt || ''}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          contactInfo: { ...cmsSettings.contactInfo, phoneAlt: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Email Officiel du Site
+                      </label>
+                      <input
+                        type="email"
+                        value={cmsSettings.contactInfo.email}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          contactInfo: { ...cmsSettings.contactInfo, email: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Horaires d'Ouverture
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.contactInfo.openingHours}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          contactInfo: { ...cmsSettings.contactInfo, openingHours: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. MESSAGE DU DIRECTEUR */}
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center gap-2 text-xs font-black text-slate-900 tracking-wider uppercase">
+                    <span className="w-1 h-3.5 bg-slate-950 rounded-full" />
+                    <span>Message d'Accueil de la Direction</span>
+                  </div>
+
+                  <div>
+                    <textarea
+                      rows={3}
+                      value={cmsSettings.directorWelcome}
+                      onChange={(e) => setCmsSettings({ ...cmsSettings, directorWelcome: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors text-xs leading-relaxed"
+                    />
+                  </div>
+                </div>
+
+                {/* Submit action */}
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                    ) : (
+                      <Check className="w-4 h-4 text-amber-400" />
+                    )}
+                    <span>Enregistrer les Modifications</span>
+                  </button>
+                </div>
+
+              </form>
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 2 : PASSERELLES & CLÉS API / MESSAGERIE SMTP (MATCH IMAGE 3)
+          =========================================================== */}
+          {activeTab === 'gateways' && cmsSettings && (
+            <div className="space-y-4">
+              
+              {/* TOP DARK BANNER (EXACTLY AS IN IMAGE 3) */}
+              <div className="bg-slate-950 text-white rounded-2xl p-4 sm:p-5 border border-slate-800 shadow-md">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+                      <KeyRound className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                          Paramètres de Passerelle & Communication
+                        </h2>
+                        <span className="px-2 py-0.5 rounded-full bg-blue-600/30 text-blue-300 border border-blue-500/40 text-[10px] font-mono font-bold">
+                          STANDARD SMTP & API
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Configuration des protocoles d'envoi pour la messagerie académique, les notifications et le routage
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold self-start sm:self-auto">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span>Chiffrement TLS / SSL</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* SERVEUR DE MESSAGERIE SORTANTE (SMTP) - EDITABLE & DYNAMIC CARD */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-5">
+                
+                {/* Header with Preconfigure Gmail button */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-900 flex items-center justify-center shrink-0">
+                      <Mail className="w-5 h-5 text-blue-900" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm sm:text-base font-black text-slate-900 tracking-tight">
+                        Serveur de Messagerie Sortante (SMTP)
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Routage certifié des reçus, convocations et bulletins scolaires par email
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handlePreconfigureGmail}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-900 text-xs font-bold transition-colors cursor-pointer self-start sm:self-auto"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-blue-700" />
+                    <span>Préconfigurer Gmail</span>
+                  </button>
+                </div>
+
+                {/* Form fields (DYNAMIC, NOT HARDCODED!) */}
+                <div className="space-y-4 text-xs">
+                  
+                  {/* Row 1: Nom expéditeur + Adresse email expédition */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Nom de l'Expéditeur Affiché
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.smtpConfig?.senderName || 'Direction Collège Isaac Newton'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          smtpConfig: {
+                            ...(cmsSettings.smtpConfig || {
+                              enabled: true,
+                              senderName: '',
+                              senderEmail: '',
+                              smtpHost: 'smtp.gmail.com',
+                              smtpPort: 465,
+                              smtpUser: '',
+                              smtpPass: '',
+                              encryption: 'SSL'
+                            }),
+                            senderName: e.target.value
+                          }
+                        })}
+                        placeholder="ex: Direction Collège Isaac Newton"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Adresse Email d'Expédition
+                      </label>
+                      <input
+                        type="email"
+                        value={cmsSettings.smtpConfig?.senderEmail || 'collegeisaacnewton9@gmail.com'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          smtpConfig: {
+                            ...(cmsSettings.smtpConfig || {
+                              enabled: true,
+                              senderName: '',
+                              senderEmail: '',
+                              smtpHost: 'smtp.gmail.com',
+                              smtpPort: 465,
+                              smtpUser: '',
+                              smtpPass: '',
+                              encryption: 'SSL'
+                            }),
+                            senderEmail: e.target.value
+                          }
+                        })}
+                        placeholder="collegeisaacnewton9@gmail.com"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 2: Hôte serveur SMTP + Port réseau */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-700 text-[11px] uppercase tracking-wide">
+                          Hôte Serveur SMTP
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-mono">smtp.domaine.com</span>
+                      </div>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                          <Building2 className="w-4 h-4" />
+                        </div>
+                        <input
+                          type="text"
+                          value={cmsSettings.smtpConfig?.smtpHost || 'smtp.gmail.com'}
+                          onChange={(e) => setCmsSettings({
+                            ...cmsSettings,
+                            smtpConfig: {
+                              ...(cmsSettings.smtpConfig || {
+                                enabled: true,
+                                senderName: '',
+                                senderEmail: '',
+                                smtpHost: 'smtp.gmail.com',
+                                smtpPort: 465,
+                                smtpUser: '',
+                                smtpPass: '',
+                                encryption: 'SSL'
+                              }),
+                              smtpHost: e.target.value
+                            }
+                          })}
+                          placeholder="smtp.gmail.com"
+                          className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-medium focus:border-slate-900 outline-none transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Port Réseau SMTP
+                      </label>
+                      <input
+                        type="number"
+                        value={cmsSettings.smtpConfig?.smtpPort || 465}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          smtpConfig: {
+                            ...(cmsSettings.smtpConfig || {
+                              enabled: true,
+                              senderName: '',
+                              senderEmail: '',
+                              smtpHost: 'smtp.gmail.com',
+                              smtpPort: 465,
+                              smtpUser: '',
+                              smtpPass: '',
+                              encryption: 'SSL'
+                            }),
+                            smtpPort: parseInt(e.target.value, 10) || 465
+                          }
+                        })}
+                        placeholder="465 ou 587"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 3: Identifiant SMTP + Mot de passe SMTP */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Identifiant de Connexion SMTP
+                      </label>
+                      <input
+                        type="text"
+                        value={cmsSettings.smtpConfig?.smtpUser || 'collegeisaacnewton9@gmail.com'}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          smtpConfig: {
+                            ...(cmsSettings.smtpConfig || {
+                              enabled: true,
+                              senderName: '',
+                              senderEmail: '',
+                              smtpHost: 'smtp.gmail.com',
+                              smtpPort: 465,
+                              smtpUser: '',
+                              smtpPass: '',
+                              encryption: 'SSL'
+                            }),
+                            smtpUser: e.target.value
+                          }
+                        })}
+                        placeholder="collegeisaacnewton9@gmail.com"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-medium focus:border-slate-900 outline-none transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="font-bold text-slate-700 text-[11px] uppercase tracking-wide">
+                          Clé d'Accès ou Mot de Passe SMTP
+                        </label>
+                        <span className="text-[10px] text-blue-700 font-mono font-bold">16 CARACTÈRES POUR GMAIL</span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={cmsSettings.smtpConfig?.smtpPass || 'ujwy suyt gjcp fnxf'}
+                          onChange={(e) => setCmsSettings({
+                            ...cmsSettings,
+                            smtpConfig: {
+                              ...(cmsSettings.smtpConfig || {
+                                enabled: true,
+                                senderName: '',
+                                senderEmail: '',
+                                smtpHost: 'smtp.gmail.com',
+                                smtpPort: 465,
+                                smtpUser: '',
+                                smtpPass: '',
+                                encryption: 'SSL'
+                              }),
+                              smtpPass: e.target.value
+                            }
+                          })}
+                          placeholder="ujwy suyt gjcp fnxf"
+                          className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-mono font-medium focus:border-slate-900 outline-none transition-colors tracking-wider"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(p => !p)}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-700 cursor-pointer"
+                          title={showPassword ? 'Masquer' : 'Afficher'}
+                        >
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* ACTION BUTTONS & TEST EMAIL ROW */}
+                <div className="pt-3 border-t border-slate-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                  
+                  {/* Save button */}
+                  <button
+                    type="button"
+                    onClick={() => handleSaveSettings()}
+                    disabled={isSaving}
+                    className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                    ) : (
+                      <Save className="w-4 h-4 text-amber-400" />
+                    )}
+                    <span>Enregistrer la Passerelle SMTP</span>
+                  </button>
+
+                  {/* Send test email form */}
+                  <form onSubmit={handleSendTestEmail} className="flex items-center gap-2">
+                    <input
+                      type="email"
+                      value={testEmailTarget}
+                      onChange={(e) => setTestEmailTarget(e.target.value)}
+                      placeholder="destinataire@exemple.com"
+                      className="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/60 text-xs text-slate-900 font-mono outline-none focus:border-slate-900"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSendingTestEmail}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer shrink-0"
+                    >
+                      {isSendingTestEmail ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5 text-amber-400" />
+                      )}
+                      <span>Tester la Connexion</span>
+                    </button>
+                  </form>
+
+                </div>
+
+                {/* AUTOMATED NOTIFICATION FLOWS BADGE */}
+                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200/80 text-xs text-slate-600 space-y-1.5">
+                  <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                    <CheckCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Flux de notifications automatisés :</span>
+                  </div>
+                  <ul className="list-disc pl-4 space-y-1 text-slate-600">
+                    <li><strong>Nouvelle Préinscription :</strong> Envoi instantané de la fiche complète au secrétariat académique et de l'accusé de réception officiel avec numéro de dossier unique au parent.</li>
+                    <li><strong>Formulaire de Contact :</strong> Réception immédiate des demandes et accusé de réception automatique au visiteur.</li>
+                  </ul>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 3 : ANNÉES SCOLAIRES & CAMPAGNES
+          =========================================================== */}
+          {activeTab === 'academic' && cmsSettings && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                    <Calendar className="w-5 h-5 text-amber-700" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                      Gestion des Années Scolaires & Campagnes
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Dates clés, ouvertures des candidatures et bandeau d'alerte en direct
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleSaveSettings()}
+                  disabled={isSaving}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
+                >
+                  <Save className="w-4 h-4 text-amber-400" />
+                  <span>Enregistrer</span>
+                </button>
+              </div>
+
+              <div className="space-y-4 text-xs">
+                {/* Admissions campaign status */}
+                <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-slate-900 text-sm">Campagne de Préinscription en Ligne</span>
+                      <p className="text-slate-500 text-[11px]">Active ou ferme l'accès aux formulaires de candidature.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cmsSettings.admissionsStatus.isOpen}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          admissionsStatus: { ...cmsSettings.admissionsStatus, isOpen: e.target.checked }
+                        })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase">Année Académique</label>
+                      <input
+                        type="text"
+                        value={cmsSettings.admissionsStatus.currentSchoolYear}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          admissionsStatus: { ...cmsSettings.admissionsStatus, currentSchoolYear: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-bold text-slate-900"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase">Notice de Clôture</label>
+                      <input
+                        type="text"
+                        value={cmsSettings.admissionsStatus.deadlineNotice}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          admissionsStatus: { ...cmsSettings.admissionsStatus, deadlineNotice: e.target.value }
+                        })}
+                        className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium text-slate-900"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Announcement Banner CMS */}
+                <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-slate-900 text-sm">Bandeau Public d'Alerte (Entête)</span>
+                      <p className="text-slate-500 text-[11px]">Message défilant ou bannière prioritaire affichée sur tout le site.</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={cmsSettings.announcement.enabled}
+                        onChange={(e) => setCmsSettings({
+                          ...cmsSettings,
+                          announcement: { ...cmsSettings.announcement, enabled: e.target.checked }
+                        })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <label className="block font-bold text-slate-700 text-[11px] uppercase">Texte du Message d'Alerte</label>
+                    <input
+                      type="text"
+                      value={cmsSettings.announcement.text}
+                      onChange={(e) => setCmsSettings({
+                        ...cmsSettings,
+                        announcement: { ...cmsSettings.announcement, text: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-white font-medium text-slate-900"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 3.5 : ACTUALITÉS & PUBLICATIONS (PAGE D'ACCUEIL)
+          =========================================================== */}
+          {activeTab === 'news' && (
+            <div className="space-y-4">
+              
+              {/* Header card with "Nouvel Article" button */}
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-900 flex items-center justify-center shrink-0">
+                    <Newspaper className="w-5 h-5 text-blue-900" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                      Actualités & Publications (Page d'Accueil)
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Modifiez les articles, résumés et images de la vitrine avec compression automatique avant envoi.
+                    </p>
+                  </div>
+                </div>
+
+                {!isNewsFormOpen && (
+                  <button
+                    type="button"
+                    onClick={handleOpenNewArticle}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
+                  >
+                    <Plus className="w-4 h-4 text-amber-400" />
+                    <span>Rédiger un Article</span>
+                  </button>
+                )}
+              </div>
+
+              {/* EDITOR FORM WITH IMAGE COMPRESSOR */}
+              {isNewsFormOpen && (
+                <div className="bg-white rounded-2xl border-2 border-slate-900/10 shadow-md p-4 sm:p-5 space-y-4 animate-scale-in">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Edit3 className="w-4 h-4 text-blue-900" />
+                      <h3 className="font-black text-slate-900 text-sm sm:text-base">
+                        {editingArticleId ? 'Modifier l’Article d’Actualité' : 'Nouvelle Publication pour l’Accueil'}
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsNewsFormOpen(false)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveArticle} className="space-y-4 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Titre de l'Actualité *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newsForm.title}
+                        onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })}
+                        placeholder="ex: Modernisation continue de notre laboratoire informatique et sciences"
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none transition-colors text-xs"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                          Catégorie
+                        </label>
+                        <select
+                          value={newsForm.category}
+                          onChange={(e) => setNewsForm({ ...newsForm, category: e.target.value })}
+                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                        >
+                          <option value="Admissions">Admissions</option>
+                          <option value="Technologie">Technologie & Sciences</option>
+                          <option value="Académique">Académique & Pédagogie</option>
+                          <option value="Vie Scolaire">Vie Scolaire & Campus</option>
+                          <option value="Direction">Direction Générale</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-center pt-5 sm:pt-6">
+                        <label className="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl w-full">
+                          <input
+                            type="checkbox"
+                            checked={newsForm.featured}
+                            onChange={(e) => setNewsForm({ ...newsForm, featured: e.target.checked })}
+                            className="w-4 h-4 text-amber-500 rounded-sm"
+                          />
+                          <span className="font-bold text-slate-900 text-[11px]">
+                            ⭐ Mettre à la une sur la Page d'Accueil
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* CLIENT-SIDE IMAGE COMPRESSOR */}
+                    <div>
+                      <ImageUploadCompressor
+                        currentImageUrl={newsForm.coverImage}
+                        onImageReady={(compressedUrl) => setNewsForm({ ...newsForm, coverImage: compressedUrl })}
+                        label="Image de Couverture (Compression & Allègement Automatique WebP)"
+                        recommendedAspect="Format 16:9 recommandé (Résolution max 1280px)"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Extrait / Résumé d'Accroche (Visible sur la carte d'accueil) *
+                      </label>
+                      <textarea
+                        rows={2}
+                        required
+                        value={newsForm.excerpt}
+                        onChange={(e) => setNewsForm({ ...newsForm, excerpt: e.target.value })}
+                        placeholder="Court texte percutant décrivant la nouvelle..."
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors text-xs leading-relaxed"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                        Contenu Détaillé de l'Article *
+                      </label>
+                      <textarea
+                        rows={4}
+                        required
+                        value={newsForm.content}
+                        onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })}
+                        placeholder="Texte complet de l'article accessible lors du clic..."
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors text-xs leading-relaxed"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setIsNewsFormOpen(false)}
+                        className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSavingNews}
+                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold transition-colors cursor-pointer shadow-xs"
+                      >
+                        {isSavingNews ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                        ) : (
+                          <Check className="w-3.5 h-3.5 text-amber-400" />
+                        )}
+                        <span>Enregistrer la Publication</span>
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {/* LIST OF PUBLISHED ARTICLES */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                {newsArticles.map((art) => (
+                  <div
+                    key={art.id}
+                    className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3.5 flex flex-col justify-between space-y-3 hover:border-slate-300 transition-all"
+                  >
+                    <div className="space-y-2.5">
+                      <div className="relative aspect-[16/9] max-h-40 rounded-xl overflow-hidden bg-slate-950 border border-slate-200/80">
+                        <img
+                          src={art.coverImage}
+                          alt={art.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-2 left-2 flex items-center gap-1.5">
+                          <span className="bg-slate-950/80 text-white font-bold text-[9px] px-2 py-0.5 rounded-full border border-white/20 backdrop-blur-xs">
+                            {art.category}
+                          </span>
+                          {art.featured && (
+                            <span className="bg-amber-400 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full shadow-xs">
+                              ⭐ À LA UNE
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute bottom-1.5 right-2 bg-black/60 text-white text-[10px] font-mono px-2 py-0.5 rounded backdrop-blur-xs">
+                          {art.publishedAt}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-serif font-bold text-sm text-slate-900 line-clamp-2 leading-snug">
+                          {art.title}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-relaxed">
+                          {art.excerpt}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {art.authorName || 'Direction'}
+                      </span>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleEditArticle(art)}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold transition-colors cursor-pointer text-[11px]"
+                        >
+                          <Edit3 className="w-3 h-3 text-blue-900" />
+                          <span>Modifier</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteArticle(art.id)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
+                          title="Supprimer l'article"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 4 : FINANCE & SCOLARITÉ
+          =========================================================== */}
+          {activeTab === 'finance' && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <DollarSign className="w-5 h-5 text-emerald-700" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    Finance & Barèmes de Scolarité
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Configuration des cycles, droits d'admission et échéanciers académiques
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="font-bold text-slate-800 block mb-1">Préscolaire</span>
+                  <p className="text-slate-500 text-[11px]">Petite, Moyenne & Grande Section</p>
+                  <div className="text-lg font-black text-slate-900 mt-2 font-mono">Sur Dossier</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="font-bold text-slate-800 block mb-1">Fondamental (1er au 3e Cycle)</span>
+                  <p className="text-slate-500 text-[11px]">1ère à la 9ème Année Fondamentale</p>
+                  <div className="text-lg font-black text-slate-900 mt-2 font-mono">Sur Test</div>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <span className="font-bold text-slate-800 block mb-1">Secondaire Rénové</span>
+                  <p className="text-slate-500 text-[11px]">Nouveau Secondaire 1 à 4</p>
+                  <div className="text-lg font-black text-slate-900 mt-2 font-mono">Sur Test & Dossier</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 5 : MODES DE RÈGLEMENT
+          =========================================================== */}
+          {activeTab === 'payments' && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 text-blue-800 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-5 h-5 text-blue-900" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    Modes de Règlement
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Canaux de perception autorisés pour les scolarités et frais de dossiers
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-slate-900 block">Dépôt Bancaire (Sogebank / Unibank)</span>
+                    <span className="text-[11px] text-slate-500">Compte officiel Collège Isaac Newton</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">ACTIF</span>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-slate-900 block">Paiement Mobile (MonCash)</span>
+                    <span className="text-[11px] text-slate-500">Numéro marchand dédié</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">ACTIF</span>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between sm:col-span-2">
+                  <div>
+                    <span className="font-bold text-slate-900 block">Comptabilité du Campus (Delmas 50)</span>
+                    <span className="text-[11px] text-slate-500">Chèque de direction ou espèces aux guichets administratifs</span>
+                  </div>
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold text-[10px]">ACTIF</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 5.5 : UTILISATEURS & ÉQUIPE
+          =========================================================== */}
+          {activeTab === 'users' && (
+            <div className="space-y-4">
+              <AccessControlView hideHeader={false} />
+            </div>
+          )}
+
+          {/* ===========================================================
+              TAB 6 : SÉCURITÉ & ACCÈS
+          =========================================================== */}
+          {activeTab === 'security' && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
+              <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
+                  <Shield className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                    Sécurité & Politique d'Accès
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Contrôle des accès basé sur les rôles (RBAC) et traçabilité des actions
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                  <span className="font-bold text-slate-900 block">Matrice des Permissions RBAC</span>
+                  <p className="text-slate-600 text-[11px] leading-relaxed">
+                    Les rôles système (SUPER_ADMIN, ADMIN, DIRECTION, SECRÉTARIAT, PROFESSEUR, PARENT, ÉLÈVE) sont compartimentés et validés à chaque transaction API.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </main>
+
+      </div>
+
+      {/* =========================================================================
+          MODAL DE SYNCHRONISATION GITHUB (CLEAN & COMPACT)
+      ========================================================================= */}
+      {isGitHubModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-4 sm:p-5 space-y-4 animate-scale-in">
+            
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-slate-950 text-white flex items-center justify-center">
+                  <Github className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 text-sm sm:text-base">
+                    Synchronisation GitHub REST API
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-mono">
+                    {config.owner} / {config.repo} ({config.branch})
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsGitHubModalOpen(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Verification Status */}
+            {repoDetails && (
+              <div className={`p-3 rounded-xl text-xs flex items-center gap-2.5 ${
+                repoDetails.valid ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
+              }`}>
+                {repoDetails.valid ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                ) : (
+                  <XCircle className="w-4 h-4 text-red-600 shrink-0" />
+                )}
+                <div>
+                  <span className="font-bold">{repoDetails.valid ? 'Dépôt Connecté & Prêt' : 'Erreur de connexion'}</span>
+                  {repoDetails.lastCommit && (
+                    <p className="text-[10px] text-slate-600 font-mono mt-0.5">
+                      Dernier commit : {repoDetails.lastCommit.sha} · {repoDetails.lastCommit.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Commit Message & Sync Button */}
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase">Message de Commit</label>
+                <input
+                  type="text"
+                  value={commitMessage}
+                  onChange={(e) => setCommitMessage(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium"
+                />
+              </div>
+
+              {/* Progress bar if syncing */}
+              {isSyncing && (
+                <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                  <div className="flex justify-between text-[11px] font-bold text-slate-700">
+                    <span>{syncStage}</span>
+                    <span>{syncProgress}%</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
+                    <div
+                      className="h-full bg-slate-900 transition-all duration-300"
+                      style={{ width: `${syncProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsGitHubModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-semibold cursor-pointer"
+              >
+                Fermer
+              </button>
+              <button
+                type="button"
+                onClick={handleSyncToGitHub}
+                disabled={isSyncing}
+                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer"
+              >
+                {isSyncing ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                    <span>Synchronisation...</span>
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Pousser vers GitHub</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};
