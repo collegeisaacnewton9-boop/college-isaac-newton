@@ -6,7 +6,8 @@ import {
   DocumentFile, 
   AdmissionApplication,
   User,
-  Testimonial
+  Testimonial,
+  AcademicCyclesRecord
 } from '../types';
 
 export const SCHOOL_INFO = {
@@ -812,3 +813,7 @@ export const SCHOOL_VALUES = [
     iconName: 'HeartHandshake'
   }
 ];
+
+export { DEFAULT_EDUCATIONAL_CYCLES } from './cyclesData';
+
+

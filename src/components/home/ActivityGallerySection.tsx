@@ -125,13 +125,23 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
             onClick={() => setActivePhoto(item)}
             className="group relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/90 shadow-2xs hover:shadow-xl transition-all duration-300 aspect-[16/11] cursor-pointer"
           >
-            {/* Image with subtle zoom on hover */}
             <img
               src={item.imageUrl}
               alt={item.altText || item.title}
               referrerPolicy="no-referrer"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-106 transition-transform duration-500 ease-out"
               loading="lazy"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.dataset.triedFallback) {
+                  target.dataset.triedFallback = '1';
+                  if (target.src.includes('/src/assets/images/')) {
+                    target.src = target.src.replace('/src/assets/images/', '/images/');
+                  } else {
+                    target.src = '/images/campus_courtyard_building_1790531780046.jpg';
+                  }
+                }
+              }}
             />
 
             {/* Gradient Overlay for high readability */}
@@ -240,6 +250,17 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
                 alt={activePhoto.title}
                 referrerPolicy="no-referrer"
                 className="max-h-[65vh] w-full object-contain mx-auto"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.dataset.triedFallback) {
+                    target.dataset.triedFallback = '1';
+                    if (target.src.includes('/src/assets/images/')) {
+                      target.src = target.src.replace('/src/assets/images/', '/images/');
+                    } else {
+                      target.src = '/images/campus_courtyard_building_1790531780046.jpg';
+                    }
+                  }
+                }}
               />
             </div>
 

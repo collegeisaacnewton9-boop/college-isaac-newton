@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build",
+    "build": "vite build && mkdir -p dist/images && cp -a src/assets/images/* dist/images/",
     "start": "tsx server.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "test": "tsx --test tests/**/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

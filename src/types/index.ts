@@ -197,7 +197,21 @@ export interface SiteSettings {
     twoFactorEnabled?: boolean;
     updatedAt?: string;
   };
+  educationalCycles?: AcademicCyclesRecord;
 }
+
+export interface AcademicCycleInfo {
+  title: string;
+  subtitle: string;
+  description: string;
+  highlights: string[];
+  targetPage: string;
+  badgeColor: string;
+  image: string;
+}
+
+export type AcademicCyclesRecord = Record<'prescolaire' | 'fondamental' | 'secondaire' | 'numerique', AcademicCycleInfo>;
+
 
 export interface Testimonial {
   id: string;

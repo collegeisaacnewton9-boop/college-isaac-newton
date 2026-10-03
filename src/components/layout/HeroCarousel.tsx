@@ -210,6 +210,17 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
               style={{ objectPosition: activeSlide.objectPosition || 'center 35%' }}
               className="w-full h-full object-cover select-none"
               loading="eager"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.dataset.triedFallback) {
+                  target.dataset.triedFallback = '1';
+                  if (target.src.includes('/src/assets/images/')) {
+                    target.src = target.src.replace('/src/assets/images/', '/images/');
+                  } else {
+                    target.src = SCHOOL_IMAGES.entranceFacade;
+                  }
+                }
+              }}
             />
 
             {/* Subtle top vignette for contrast without darkening the campus architecture */}
