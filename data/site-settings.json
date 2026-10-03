@@ -7,7 +7,7 @@
     "linkUrl": "pre-registration"
   },
   "admissionsStatus": {
-    "isOpen": true,
+    "isOpen": false,
     "currentSchoolYear": "2026-2027",
     "deadlineNotice": "Dépôt des dossiers ouvert jusqu'au 31 août 2026"
   },
