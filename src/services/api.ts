@@ -433,7 +433,7 @@ export const apiService = {
     const defaultSlides: HeroSlide[] = [
       {
         id: 'slide-1',
-        image: '/src/assets/images/campus_facade_real_1790679454540.jpg',
+        image: '/images/campus_facade_real_1790679454540.jpg',
         badge: 'Campus Principal · Delmas 50, rue Dominique #2 bis',
         title: 'Collège Isaac Newton',
         subtitle: '« Savoir aujourd’hui, réussir demain » — Notre campus moderne et sécurisé à Delmas 50, dédié à l’excellence intellectuelle et civique de vos enfants.',
@@ -447,7 +447,7 @@ export const apiService = {
       },
       {
         id: 'slide-2',
-        image: '/src/assets/images/computer_lab_real_1790679476180.jpg',
+        image: '/images/computer_lab_real_1790679476180.jpg',
         badge: 'Laboratoire Informatique & Multimédia',
         title: 'La Technologie au Service de Votre Avenir',
         subtitle: 'Postes informatiques récents sous onduleurs, initiation au code, bureautique structurée et culture numérique dès le cycle fondamental.',
@@ -461,7 +461,7 @@ export const apiService = {
       },
       {
         id: 'slide-3',
-        image: '/src/assets/images/graduation_promo_real_1790679465649.jpg',
+        image: '/images/graduation_promo_real_1790679465649.jpg',
         badge: 'Promotion des Diplômés · Cérémonie de Graduation',
         title: 'Former les Bâtisseurs de Demain',
         subtitle: '100% de réussite aux examens d’État (9e AF et Baccalauréat Nouveau Secondaire). Nos bacheliers en toges académiques prêts pour l’université.',
@@ -475,7 +475,7 @@ export const apiService = {
       },
       {
         id: 'slide-4',
-        image: '/src/assets/images/campus_courtyard_building_1790531780046.jpg',
+        image: '/images/campus_courtyard_building_1790531780046.jpg',
         badge: 'Campus Principal · Delmas 50',
         title: 'Un Environnement Propice à l’Excellence',
         subtitle: 'Bâtiment aéré à galeries bleues, cour spacieuse, terrain multisports et encadrement pédagogique rigoureux.',
@@ -490,7 +490,7 @@ export const apiService = {
     ];
 
     try {
-      const res = await appFetch('/api/slides');
+      const res = await appFetch(`/api/slides?_t=${Date.now()}`);
       if (res.ok) {
         const slides = await res.json();
         if (Array.isArray(slides) && slides.length > 0) {

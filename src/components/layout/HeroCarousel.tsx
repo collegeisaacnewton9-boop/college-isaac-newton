@@ -21,7 +21,7 @@ export interface HeroCarouselProps {
 
 const DEFAULT_SLIDES: HeroSlide[] = [
   {
-    id: 'campus-facade-real',
+    id: 'slide-1',
     image: SCHOOL_IMAGES.entranceFacade,
     badge: 'Campus Principal · Delmas 50, rue Dominique #2 bis',
     title: 'Collège Isaac Newton',
@@ -35,7 +35,7 @@ const DEFAULT_SLIDES: HeroSlide[] = [
     order: 1,
   },
   {
-    id: 'computer-lab-real',
+    id: 'slide-2',
     image: SCHOOL_IMAGES.computerLab,
     badge: 'Laboratoire Informatique & Multimédia',
     title: 'La Technologie au Service de Votre Avenir',
@@ -49,7 +49,7 @@ const DEFAULT_SLIDES: HeroSlide[] = [
     order: 2,
   },
   {
-    id: 'graduation-promo-real',
+    id: 'slide-3',
     image: SCHOOL_IMAGES.graduationPromo,
     badge: 'Promotion des Diplômés · Cérémonie de Graduation',
     title: 'Former les Bâtisseurs de Demain',
@@ -63,7 +63,7 @@ const DEFAULT_SLIDES: HeroSlide[] = [
     order: 3,
   },
   {
-    id: 'campus-courtyard',
+    id: 'slide-4',
     image: SCHOOL_IMAGES.campusCourtyard,
     badge: 'Campus Principal · Delmas 50',
     title: 'Un Environnement Propice à l’Excellence',

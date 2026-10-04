@@ -179,6 +179,25 @@ export async function initDatabase(): Promise<boolean> {
         );
       `);
 
+      // 9. Table Hero Slides (Direct GUI editing in DBeaver & Web Admin)
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS hero_slides (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          subtitle TEXT,
+          badge TEXT,
+          image TEXT NOT NULL,
+          cta_text TEXT,
+          cta_target TEXT,
+          secondary_cta_text TEXT,
+          secondary_cta_target TEXT,
+          object_position TEXT DEFAULT 'center 35%',
+          is_active BOOLEAN DEFAULT TRUE,
+          slide_order INTEGER DEFAULT 1,
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+      `);
+
       // Seed if empty
       const countRes = await client.query('SELECT COUNT(*) FROM admissions');
       if (parseInt(countRes.rows[0].count, 10) === 0) {
@@ -261,6 +280,74 @@ export async function initDatabase(): Promise<boolean> {
           ('med-3', '/src/assets/images/graduation_promo_real_1790679465649.jpg', 'Promotion des Lauréats en Toges', 'SLIDESHOW', '1280x853'),
           ('med-4', '/src/assets/images/campus_courtyard_building_1790531780046.jpg', 'Cour Spacieuse & Bâtiments Pédagogiques', 'CAMPUS', '1280x853'),
           ('med-5', '/src/assets/images/students_assembly_1790529184364.jpg', 'Rassemblement Matinal & Discipline', 'EVENTS', '1280x853')
+          ON CONFLICT (id) DO NOTHING;
+        `);
+      }
+
+      // Ensure hero_slides table is seeded for DBeaver visibility
+      const heroCountRes = await client.query('SELECT COUNT(*) FROM hero_slides');
+      if (parseInt(heroCountRes.rows[0].count, 10) === 0) {
+        console.log('[Database] Initialisation des diapositives d’entête (hero_slides)...');
+        await client.query(`
+          INSERT INTO hero_slides (
+            id, title, subtitle, badge, image, cta_text, cta_target, secondary_cta_text, secondary_cta_target, object_position, is_active, slide_order
+          ) VALUES 
+          (
+            'slide-1',
+            'Collège Isaac Newton',
+            '« Savoir aujourd’hui, réussir demain » — Notre campus moderne et sécurisé à Delmas 50, rue Dominique #2 bis, dédié à l’excellence intellectuelle et civique de vos enfants.',
+            'Campus Principal · Delmas 50, rue Dominique #2 bis',
+            '/images/campus_facade_real_1790679454540.jpg',
+            'Formulaire de Préinscription',
+            'pre-registration',
+            'Secrétariat (+509 3316-0934 / 3721-1818)',
+            'contact',
+            'center 35%',
+            true,
+            1
+          ),
+          (
+            'slide-2',
+            'La Technologie au Service de Votre Avenir',
+            'Postes informatiques récents sous onduleurs, initiation au code, bureautique structurée et culture numérique dès le cycle fondamental.',
+            'Laboratoire Informatique & Multimédia',
+            '/images/computer_lab_real_1790679476180.jpg',
+            'Découvrir le Pôle Numérique',
+            'programs',
+            'Préinscrire un élève',
+            'pre-registration',
+            'center 45%',
+            true,
+            2
+          ),
+          (
+            'slide-3',
+            'Former les Bâtisseurs de Demain',
+            '100% de réussite aux examens d’État (9e AF et Baccalauréat Nouveau Secondaire). Nos bacheliers en toges académiques prêts pour l’université.',
+            'Promotion des Diplômés · Cérémonie de Graduation',
+            '/images/graduation_promo_real_1790679465649.jpg',
+            'Cursus Nouveau Secondaire',
+            'programs',
+            'Palmarès d’Excellence',
+            'college',
+            'center 22%',
+            true,
+            3
+          ),
+          (
+            'slide-4',
+            'Un Environnement Propice à l’Excellence',
+            'Bâtiment aéré à galeries bleues, cour spacieuse, terrain multisports et encadrement pédagogique rigoureux.',
+            'Campus Principal · Delmas 50',
+            '/images/campus_courtyard_building_1790531780046.jpg',
+            'Visiter le Campus',
+            'college',
+            'Préinscription 2026-2027',
+            'pre-registration',
+            'center 28%',
+            true,
+            4
+          )
           ON CONFLICT (id) DO NOTHING;
         `);
       }
@@ -902,9 +989,41 @@ export async function dbGetHeroSlides(): Promise<any[] | null> {
   const p = getDbPool();
   if (!p || !isConnected) return null;
   try {
+    // 1. Try relational hero_slides table first (enables direct graphical editing via DBeaver)
+    try {
+      const resTable = await p.query(
+        'SELECT * FROM hero_slides ORDER BY slide_order ASC, updated_at DESC'
+      );
+      if (resTable.rows.length > 0) {
+        return resTable.rows.map(row => ({
+          id: row.id,
+          title: row.title,
+          subtitle: row.subtitle || '',
+          badge: row.badge || '',
+          image: row.image,
+          ctaText: row.cta_text || '',
+          ctaTarget: row.cta_target || '',
+          secondaryCtaText: row.secondary_cta_text || '',
+          secondaryCtaTarget: row.secondary_cta_target || '',
+          objectPosition: row.object_position || 'center 35%',
+          isActive: row.is_active !== false,
+          order: row.slide_order || 1,
+        }));
+      }
+    } catch {
+      // Table may not exist yet or fallback
+    }
+
+    // 2. Fallback to site_settings JSON blob
     const res = await p.query('SELECT data FROM site_settings WHERE id = $1', ['hero_slides']);
     if (res.rows.length > 0) {
-      return res.rows[0].data;
+      let data = res.rows[0].data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch {}
+      }
+      return Array.isArray(data) ? data : null;
     }
     return null;
   } catch (err: any) {
@@ -917,12 +1036,55 @@ export async function dbSaveHeroSlides(slides: any[]): Promise<boolean> {
   const p = getDbPool();
   if (!p || !isConnected) return false;
   try {
+    // 1. Save to site_settings JSON blob (guaranteed backup & fast lookup)
     await p.query(
       `INSERT INTO site_settings (id, data, updated_at)
        VALUES ($1, $2, NOW())
        ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
       ['hero_slides', JSON.stringify(slides)]
     );
+
+    // 2. Upsert each slide into dedicated hero_slides table for DBeaver visibility & direct editing
+    try {
+      for (let i = 0; i < slides.length; i++) {
+        const s = slides[i];
+        await p.query(
+          `INSERT INTO hero_slides (
+            id, title, subtitle, badge, image, cta_text, cta_target, secondary_cta_text, secondary_cta_target, object_position, is_active, slide_order, updated_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
+          ON CONFLICT (id) DO UPDATE SET
+            title = EXCLUDED.title,
+            subtitle = EXCLUDED.subtitle,
+            badge = EXCLUDED.badge,
+            image = EXCLUDED.image,
+            cta_text = EXCLUDED.cta_text,
+            cta_target = EXCLUDED.cta_target,
+            secondary_cta_text = EXCLUDED.secondary_cta_text,
+            secondary_cta_target = EXCLUDED.secondary_cta_target,
+            object_position = EXCLUDED.object_position,
+            is_active = EXCLUDED.is_active,
+            slide_order = EXCLUDED.slide_order,
+            updated_at = NOW()`,
+          [
+            s.id || `slide-${i + 1}`,
+            s.title || '',
+            s.subtitle || '',
+            s.badge || '',
+            s.image || '',
+            s.ctaText || '',
+            s.ctaTarget || '',
+            s.secondaryCtaText || '',
+            s.secondaryCtaTarget || '',
+            s.objectPosition || 'center 35%',
+            s.isActive !== false,
+            s.order || (i + 1),
+          ]
+        );
+      }
+    } catch (tblErr: any) {
+      console.warn('[DB Save Hero Slides Table Warn]', tblErr.message);
+    }
+
     return true;
   } catch (err: any) {
     console.error('[DB Save Hero Slides Error]', err.message);

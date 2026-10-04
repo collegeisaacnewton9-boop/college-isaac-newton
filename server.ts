@@ -1448,6 +1448,9 @@ let memoryHeroSlides = [
 ];
 
 app.get('/api/slides', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   if (isDbActive()) {
     try {
       const dbSlides = await dbGetHeroSlides();
@@ -1463,6 +1466,7 @@ app.get('/api/slides', async (req: Request, res: Response) => {
 });
 
 app.put('/api/slides', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   const newSlides = req.body;
   if (!Array.isArray(newSlides)) {
     return res.status(400).json({ error: 'Liste de diapositives invalide' });
