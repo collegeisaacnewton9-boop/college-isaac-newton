@@ -128,7 +128,8 @@ process.on('unhandledRejection', (reason) => {
   console.error('[Unhandled Rejection]', reason);
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // In-memory data storage (mirrors Prisma schema for runtime operation)
 let admissions = [
@@ -2293,6 +2294,25 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   }
+
+  // Global Error Handler (handles payload too large, invalid json, etc.)
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    if (err && (err.type === 'entity.too.large' || err.status === 413 || err.statusCode === 413)) {
+      console.warn('[Server Warn] Request payload exceeded limit:', err.message);
+      return res.status(413).json({
+        error: 'Le fichier ou les données envoyées dépassent la taille maximale autorisée (50 Mo). Veuillez compresser l’image ou le document.',
+        code: 'PAYLOAD_TOO_LARGE'
+      });
+    }
+    if (err) {
+      console.error('[Server Error Middleware]', err.message);
+      return res.status(err.status || 500).json({
+        error: err.message || 'Erreur interne du serveur',
+        code: err.code || 'INTERNAL_ERROR'
+      });
+    }
+    next();
+  });
 
   app.listen(PORT, HOST, () => {
     console.log(`[Server] Collège Isaac Newton API & Web running on http://${HOST}:${PORT}`);
