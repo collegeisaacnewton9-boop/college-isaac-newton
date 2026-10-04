@@ -41,6 +41,7 @@ import { apiService } from '../../services/api';
 import { DEFAULT_EDUCATIONAL_CYCLES } from '../../data/mockData';
 import { AccessControlView } from './AccessControlView';
 import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
+import { GitHubSyncModal } from './GitHubSyncModal';
 
 interface SettingsViewProps {
   initialSettings?: SiteSettings | null;
@@ -2358,114 +2359,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       {/* =========================================================================
           MODAL DE SYNCHRONISATION GITHUB (CLEAN & COMPACT)
       ========================================================================= */}
-      {import.meta.env.DEV && isGitHubModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-3">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-4 sm:p-5 space-y-4 animate-scale-in">
-            
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-slate-950 text-white flex items-center justify-center">
-                  <Github className="w-4 h-4 text-amber-400" />
-                </div>
-                <div>
-                  <h3 className="font-black text-slate-900 text-sm sm:text-base">
-                    Synchronisation GitHub REST API
-                  </h3>
-                  <p className="text-[11px] text-slate-500 font-mono">
-                    {config.owner} / {config.repo} ({config.branch})
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsGitHubModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Verification Status */}
-            {repoDetails && (
-              <div className={`p-3 rounded-xl text-xs flex items-center gap-2.5 ${
-                repoDetails.valid ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-red-50 text-red-800 border border-red-200'
-              }`}>
-                {repoDetails.valid ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                ) : (
-                  <XCircle className="w-4 h-4 text-red-600 shrink-0" />
-                )}
-                <div>
-                  <span className="font-bold">{repoDetails.valid ? 'Dépôt Connecté & Prêt' : 'Erreur de connexion'}</span>
-                  {repoDetails.lastCommit && (
-                    <p className="text-[10px] text-slate-600 font-mono mt-0.5">
-                      Dernier commit : {repoDetails.lastCommit.sha} · {repoDetails.lastCommit.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Commit Message & Sync Button */}
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase">Message de Commit</label>
-                <input
-                  type="text"
-                  value={commitMessage}
-                  onChange={(e) => setCommitMessage(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 font-medium"
-                />
-              </div>
-
-              {/* Progress bar if syncing */}
-              {isSyncing && (
-                <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="flex justify-between text-[11px] font-bold text-slate-700">
-                    <span>{syncStage}</span>
-                    <span>{syncProgress}%</span>
-                  </div>
-                  <div className="w-full h-2 rounded-full bg-slate-200 overflow-hidden">
-                    <div
-                      className="h-full bg-slate-900 transition-all duration-300"
-                      style={{ width: `${syncProgress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setIsGitHubModalOpen(false)}
-                className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 text-xs font-semibold cursor-pointer"
-              >
-                Fermer
-              </button>
-              <button
-                type="button"
-                onClick={handleSyncToGitHub}
-                disabled={isSyncing}
-                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer"
-              >
-                {isSyncing ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                    <span>Synchronisation...</span>
-                  </>
-                ) : (
-                  <>
-                    <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Pousser vers GitHub</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
+      {/* MODAL DE SYNCHRONISATION GITHUB (CONFORME AU DESIGN DEMANDÉ & PERSISTANT) */}
+      <GitHubSyncModal
+        isOpen={isGitHubModalOpen}
+        onClose={() => {
+          setIsGitHubModalOpen(false);
+          checkGitHubStatus(config);
+        }}
+      />
 
     </div>
   );

@@ -1413,5 +1413,43 @@ export async function dbRepairSystemPermissions(): Promise<{ success: boolean; r
   }
 }
 
+// --- GITHUB CONFIGURATION PERSISTENCE ---
+export async function dbGetGitHubConfig(): Promise<any | null> {
+  const p = getDbPool();
+  if (!p || !isConnected) return null;
+  try {
+    const res = await p.query('SELECT data FROM site_settings WHERE id = $1', ['github_config']);
+    if (res.rows.length > 0) {
+      let data = res.rows[0].data;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch {}
+      }
+      return data;
+    }
+    return null;
+  } catch (err: any) {
+    console.error('[DB Get GitHub Config Error]', err.message);
+    return null;
+  }
+}
+
+export async function dbSaveGitHubConfig(config: any): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query(
+      `INSERT INTO site_settings (id, data, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
+      ['github_config', JSON.stringify(config)]
+    );
+    return true;
+  } catch (err: any) {
+    console.error('[DB Save GitHub Config Error]', err.message);
+    return false;
+  }
+}
+
+
 
 

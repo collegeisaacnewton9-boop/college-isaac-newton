@@ -29,13 +29,32 @@ export const githubService = {
         return { 
           ...DEFAULT_GITHUB_CONFIG, 
           ...parsed,
-          token: parsed.token || '',
+          token: parsed.token || DEFAULT_GITHUB_CONFIG.token,
         };
       }
     } catch {
       // Fallback
     }
     return DEFAULT_GITHUB_CONFIG;
+  },
+
+  async fetchRemoteConfig(): Promise<GitHubRepoConfig> {
+    try {
+      const res = await fetch('/api/admin/github/config?_t=' + Date.now());
+      if (res.ok) {
+        const remote = await res.json();
+        if (remote && remote.owner) {
+          const merged = { ...this.getConfig(), ...remote };
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+          } catch {}
+          return merged;
+        }
+      }
+    } catch {
+      // Non-blocking fallback
+    }
+    return this.getConfig();
   },
 
   saveConfig(config: Partial<GitHubRepoConfig>): GitHubRepoConfig {
@@ -46,6 +65,13 @@ export const githubService = {
     } catch {
       // Fallback
     }
+    // Also persist to PostgreSQL backend
+    fetch('/api/admin/github/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+    }).catch(() => {});
+
     return updated;
   },
 

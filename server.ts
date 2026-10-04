@@ -42,7 +42,9 @@ import {
   dbGetGallery,
   dbSaveGallery,
   dbUpdateUserPassword,
-  dbRepairSystemPermissions
+  dbRepairSystemPermissions,
+  dbGetGitHubConfig,
+  dbSaveGitHubConfig
 } from './server-db';
 
 const execPromise = util.promisify(exec);
@@ -1955,17 +1957,75 @@ app.post('/api/test-email', async (req: Request, res: Response) => {
   }
 });
 
-// 10. GitHub Synchronization via Octokit REST API
+// 10. GitHub Configuration Persistence & Synchronization via Octokit REST API
+let inMemoryGitHubConfig = {
+  owner: process.env.GITHUB_OWNER || 'collegeisaacnewton9-boop',
+  repo: process.env.GITHUB_REPO || 'college-isaac-newton',
+  branch: process.env.GITHUB_BRANCH || 'main',
+  token: process.env.GITHUB_PAT || '',
+};
+
+app.get('/api/admin/github/config', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  if (isDbActive()) {
+    try {
+      const dbConfig = await dbGetGitHubConfig();
+      if (dbConfig && dbConfig.owner) {
+        inMemoryGitHubConfig = { ...inMemoryGitHubConfig, ...dbConfig };
+        return res.json(dbConfig);
+      }
+    } catch (e: any) {
+      console.warn('[GitHub Config DB Fetch]', e.message);
+    }
+  }
+  res.json(inMemoryGitHubConfig);
+});
+
+app.post('/api/admin/github/config', async (req: Request, res: Response) => {
+  const { owner, repo, branch, token } = req.body;
+  inMemoryGitHubConfig = {
+    owner: owner || inMemoryGitHubConfig.owner,
+    repo: repo || inMemoryGitHubConfig.repo,
+    branch: branch || inMemoryGitHubConfig.branch,
+    token: token !== undefined ? token : inMemoryGitHubConfig.token,
+  };
+
+  if (isDbActive()) {
+    try {
+      await dbSaveGitHubConfig(inMemoryGitHubConfig);
+    } catch (e: any) {
+      console.warn('[GitHub Config DB Save]', e.message);
+    }
+  }
+
+  res.json({ success: true, config: inMemoryGitHubConfig });
+});
+
 app.post('/api/admin/github/sync', async (req: Request, res: Response) => {
   const { token, owner, repo, branch, message } = req.body;
   if (!token) {
     return res.status(400).json({ error: 'Token d\'accès personnel GitHub requis' });
   }
 
-  const targetOwner = owner || 'collegeisaacnewton9-boop';
-  const targetRepo = repo || 'college-isaac-newton';
-  const targetBranch = branch || 'main';
+  const targetOwner = owner || inMemoryGitHubConfig.owner || 'collegeisaacnewton9-boop';
+  const targetRepo = repo || inMemoryGitHubConfig.repo || 'college-isaac-newton';
+  const targetBranch = branch || inMemoryGitHubConfig.branch || 'main';
   const commitMsg = message || `Mise à jour automatique des sources - ${new Date().toLocaleString('fr-FR')}`;
+
+  // Persist updated config in memory and database
+  inMemoryGitHubConfig = {
+    owner: targetOwner,
+    repo: targetRepo,
+    branch: targetBranch,
+    token,
+  };
+  if (isDbActive()) {
+    try {
+      await dbSaveGitHubConfig(inMemoryGitHubConfig);
+    } catch (saveErr: any) {
+      console.warn('[GitHub Config Auto-Save]', saveErr.message);
+    }
+  }
 
   try {
     // 1. Verify with Octokit REST API

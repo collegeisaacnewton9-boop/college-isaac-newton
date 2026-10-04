@@ -36,6 +36,7 @@ import {
   Building,
   GraduationCap,
   Github,
+  GitBranch,
   KeyRound,
   UserCheck,
   Image as ImageIcon
@@ -55,6 +56,7 @@ import { INITIAL_USERS } from '../data/mockData';
 import { SettingsView } from '../components/admin/SettingsView';
 import { AccessControlView } from '../components/admin/AccessControlView';
 import { MediaLibraryView } from '../components/admin/MediaLibraryView';
+import { GitHubSyncModal } from '../components/admin/GitHubSyncModal';
 import { ROLE_PERMISSIONS } from '../data/rolePermissions';
 import { appFetch } from '../services/loadingService';
 import { ImageUploadCompressor } from '../components/common/ImageUploadCompressor';
@@ -135,6 +137,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
   // CMS Settings Form state
   const [cmsSettings, setCmsSettings] = useState<SiteSettings | null>(null);
+  const [showGitHubModal, setShowGitHubModal] = useState(false);
 
   // Selected Contact Message for Reading
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
@@ -517,6 +520,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-amber-400' : 'text-slate-300'}`} />
                 <span className="hidden sm:inline">Actualiser</span>
               </button>
+
+              {/* GitHub Synchronizer Button for Super Admin */}
+              {currentUser.role === 'ADMIN' && (
+                <button
+                  type="button"
+                  onClick={() => setShowGitHubModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 hover:text-white text-xs font-bold transition-all border border-emerald-700/60 cursor-pointer shadow-xs"
+                  title="Exporter et synchroniser les sources vers GitHub"
+                >
+                  <GitBranch className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="hidden md:inline">Synchroniser GitHub</span>
+                </button>
+              )}
 
               {/* Profile Card */}
               <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-950/70 border border-blue-800/60 text-xs">
@@ -2006,6 +2022,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           </div>
         </div>
       )}
+
+      {/* MODAL DE SYNCHRONISATION GITHUB (CONFORME AU DESIGN DEMANDÉ & PERSISTANT) */}
+      <GitHubSyncModal
+        isOpen={showGitHubModal}
+        onClose={() => setShowGitHubModal(false)}
+      />
 
     </div>
   );
