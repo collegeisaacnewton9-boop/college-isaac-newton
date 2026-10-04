@@ -912,17 +912,49 @@ export const apiService = {
   },
 
   // --- AUTH ---
-  async login(email: string, _password: string): Promise<User> {
-    // Find matching demo user or create a generic session
-    const found = INITIAL_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
-    const user: User = found || {
-      id: `usr-${Date.now()}`,
-      email,
-      fullName: email.split('@')[0],
-      role: 'PARENT',
-      token: `jwt-token-${Date.now()}`,
+  async login(email: string, _password?: string): Promise<User> {
+    const cleanEmail = email.trim().toLowerCase();
+    
+    // First, check existing users from storage or database
+    const allUsers = await this.getUsers().catch(() => INITIAL_USERS);
+    
+    // Alias mapping for flexible login matching Image 2 & mockData
+    const aliasMap: Record<string, string> = {
+      'admin@collegeisaacnewton.com': 'admin@collegeisaacnewton.com',
+      'direction@collegeisaacnewton.com': 'direction@collegeisaacnewton.com',
+      'redaction@collegeisaacnewton.com': 'redaction@collegeisaacnewton.com',
+      'prof.sciences@collegeisaacnewton.com': 'prof.sciences@collegeisaacnewton.com',
+      'mod.vie.scolaire@collegeisaacnewton.com': 'mod.vie.scolaire@collegeisaacnewton.com',
+      'moderation@collegeisaacnewton.com': 'mod.vie.scolaire@collegeisaacnewton.com',
+      'parent.demo@collegeisaacnewton.com': 'parent.demo@collegeisaacnewton.com',
+      'eleve.ns4@collegeisaacnewton.com': 'eleve.ns4@collegeisaacnewton.com',
+      'eleve.demo@collegeisaacnewton.com': 'eleve.ns4@collegeisaacnewton.com',
     };
-    user.token = `jwt-token-cin-${user.role.toLowerCase()}-${Date.now()}`;
+
+    const targetEmail = aliasMap[cleanEmail] || cleanEmail;
+
+    let found = allUsers.find(u => u.email.toLowerCase() === targetEmail.toLowerCase())
+      || INITIAL_USERS.find(u => u.email.toLowerCase() === targetEmail.toLowerCase())
+      || allUsers.find(u => u.email.toLowerCase() === cleanEmail)
+      || INITIAL_USERS.find(u => u.email.toLowerCase() === cleanEmail);
+
+    if (found && found.status === 'SUSPENDED') {
+      throw new Error('Ce compte utilisateur a été temporairement suspendu par la Direction Générale.');
+    }
+
+    const user: User = found ? {
+      ...found,
+      lastActive: 'En ligne maintenant',
+      token: `jwt-token-cin-${found.role.toLowerCase()}-${Date.now()}`,
+    } : {
+      id: `usr-${Date.now()}`,
+      email: cleanEmail,
+      fullName: cleanEmail.split('@')[0],
+      role: 'PARENT',
+      token: `jwt-token-cin-parent-${Date.now()}`,
+      lastActive: 'En ligne maintenant',
+    };
+
     setLocal(STORAGE_KEYS.USER, user);
     return user;
   },

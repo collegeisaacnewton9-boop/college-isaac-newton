@@ -235,6 +235,7 @@ export default function App() {
         currentUser={currentUser}
         onUserChange={setCurrentUser}
         onNavigateToAdmin={() => handleNavigate('admin')}
+        onNavigate={handleNavigate}
       />
 
       {/* Dynamic Floating WhatsApp Quick Contact Button */}

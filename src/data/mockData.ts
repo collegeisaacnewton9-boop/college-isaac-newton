@@ -79,7 +79,7 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'user-moderator-1',
-    email: 'moderation@collegeisaacnewton.com',
+    email: 'mod.vie.scolaire@collegeisaacnewton.com',
     fullName: 'M. Lucner Bernard (Modérateur)',
     role: 'MODERATOR',
     phone: '+509 3800-0006',
@@ -101,11 +101,11 @@ export const INITIAL_USERS: User[] = [
   },
   {
     id: 'user-student-1',
-    email: 'eleve.demo@collegeisaacnewton.com',
-    fullName: 'Jean-Marc Joseph (Élève NS3)',
+    email: 'eleve.ns4@collegeisaacnewton.com',
+    fullName: 'Jean-Marc Augustin (Élève NS4)',
     role: 'STUDENT',
     phone: '+509 3800-0004',
-    department: 'Nouveau Secondaire 3 (Série Scientifique)',
+    department: 'Promotion Terminale / Baccalauréat',
     status: 'ACTIVE',
     lastActive: 'Il y a 4 heures',
     createdAt: '2025-09-22',

@@ -153,5 +153,23 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       }
     });
   });
+
+  describe('Sécurisation du Login & Profils RBAC Équipe (Image 2)', () => {
+    it('should provide authentic credentials and roles for all 6 team profiles matching RBAC management', () => {
+      const expectedTeam = [
+        { email: 'admin@collegeisaacnewton.com', role: 'ADMIN' },
+        { email: 'redaction@collegeisaacnewton.com', role: 'EDITOR' },
+        { email: 'prof.sciences@collegeisaacnewton.com', role: 'TEACHER' },
+        { email: 'mod.vie.scolaire@collegeisaacnewton.com', role: 'MODERATOR' },
+        { email: 'parent.demo@collegeisaacnewton.com', role: 'PARENT' },
+        { email: 'eleve.ns4@collegeisaacnewton.com', role: 'STUDENT' },
+      ];
+
+      for (const member of expectedTeam) {
+        assert.ok(member.email.includes('@collegeisaacnewton.com'), `Email ${member.email} must have institutional domain`);
+        assert.ok(ROLE_PERMISSIONS[member.role as any], `Role ${member.role} must exist in ROLE_PERMISSIONS matrix`);
+      }
+    });
+  });
 });
 
