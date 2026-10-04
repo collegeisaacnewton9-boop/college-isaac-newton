@@ -549,7 +549,7 @@ export const apiService = {
   // --- GALLERY & DOCUMENTS ---
   async getGallery(): Promise<GalleryItem[]> {
     try {
-      const res = await appFetch('/api/gallery');
+      const res = await appFetch(`/api/gallery?_t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {

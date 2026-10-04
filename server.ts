@@ -1547,6 +1547,9 @@ let memoryGallery = [
 ];
 
 app.get('/api/gallery', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   if (isDbActive()) {
     try {
       const dbGal = await dbGetGallery();

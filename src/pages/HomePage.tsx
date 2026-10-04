@@ -19,6 +19,7 @@ import {
 import { SCHOOL_IMAGES } from '../assets/images';
 import { SCHOOL_INFO, SCHOOL_VALUES, INITIAL_NEWS, INITIAL_EVENTS, DEFAULT_EDUCATIONAL_CYCLES } from '../data/mockData';
 import { HeroCarousel } from '../components/layout/HeroCarousel';
+import { InfrastructureCarousel } from '../components/home/InfrastructureCarousel';
 import { ActivityGallerySection } from '../components/home/ActivityGallerySection';
 import { TestimonialSection } from '../components/home/TestimonialsSection';
 import { apiService } from '../services/api';
@@ -496,6 +497,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
 
         </div>
       </section>
+
+      {/* 5. GALERIE PHOTO DES INFRASTRUCTURES - Dynamic photo carousel with DB persistence */}
+      <InfrastructureCarousel onNavigate={onNavigate} currentUser={currentUser} />
 
     </div>
   );

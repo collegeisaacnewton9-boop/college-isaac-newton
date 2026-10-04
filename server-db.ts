@@ -198,6 +198,21 @@ export async function initDatabase(): Promise<boolean> {
         );
       `);
 
+      // 10. Table Gallery Items / Infrastructure (Direct GUI editing in DBeaver & Web Admin)
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS gallery_items (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          category TEXT DEFAULT 'INFRASTRUCTURE',
+          image_url TEXT NOT NULL,
+          alt_text TEXT,
+          caption TEXT,
+          display_order INTEGER DEFAULT 1,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+      `);
+
       // Seed if empty
       const countRes = await client.query('SELECT COUNT(*) FROM admissions');
       if (parseInt(countRes.rows[0].count, 10) === 0) {
@@ -347,6 +362,71 @@ export async function initDatabase(): Promise<boolean> {
             'center 28%',
             true,
             4
+          )
+          ON CONFLICT (id) DO NOTHING;
+        `);
+      }
+
+      // Ensure gallery_items table is seeded for DBeaver visibility
+      const galleryCountRes = await client.query('SELECT COUNT(*) FROM gallery_items');
+      if (parseInt(galleryCountRes.rows[0].count, 10) === 0) {
+        console.log('[Database] Initialisation de la photothèque des infrastructures (gallery_items)...');
+        await client.query(`
+          INSERT INTO gallery_items (id, title, category, image_url, alt_text, caption, display_order)
+          VALUES 
+          (
+            'gal-1',
+            'Cour d’Honneur & Terrain Multisports',
+            'Espaces Sportifs & Cour',
+            '/images/campus_courtyard_building_1790531780046.jpg',
+            'Bâtiment moderne du Collège Isaac Newton avec ses galeries bleues et son terrain de basket',
+            'Cour intérieure moderne et sécurisée au campus de Delmas 50 avec terrain multisports.',
+            1
+          ),
+          (
+            'gal-2',
+            'Façade Principale & Accueil Sécurisé',
+            'Campus & Bâtiments',
+            '/images/campus_facade_real_1790679454540.jpg',
+            'Façade extérieure avec enseigne Collège Isaac Newton à Delmas 50',
+            'Entrée officielle sécurisée sur Delmas 50, rue Dominique #2 bis, avec contrôle d’accès.',
+            2
+          ),
+          (
+            'gal-3',
+            'Laboratoire Informatique & Multimédia',
+            'Laboratoire & Numérique',
+            '/images/computer_lab_real_1790679476180.jpg',
+            'Postes d’ordinateurs récents sous onduleurs dans la salle informatique',
+            'Postes récents sous onduleurs, écran géant interactif, connexion haut débit et logiciels pédagogiques.',
+            3
+          ),
+          (
+            'gal-4',
+            'Cérémonie Solennelle de Graduation',
+            'Événements & Cérémonies',
+            '/images/graduation_promo_real_1790679465649.jpg',
+            'Élèves diplômés en toges académiques bleu roi et blanches sur l’estrade',
+            'Célébration annuelle de nos lauréats de 9e AF et bacheliers du Nouveau Secondaire.',
+            4
+          ),
+          (
+            'gal-5',
+            'Rassemblement Matinal & Discipline Citoyenne',
+            'Vie Scolaire',
+            '/images/students_assembly_1790529184364.jpg',
+            'Élèves rassemblés en uniforme complet dans la cour d’honneur',
+            'Discipline, salut au drapeau et esprit civique au quotidien au sein de l’établissement.',
+            5
+          ),
+          (
+            'gal-6',
+            'Salles de Classe Spacieuses & Équipées',
+            'Pédagogie & Enseignement',
+            '/images/hero_campus_facade_1790529159819.jpg',
+            'Vue d’ensemble des installations scolaires aérées',
+            'Un cadre d’apprentissage aéré, lumineux et propice à la concentration et à l’excellence.',
+            6
           )
           ON CONFLICT (id) DO NOTHING;
         `);
@@ -1162,9 +1242,36 @@ export async function dbGetGallery(): Promise<any[] | null> {
   const p = getDbPool();
   if (!p || !isConnected) return null;
   try {
+    // 1. Relational table gallery_items first (allows direct DBeaver spreadsheet editing)
+    try {
+      const resTable = await p.query(
+        'SELECT * FROM gallery_items ORDER BY display_order ASC, created_at DESC'
+      );
+      if (resTable.rows.length > 0) {
+        return resTable.rows.map(row => ({
+          id: row.id,
+          title: row.title,
+          category: row.category || 'Infrastructure',
+          imageUrl: row.image_url,
+          altText: row.alt_text || '',
+          caption: row.caption || '',
+          displayOrder: row.display_order || 1,
+        }));
+      }
+    } catch {
+      // Fallback if table not ready
+    }
+
+    // 2. Fallback to site_settings JSON blob
     const res = await p.query('SELECT data FROM site_settings WHERE id = $1', ['school_gallery']);
     if (res.rows.length > 0) {
-      return res.rows[0].data;
+      let data = res.rows[0].data;
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch {}
+      }
+      return Array.isArray(data) ? data : null;
     }
     return null;
   } catch (err: any) {
@@ -1177,12 +1284,44 @@ export async function dbSaveGallery(gallery: any[]): Promise<boolean> {
   const p = getDbPool();
   if (!p || !isConnected) return false;
   try {
+    // 1. Save in site_settings JSON blob (guaranteed backup)
     await p.query(
       `INSERT INTO site_settings (id, data, updated_at)
        VALUES ($1, $2, NOW())
        ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
       ['school_gallery', JSON.stringify(gallery)]
     );
+
+    // 2. Upsert into gallery_items table so DBeaver users can view and edit rows directly!
+    try {
+      for (let i = 0; i < gallery.length; i++) {
+        const item = gallery[i];
+        await p.query(
+          `INSERT INTO gallery_items (id, title, category, image_url, alt_text, caption, display_order, updated_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+           ON CONFLICT (id) DO UPDATE SET
+             title = EXCLUDED.title,
+             category = EXCLUDED.category,
+             image_url = EXCLUDED.image_url,
+             alt_text = EXCLUDED.alt_text,
+             caption = EXCLUDED.caption,
+             display_order = EXCLUDED.display_order,
+             updated_at = NOW()`,
+          [
+            item.id || `gal-${i + 1}`,
+            item.title || '',
+            item.category || 'Infrastructure',
+            item.imageUrl || '',
+            item.altText || item.title || '',
+            item.caption || '',
+            i + 1
+          ]
+        );
+      }
+    } catch (e: any) {
+      console.warn('[DB Save Gallery Table Warn]', e.message);
+    }
+
     return true;
   } catch (err: any) {
     console.error('[DB Save Gallery Error]', err.message);
