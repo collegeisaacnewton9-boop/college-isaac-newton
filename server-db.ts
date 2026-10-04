@@ -1231,6 +1231,44 @@ export async function dbInsertMedia(item: any): Promise<any | null> {
   }
 }
 
+export async function dbUpdateMedia(id: string, item: any): Promise<any | null> {
+  const p = getDbPool();
+  if (!p || !isConnected) return null;
+  try {
+    const res = await p.query(`
+      UPDATE media_items 
+      SET url = COALESCE($1, url),
+          title = COALESCE($2, title),
+          category = COALESCE($3, category),
+          dimensions = COALESCE($4, dimensions),
+          size_bytes = COALESCE($5, size_bytes)
+      WHERE id = $6
+      RETURNING *
+    `, [
+      item.url,
+      item.title,
+      item.category || 'CAMPUS',
+      item.dimensions || null,
+      item.sizeBytes !== undefined ? item.sizeBytes : null,
+      id
+    ]);
+    if (res.rows.length === 0) return null;
+    const r = res.rows[0];
+    return {
+      id: r.id,
+      url: r.url,
+      title: r.title,
+      category: r.category,
+      sizeBytes: r.size_bytes,
+      dimensions: r.dimensions,
+      createdAt: r.created_at,
+    };
+  } catch (err: any) {
+    console.error('[DB Update Media Error]', err.message);
+    return null;
+  }
+}
+
 export async function dbDeleteMedia(id: string): Promise<boolean> {
   const p = getDbPool();
   if (!p || !isConnected) return false;

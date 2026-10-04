@@ -56,6 +56,7 @@ import { INITIAL_USERS } from '../data/mockData';
 import { SettingsView } from '../components/admin/SettingsView';
 import { AccessControlView } from '../components/admin/AccessControlView';
 import { MediaLibraryView } from '../components/admin/MediaLibraryView';
+import { SlideshowEditorView } from '../components/admin/SlideshowEditorView';
 import { GitHubSyncModal } from '../components/admin/GitHubSyncModal';
 import { ROLE_PERMISSIONS } from '../data/rolePermissions';
 import { appFetch } from '../services/loadingService';
@@ -77,7 +78,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   onNavigate,
   onUserChange,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'admissions' | 'news' | 'events' | 'media' | 'messages' | 'cms' | 'users'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'slideshow' | 'admissions' | 'news' | 'events' | 'media' | 'messages' | 'cms' | 'users'>('overview');
   
   // Data states
   const [admissions, setAdmissions] = useState<AdmissionApplication[]>([]);
@@ -572,6 +573,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <span>Tableau de Bord</span>
             </button>
 
+            {/* DEDICATED SLIDESHOW EDITOR TAB (ACCESSIBLE TO ADMIN & EDITOR) */}
+            <button
+              onClick={() => setActiveTab('slideshow')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                activeTab === 'slideshow'
+                  ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
+                  : 'text-amber-300 hover:text-white hover:bg-slate-800/70 border border-amber-400/40 bg-amber-950/20'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span>Éditeur Diaporama (Hero)</span>
+            </button>
+
             <button
               onClick={() => setActiveTab('admissions')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
@@ -840,6 +854,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   </div>
                   <h4 className="font-semibold text-slate-900 text-xs">Planifier Événement</h4>
                   <p className="text-[9.5px] text-slate-500 line-clamp-1">Date au calendrier officiel</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('slideshow')}
+                  className="p-2 rounded-lg border border-amber-300/60 hover:border-amber-500 bg-amber-50/60 hover:bg-amber-100/50 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-6 h-6 rounded-md bg-amber-400 text-slate-950 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform font-bold">
+                    <Sparkles className="w-3 h-3" />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-xs">Éditeur Diaporama</h4>
+                  <p className="text-[9.5px] text-slate-600 line-clamp-1">Textes, photos & slogans</p>
                 </button>
 
                 <button
@@ -1531,6 +1557,16 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             </div>
 
           </div>
+        )}
+
+        {/* =========================================================================
+            TAB 4.2: ÉDITEUR DU DIAPORAMA D'ACCUEIL (HERO SLIDESHOW FORMULAIRE SIMPLE)
+        ========================================================================= */}
+        {activeTab === 'slideshow' && (
+          <SlideshowEditorView 
+            currentUserRole={currentUser?.role} 
+            onNavigate={onNavigate} 
+          />
         )}
 
         {/* =========================================================================

@@ -73,6 +73,12 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
   const [uploadCategory, setUploadCategory] = useState<'CAMPUS' | 'SLIDESHOW' | 'EVENTS' | 'NEWS' | 'LAB'>('CAMPUS');
   const [uploadedUrl, setUploadedUrl] = useState('');
 
+  // Media Edit modal state (Images Médiathèque entièrement éditables)
+  const [editingMedia, setEditingMedia] = useState<MediaItem | null>(null);
+  const [isMediaEditModalOpen, setIsMediaEditModalOpen] = useState(false);
+  const [isSavingMedia, setIsSavingMedia] = useState(false);
+  const [showEditMediaUploader, setShowEditMediaUploader] = useState(false);
+
   // Load media, slides and gallery
   const loadData = async () => {
     setIsLoadingMedia(true);
@@ -160,6 +166,34 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
       toast.success('Média supprimé avec succès');
     } catch {
       toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  // Handle Open Edit Media
+  const handleOpenEditMedia = (item: MediaItem) => {
+    setEditingMedia({ ...item });
+    setShowEditMediaUploader(false);
+    setIsMediaEditModalOpen(true);
+  };
+
+  // Handle Save Edited Media
+  const handleSaveMediaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMedia) return;
+    if (!editingMedia.title.trim()) {
+      toast.error('Le titre de l’image est obligatoire');
+      return;
+    }
+    setIsSavingMedia(true);
+    try {
+      const updated = await apiService.updateMedia(editingMedia.id, editingMedia);
+      setMediaItems(prev => prev.map(m => m.id === editingMedia.id ? updated : m));
+      toast.success('Image de la médiathèque mise à jour avec succès dans PostgreSQL !');
+      setIsMediaEditModalOpen(false);
+    } catch (err: any) {
+      toast.error('Erreur lors de la mise à jour de l’image : ' + (err.message || ''));
+    } finally {
+      setIsSavingMedia(false);
     }
   };
 
@@ -679,6 +713,15 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                   </button>
 
                   <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditMedia(media)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-blue-900 hover:border-blue-900 font-bold text-[10.5px] transition-colors cursor-pointer shadow-2xs"
+                      title="Modifier les informations de cette photo"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-blue-900" />
+                      <span>Modifier</span>
+                    </button>
                     {onSelectImageForTarget && (
                       <button
                         type="button"
@@ -793,6 +836,184 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                     <Check className="w-3.5 h-3.5 text-amber-400" />
                   )}
                   <span>{editingGalleryItem ? 'Mettre à jour' : 'Ajouter à la Galerie'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: MODIFIER UNE PHOTO DE LA MÉDIATHÈQUE (FORMULAIRE COMPLET ÉDITABLE)
+      ========================================================================= */}
+      {isMediaEditModalOpen && editingMedia && (
+        <div 
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-scale-in">
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-900 text-white flex items-center justify-center shadow-xs">
+                  <Edit3 className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                    Modifier l'Image de la Médiathèque
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    Modifiez le titre, la catégorie, ou remplacez le fichier photo.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMediaEditModalOpen(false)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveMediaSubmit} className="p-5 sm:p-6 space-y-4">
+              {/* Image Preview & Replacement Section */}
+              <div className="space-y-3">
+                <div className="relative aspect-[16/9] max-h-[220px] rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 flex items-center justify-center group">
+                  <img
+                    src={editingMedia.url}
+                    alt={editingMedia.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 left-2">
+                    <span className="bg-slate-950/80 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/20">
+                      {editingMedia.category}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-500 font-mono">
+                    ID : {editingMedia.id}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowEditMediaUploader(!showEditMediaUploader)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-blue-900" />
+                    <span>{showEditMediaUploader ? 'Annuler le téléversement' : 'Remplacer par une autre photo'}</span>
+                  </button>
+                </div>
+
+                {showEditMediaUploader && (
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                    <p className="text-xs font-bold text-slate-700 mb-2">
+                      Téléversez un nouveau fichier pour remplacer cette image :
+                    </p>
+                    <ImageUploadCompressor
+                      onImageReady={(dataUrl: string) => {
+                        setEditingMedia({ ...editingMedia, url: dataUrl });
+                        setShowEditMediaUploader(false);
+                        toast.success('Nouvelle photo chargée ! Cliquez sur Enregistrer pour valider.');
+                      }}
+                      recommendedAspect="16:9"
+                      compact
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Title input */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Titre de l'Image <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editingMedia.title}
+                  onChange={(e) => setEditingMedia({ ...editingMedia, title: e.target.value })}
+                  placeholder="Ex : Laboratoire Numérique & Ordinateurs"
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-blue-900 focus:ring-2 focus:ring-blue-900/10 font-medium text-slate-900"
+                />
+              </div>
+
+              {/* Category & Dimensions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Catégorie
+                  </label>
+                  <select
+                    value={editingMedia.category}
+                    onChange={(e) => setEditingMedia({ ...editingMedia, category: e.target.value as any })}
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-blue-900 text-slate-800 bg-white"
+                  >
+                    <option value="CAMPUS">Campus & Bâtiment</option>
+                    <option value="SLIDESHOW">Diaporama d'Entête</option>
+                    <option value="LAB">Laboratoire Tech</option>
+                    <option value="EVENTS">Événements & Cérémonies</option>
+                    <option value="NEWS">Actualités</option>
+                    <option value="OTHER">Autre</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Dimensions estimées
+                  </label>
+                  <input
+                    type="text"
+                    value={editingMedia.dimensions || '1280x850'}
+                    onChange={(e) => setEditingMedia({ ...editingMedia, dimensions: e.target.value })}
+                    placeholder="Ex : 1920x1080"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-none focus:border-blue-900 text-slate-800 bg-white font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* URL Input */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  URL / Chemin direct de l'image
+                </label>
+                <input
+                  type="text"
+                  value={editingMedia.url}
+                  onChange={(e) => setEditingMedia({ ...editingMedia, url: e.target.value })}
+                  placeholder="https://... ou /images/..."
+                  className="w-full px-3 py-2 text-xs font-mono rounded-xl border border-slate-200 focus:outline-none focus:border-blue-900 text-slate-700 bg-slate-50"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsMediaEditModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 font-bold text-xs transition-colors cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingMedia}
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingMedia ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Enregistrement...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Enregistrer les modifications</span>
+                    </>
+                  )}
                 </button>
               </div>
             </form>

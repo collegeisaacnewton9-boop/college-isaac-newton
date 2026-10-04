@@ -21,11 +21,19 @@ import {
   Users, 
   Globe, 
   Award,
-  Lock
+  Lock,
+  Quote,
+  Loader2,
+  RefreshCw,
+  User,
+  Building2,
+  Check,
+  Copy
 } from 'lucide-react';
 import { SCHOOL_IMAGES } from '../assets/images';
 import { SCHOOL_INFO } from '../data/mockData';
 import { apiService } from '../services/api';
+import { validateEmail, validatePhone, formatPhoneNumber } from '../utils/validation';
 import { toast } from 'sonner';
 
 interface SupportPageProps {
@@ -44,8 +52,104 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
     consent: false,
   });
 
+  const [touched, setTouched] = useState<Record<string, boolean>>({
+    fullName: false,
+    organization: false,
+    email: false,
+    phone: false,
+    message: false,
+    consent: false,
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [copiedRef, setCopiedRef] = useState(false);
+  const [submissionMeta, setSubmissionMeta] = useState<{
+    refCode: string;
+    submittedAt: string;
+    supportLabel: string;
+    fullName: string;
+    email: string;
+    phone?: string;
+  } | null>(null);
+
+  // Field validation evaluations using official utilities
+  const emailValidation = formData.email.trim() ? validateEmail(formData.email) : null;
+  const phoneValidation = formData.phone.trim() ? validatePhone(formData.phone) : null;
+
+  const errors = {
+    fullName: !formData.fullName.trim()
+      ? 'Veuillez renseigner votre nom complet.'
+      : formData.fullName.trim().length < 3
+      ? 'Le nom doit comporter au moins 3 caractères.'
+      : null,
+    email: !formData.email.trim()
+      ? 'Adresse e-mail requise pour le suivi.'
+      : emailValidation && !emailValidation.isValid
+      ? emailValidation.error
+      : null,
+    phone:
+      formData.phone.trim() && phoneValidation && !phoneValidation.isValid
+        ? phoneValidation.error
+        : null,
+    message: !formData.message.trim()
+      ? 'Veuillez rédiger votre proposition ou vos questions.'
+      : formData.message.trim().length < 15
+      ? 'Votre message doit contenir au moins 15 caractères pour être exploitable.'
+      : null,
+    consent: !formData.consent
+      ? 'Votre accord de contact est indispensable pour vous répondre.'
+      : null,
+  };
+
+  const handleBlur = (field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setFormData((prev) => ({ ...prev, phone: formatted }));
+    setSubmitError(null);
+  };
+
+  const applyEmailSuggestion = (suggestion: string) => {
+    setFormData((prev) => ({ ...prev, email: suggestion }));
+    setTouched((prev) => ({ ...prev, email: true }));
+  };
+
+  const handleCopyRef = (refCode: string) => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(refCode).then(() => {
+        setCopiedRef(true);
+        toast.success('Référence copiée dans le presse-papier !');
+        setTimeout(() => setCopiedRef(false), 3000);
+      }).catch(() => {});
+    }
+  };
+
+  const handleResetForm = () => {
+    setSubmitSuccess(false);
+    setSubmitError(null);
+    setSubmissionMeta(null);
+    setFormData({
+      fullName: '',
+      organization: '',
+      email: '',
+      phone: '',
+      supportType: 'bourse',
+      message: '',
+      consent: false,
+    });
+    setTouched({
+      fullName: false,
+      organization: false,
+      email: false,
+      phone: false,
+      message: false,
+      consent: false,
+    });
+  };
 
   // FAQ open/close state
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
@@ -56,17 +160,32 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
 
-    if (!formData.fullName.trim() || !formData.email.trim() || !formData.message.trim()) {
-      toast.error('Champs obligatoires manquants', {
-        description: 'Veuillez renseigner votre nom, votre e-mail et votre message.',
-      });
-      return;
-    }
+    // Mark all required fields as touched
+    setTouched({
+      fullName: true,
+      organization: true,
+      email: true,
+      phone: true,
+      message: true,
+      consent: true,
+    });
 
-    if (!formData.consent) {
-      toast.error('Consentement requis', {
-        description: 'Veuillez accepter d’être recontacté(e) par l’administration du Collège.',
+    // Check for blocking errors
+    const activeErrors = [
+      errors.fullName,
+      errors.email,
+      errors.phone,
+      errors.message,
+      errors.consent,
+    ].filter(Boolean);
+
+    if (activeErrors.length > 0) {
+      const firstError = activeErrors[0];
+      setSubmitError(firstError || 'Veuillez corriger les informations signalées ci-dessous.');
+      toast.error('Formulaire incomplet', {
+        description: firstError || 'Veuillez vérifier les champs du formulaire.',
       });
       return;
     }
@@ -82,18 +201,23 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
         autre: 'Autre forme d’appui',
       };
 
-      const formattedSubject = `[Soutien / Partenariat] ${typeLabels[formData.supportType] || 'Prise de contact'} - ${formData.organization ? `${formData.organization} (${formData.fullName})` : formData.fullName}`;
+      const selectedLabel = typeLabels[formData.supportType] || formData.supportType;
+      const refCode = `CIN-SPT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      const formattedSubject = `[Soutien / Partenariat #${refCode}] ${selectedLabel} - ${formData.organization ? `${formData.organization} (${formData.fullName})` : formData.fullName}`;
 
       const formattedMessage = [
         `=== DEMANDE D'INFORMATION & SOUTIEN SCOLAIRE ===`,
-        `Demandeur : ${formData.fullName}`,
-        formData.organization ? `Organisation / Entreprise : ${formData.organization}` : null,
-        `E-mail : ${formData.email}`,
-        formData.phone ? `Téléphone : ${formData.phone}` : null,
-        `Type de soutien envisagé : ${typeLabels[formData.supportType] || formData.supportType}`,
+        `Numéro de référence : ${refCode}`,
+        `Date : ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+        `Demandeur : ${formData.fullName.trim()}`,
+        formData.organization ? `Organisation / Entreprise : ${formData.organization.trim()}` : null,
+        `E-mail : ${formData.email.trim()}`,
+        formData.phone ? `Téléphone : ${formData.phone.trim()}` : null,
+        `Type de soutien envisagé : ${selectedLabel}`,
         ``,
         `--- Message du contributeur ---`,
-        formData.message,
+        formData.message.trim(),
         ``,
         `Consentement de contact accordé : Oui`,
         `Origine : Formulaire officiel « Soutenir le Collège » (collegeisaacnewton.com)`,
@@ -107,24 +231,24 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
         message: formattedMessage,
       });
 
-      setSubmitSuccess(true);
-      toast.success('Demande transmise avec succès !', {
-        description: 'La direction examinera votre message avec attention et vous recontactera directement.',
+      setSubmissionMeta({
+        refCode,
+        submittedAt: new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        supportLabel: selectedLabel,
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || undefined,
       });
 
-      // Reset form fields
-      setFormData({
-        fullName: '',
-        organization: '',
-        email: '',
-        phone: '',
-        supportType: 'bourse',
-        message: '',
-        consent: false,
+      setSubmitSuccess(true);
+      toast.success('Demande transmise avec succès !', {
+        description: `Référence ${refCode} enregistrée. L'administration examinera votre démarche sous 48h.`,
       });
-    } catch {
+    } catch (err: unknown) {
+      const errMsg = (err instanceof Error) ? err.message : 'Une interruption réseau est survenue. Veuillez vérifier votre connexion ou joindre directement le secrétariat.';
+      setSubmitError(errMsg);
       toast.error('Erreur lors de la transmission', {
-        description: 'Veuillez vérifier votre connexion ou nous contacter directement au +509 3721-1818.',
+        description: 'Veuillez vérifier vos informations ou utiliser la ligne directe +509 3721-1818.',
       });
     } finally {
       setIsSubmitting(false);
@@ -163,6 +287,43 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
     {
       q: 'Quel type de suivi et de compte rendu l’école transmet-elle aux mécènes ?',
       a: 'Le Collège s’engage à fournir un bilan périodique d’impact pédagogique (affectation concrète des dotations, progrès académiques collectifs, modernisation des ateliers) tout en veillant à la préservation de la vie privée des élèves [forme et périodicité du rapport à confirmer par la direction].',
+    },
+  ];
+
+  // Témoignages partenaires & retours d'expérience (emplacements et simulations éditoriales déontologiques)
+  const placeholderTestimonials = [
+    {
+      category: 'Entreprise & Dotation Numérique',
+      badge: '[TÉMOIGNAGE EN ATTENTE DE VALIDATION]',
+      role: 'Représentant du Secteur Privé / Entreprise Partenaire',
+      organization: '[Entreprise Partenaire — À Confirmer]',
+      quote:
+        '« Accompagner l’aménagement des ateliers technologiques et du laboratoire informatique du Collège Isaac Newton a permis aux jeunes d’acquérir des réflexes numériques concrets dès le secondaire. La rigueur des bilans périodiques transmis par la direction consolide une relation partenariale de confiance mutuelle. »',
+      impact: 'Dotation d’équipements informatiques & Ateliers numériques',
+      initials: 'EP',
+      badgeColor: 'bg-blue-100 text-blue-800 border-blue-200',
+    },
+    {
+      category: 'Diaspora & Bourses d’Études',
+      badge: '[TÉMOIGNAGE EN ATTENTE DE VALIDATION]',
+      role: 'Ancien Élève & Donateur Individuel (Diaspora)',
+      organization: '[Réseau Diaspora & Anciens Élèves — À Confirmer]',
+      quote:
+        '« En tant qu’ancien élève installé à l’étranger, parrainer les frais de scolarité de jeunes motivés de Delmas 50 est un geste naturel pour redonner à mon école d’origine. Le fait que l’établissement gère le soutien sans intermédiaire direct protège la dignité des élèves tout en garantissant un impact immédiat. »',
+      impact: 'Financement de bourses d’études & Manuels de cours',
+      initials: 'AD',
+      badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
+    },
+    {
+      category: 'Fondation & Projets Éducatifs',
+      badge: '[TÉMOIGNAGE EN ATTENTE DE VALIDATION]',
+      role: 'Responsable de Projets Pédagogiques / Fondation Éducative',
+      organization: '[Fondation Partenaire — À Confirmer]',
+      quote:
+        '« La transparence administrative et la régularité des comptes rendus pédagogiques consolidés font du Collège Isaac Newton un interlocuteur exemplaire à Port-au-Prince. Chaque projet est mené avec un souci constant d’éthique et de sécurité pour la communauté éducative. »',
+      impact: 'Rénovation de la bibliothèque & Matériel de laboratoire',
+      initials: 'FP',
+      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
     },
   ];
 
@@ -606,7 +767,113 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
 
       </section>
 
-      {/* 5. TRANSPARENCE ET CONFIANCE : GOUVERNANCE ADMINISTRATIVE */}
+      {/* 5. TÉMOIGNAGES & IMPACT DES PARTENARIATS */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-5">
+          <div className="max-w-2xl space-y-2">
+            <span className="text-xs font-bold uppercase tracking-widest text-blue-900 block">
+              Retours d'Expérience & Impact Pédagogique
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
+              Témoignages & Perspectives de Partenaires
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              Découvrez la vision et l'impact attendu des partenariats engagés auprès de la communauté éducative du Collège Isaac Newton.
+            </p>
+          </div>
+          
+          <div className="shrink-0">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+              <span>Emplacements prévisionnels</span>
+            </span>
+          </div>
+        </div>
+
+        {/* Note déontologique & transparence */}
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 text-xs text-slate-600 flex items-start gap-3">
+          <ShieldCheck className="w-4 h-4 text-blue-900 shrink-0 mt-0.5" />
+          <p className="leading-relaxed">
+            <strong className="text-slate-900 font-semibold">Note déontologique et conformité éditoriale :</strong> Les retours d'expérience ci-dessous sont présentés à titre d'exemples représentatifs de nos typologies de donateurs (entreprises, diaspora, fondations). Conformément à notre politique de rigueur et au respect du droit à l'image, les témoignages nominatifs et logos officiels seront intégrés au fur et à mesure de la signature des conventions et de l'obtention des autorisations écrites formelles de la direction.
+          </p>
+        </div>
+
+        {/* Grille des témoignages */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {placeholderTestimonials.map((t, idx) => (
+            <div 
+              key={idx}
+              className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-6 relative overflow-hidden"
+            >
+              {/* Top part with badge & quote */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-[10px] font-mono font-semibold px-2.5 py-1 rounded-md border ${t.badgeColor}`}>
+                    {t.badge}
+                  </span>
+                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                    <Quote className="w-4 h-4 text-slate-500" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
+                    {t.category}
+                  </span>
+                  <p className="text-xs sm:text-sm text-slate-700 font-serif italic leading-relaxed">
+                    {t.quote}
+                  </p>
+                </div>
+              </div>
+
+              {/* Author & Impact Footer */}
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-slate-900 text-amber-400 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                    {t.initials}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-xs text-slate-900 truncate">
+                      {t.organization}
+                    </h3>
+                    <p className="text-[11px] text-slate-500 truncate">
+                      {t.role}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Impact tag */}
+                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center gap-2 text-[11px] text-slate-600">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span className="truncate">{t.impact}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA incitatif */}
+        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-900 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="font-bold text-sm sm:text-base text-white">
+              Vous soutenez déjà le Collège ou envisagez de nous rejoindre ?
+            </h3>
+            <p className="text-xs text-slate-300">
+              Partagez votre retour d'expérience ou discutez d'un nouveau projet avec notre équipe administrative.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={scrollToForm}
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shrink-0 transition-all cursor-pointer"
+          >
+            <HeartHandshake className="w-4 h-4" />
+            <span>Partager un projet de soutien</span>
+          </button>
+        </div>
+      </section>
+
+      {/* 6. TRANSPARENCE ET CONFIANCE : GOUVERNANCE ADMINISTRATIVE */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-10 space-y-6">
           
@@ -663,7 +930,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 6. FAQ SUR LES DONS ET LE PARRAINAGE */}
+      {/* 7. FAQ SUR LES DONS ET LE PARRAINAGE */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         <div className="text-center space-y-2">
@@ -716,7 +983,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
 
       </section>
 
-      {/* 7. FORMULAIRE DE DEMANDE D'INFORMATION & COORDONNÉES OFFICIELLES */}
+      {/* 8. FORMULAIRE DE DEMANDE D'INFORMATION & COORDONNÉES OFFICIELLES */}
       <section id="formulaire-soutien" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
@@ -735,110 +1002,360 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
               </p>
             </div>
 
-            {submitSuccess ? (
-              <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-4 animate-in fade-in">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-6 h-6" />
+            {submitSuccess && submissionMeta ? (
+              <div 
+                role="status" 
+                aria-live="polite"
+                className="p-6 sm:p-8 rounded-3xl bg-emerald-50/90 border border-emerald-200/90 space-y-6 animate-in fade-in zoom-in-95 duration-300"
+              >
+                {/* Header with success icon and badge */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-emerald-200/70 pb-5">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
+                      <CheckCircle2 className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 block">
+                        Transmission Réussie
+                      </span>
+                      <h4 className="font-serif text-xl sm:text-2xl font-bold text-slate-900">
+                        Votre démarche a été enregistrée
+                      </h4>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-base">
-                      Votre message a été transmis avec succès !
-                    </h4>
-                    <p className="text-xs text-slate-600">
-                      Un membre de l'équipe administrative examinera votre proposition et vous contactera rapidement.
-                    </p>
+                  <span className="text-[11px] font-semibold px-3 py-1 rounded-full bg-emerald-200/60 text-emerald-900 border border-emerald-300/60 self-start sm:self-auto">
+                    Dossier en traitement
+                  </span>
+                </div>
+
+                {/* Reference Code Card */}
+                <div className="p-4 rounded-2xl bg-white border border-emerald-200 shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-slate-600 font-medium">
+                      Numéro de référence administratif :
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyRef(submissionMeta.refCode)}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-100 hover:bg-emerald-200 text-emerald-900 transition-colors cursor-pointer"
+                      title="Copier le numéro de référence"
+                      aria-label="Copier la référence de dossier"
+                    >
+                      {copiedRef ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>Copié</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copier</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="font-mono text-lg sm:text-xl font-bold text-slate-900 tracking-wider">
+                    {submissionMeta.refCode}
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Conservez ce numéro pour tout échange ultérieur avec le secrétariat administratif.
+                  </p>
+                </div>
+
+                {/* Summary Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3.5 rounded-xl bg-white/80 border border-emerald-100 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                      Demandeur
+                    </span>
+                    <span className="font-semibold text-slate-900 block">
+                      {submissionMeta.fullName}
+                    </span>
+                    <span className="text-slate-600 block text-[11px]">
+                      {submissionMeta.email}
+                    </span>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-white/80 border border-emerald-100 space-y-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">
+                      Type de soutien envisagé
+                    </span>
+                    <span className="font-semibold text-slate-900 block">
+                      {submissionMeta.supportLabel}
+                    </span>
+                    <span className="text-slate-500 block text-[11px]">
+                      Reçu le {submissionMeta.submittedAt}
+                    </span>
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-white border border-emerald-200 text-xs text-slate-700 space-y-1">
-                  <span className="font-bold text-slate-900 block">Prochaines étapes :</span>
-                  <p>1. Examen de votre demande par le secrétariat de l'école.</p>
-                  <p>2. Prise de contact par e-mail ou par téléphone pour échanger sur le projet.</p>
-                  <p>3. Envoi des modalités pratiques et coordonnées officielles si l'accord est mutuel.</p>
+                {/* Next Steps Roadmap */}
+                <div className="p-4 rounded-2xl bg-white border border-emerald-200 space-y-3">
+                  <h5 className="font-bold text-xs uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-700" />
+                    <span>Engagements de l'école & Prochaines étapes :</span>
+                  </h5>
+                  <ol className="text-xs text-slate-600 space-y-2 list-decimal list-inside leading-relaxed">
+                    <li>
+                      <strong className="text-slate-800">Accusé de réception & Archivage :</strong> Votre message a été notifié en temps réel à la direction.
+                    </li>
+                    <li>
+                      <strong className="text-slate-800">Examen pédagogique & administratif :</strong> L'équipe de M. Orphe Jean Marie étudie votre proposition selon les priorités du campus.
+                    </li>
+                    <li>
+                      <strong className="text-slate-800">Prise de contact officielle :</strong> Un membre autorisé de l'équipe vous recontactera sous 48h ouvrées.
+                    </li>
+                  </ol>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => setSubmitSuccess(false)}
-                  className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition-colors cursor-pointer"
-                >
-                  Envoyer un autre message
-                </button>
+                {/* Reset button */}
+                <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleResetForm}
+                    className="w-full sm:w-auto px-5 py-3 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer min-h-[48px]"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    <span>Transmettre une autre demande</span>
+                  </button>
+                  <a
+                    href="tel:+50937211818"
+                    className="w-full sm:w-auto px-5 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-semibold text-xs border border-emerald-200 transition-colors flex items-center justify-center gap-2 cursor-pointer min-h-[48px]"
+                  >
+                    <Phone className="w-4 h-4 text-emerald-700" />
+                    <span>Joindre la permanence (+509 3721-1818)</span>
+                  </a>
+                </div>
               </div>
             ) : (
-              <form onSubmit={handleFormSubmit} className="space-y-4 text-xs">
-                
+              <form 
+                onSubmit={handleFormSubmit} 
+                noValidate 
+                className="space-y-5 text-xs"
+                aria-label="Formulaire de demande de soutien scolaire et partenariat"
+              >
+                {/* Global Error Banner if submission fails */}
+                {submitError && (
+                  <div 
+                    role="alert" 
+                    aria-live="assertive"
+                    className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950 space-y-2 animate-in fade-in"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <strong className="font-bold text-xs text-rose-900 block">
+                          Attention : vérifiez vos informations
+                        </strong>
+                        <p className="text-xs text-rose-800 leading-relaxed">
+                          {submitError}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="pt-1 flex items-center gap-3 text-[11px]">
+                      <span className="text-slate-600">Besoin d'aide immédiate ?</span>
+                      <a href="tel:+50937211818" className="font-bold text-rose-900 underline">
+                        Ligne directe : +509 3721-1818
+                      </a>
+                    </div>
+                  </div>
+                )}
+
                 {/* Nom et Prénom */}
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-800 block">
-                    Votre nom complet <span className="text-rose-600">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.fullName}
-                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    placeholder="ex: Jean-Marc Voltaire"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-slate-900 font-medium focus:border-blue-900 focus:outline-none transition-colors"
-                  />
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="support-fullName" className="font-bold text-slate-800 block text-xs">
+                      Votre nom complet <span className="text-rose-600" aria-hidden="true">*</span>
+                    </label>
+                    {touched.fullName && !errors.fullName && (
+                      <span className="text-[11px] text-emerald-700 font-medium inline-flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Valide
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="support-fullName"
+                      name="fullName"
+                      type="text"
+                      required
+                      autoComplete="name"
+                      autoCapitalize="words"
+                      disabled={isSubmitting}
+                      value={formData.fullName}
+                      onChange={(e) => {
+                        setFormData({ ...formData, fullName: e.target.value });
+                        setSubmitError(null);
+                      }}
+                      onBlur={() => handleBlur('fullName')}
+                      placeholder="ex: Jean-Marc Voltaire"
+                      aria-required="true"
+                      aria-invalid={touched.fullName && !!errors.fullName}
+                      aria-describedby={touched.fullName && errors.fullName ? "fullName-error" : undefined}
+                      className={`w-full min-h-[48px] px-4 py-3 rounded-xl border text-sm text-slate-900 font-medium transition-all ${
+                        touched.fullName && errors.fullName
+                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20'
+                          : touched.fullName && !errors.fullName
+                          ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20'
+                          : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15'
+                      } focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed`}
+                    />
+                  </div>
+                  {touched.fullName && errors.fullName && (
+                    <p id="fullName-error" role="alert" className="text-[11px] text-rose-600 font-medium flex items-center gap-1.5 pt-0.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.fullName}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Organisation / Entreprise */}
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-800 block">
-                    Organisation, Entreprise ou Association <span className="text-slate-400 font-normal">(facultatif)</span>
-                  </label>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="support-organization" className="font-bold text-slate-800 block text-xs">
+                      Organisation, Entreprise ou Association <span className="text-slate-400 font-normal">(facultatif)</span>
+                    </label>
+                  </div>
                   <input
+                    id="support-organization"
+                    name="organization"
                     type="text"
+                    autoComplete="organization"
+                    disabled={isSubmitting}
                     value={formData.organization}
                     onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
                     placeholder="ex: Fondation Éducative / Entreprise S.A. / Association d'Alumni"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-slate-900 font-medium focus:border-blue-900 focus:outline-none transition-colors"
+                    className="w-full min-h-[48px] px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-sm text-slate-900 font-medium focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 {/* Grille Email & Téléphone */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-800 block">
-                      Adresse e-mail <span className="text-rose-600">*</span>
-                    </label>
+                  {/* Email */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="support-email" className="font-bold text-slate-800 block text-xs">
+                        Adresse e-mail <span className="text-rose-600" aria-hidden="true">*</span>
+                      </label>
+                      {touched.email && !errors.email && (
+                        <span className="text-[11px] text-emerald-700 font-medium inline-flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Valide
+                        </span>
+                      )}
+                    </div>
                     <input
+                      id="support-email"
+                      name="email"
                       type="email"
                       required
+                      inputMode="email"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      disabled={isSubmitting}
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) => {
+                        setFormData({ ...formData, email: e.target.value });
+                        setSubmitError(null);
+                      }}
+                      onBlur={() => handleBlur('email')}
                       placeholder="votre.email@domaine.com"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-slate-900 font-medium focus:border-blue-900 focus:outline-none transition-colors"
+                      aria-required="true"
+                      aria-invalid={touched.email && !!errors.email}
+                      aria-describedby={
+                        [
+                          touched.email && errors.email ? 'email-error' : null,
+                          emailValidation?.suggestion ? 'email-suggestion' : null,
+                        ].filter(Boolean).join(' ') || undefined
+                      }
+                      className={`w-full min-h-[48px] px-4 py-3 rounded-xl border text-sm text-slate-900 font-medium transition-all ${
+                        touched.email && errors.email
+                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20'
+                          : touched.email && !errors.email
+                          ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20'
+                          : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15'
+                      } focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed`}
                     />
+                    {touched.email && errors.email && (
+                      <p id="email-error" role="alert" className="text-[11px] text-rose-600 font-medium flex items-center gap-1.5 pt-0.5">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.email}</span>
+                      </p>
+                    )}
+                    {/* Typo Suggestion pill */}
+                    {emailValidation?.suggestion && (
+                      <div id="email-suggestion" className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-center justify-between gap-2 animate-in fade-in">
+                        <span>Vouliez-vous dire : <strong>{emailValidation.suggestion}</strong> ?</span>
+                        <button
+                          type="button"
+                          onClick={() => applyEmailSuggestion(emailValidation.suggestion!)}
+                          className="px-2 py-0.5 rounded bg-amber-200 hover:bg-amber-300 font-bold text-amber-950 transition-colors cursor-pointer shrink-0"
+                        >
+                          Corriger
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="font-bold text-slate-800 block">
-                      Numéro de téléphone <span className="text-slate-400 font-normal">(recommandé)</span>
-                    </label>
+                  {/* Téléphone */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="support-phone" className="font-bold text-slate-800 block text-xs">
+                        Numéro de téléphone <span className="text-slate-400 font-normal">(recommandé)</span>
+                      </label>
+                      {phoneValidation?.carrier && (
+                        <span className="text-[10px] font-semibold text-blue-900 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200">
+                          {phoneValidation.carrier}
+                        </span>
+                      )}
+                    </div>
                     <input
+                      id="support-phone"
+                      name="phone"
                       type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
+                      disabled={isSubmitting}
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+509 .... ou indicatif pays"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-slate-900 font-medium focus:border-blue-900 focus:outline-none transition-colors"
+                      onChange={handlePhoneChange}
+                      onBlur={() => handleBlur('phone')}
+                      placeholder="+509 .... ou 8 chiffres"
+                      aria-invalid={touched.phone && !!errors.phone}
+                      aria-describedby={touched.phone && errors.phone ? 'phone-error' : undefined}
+                      className={`w-full min-h-[48px] px-4 py-3 rounded-xl border text-sm text-slate-900 font-medium transition-all ${
+                        touched.phone && errors.phone
+                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20'
+                          : touched.phone && formData.phone && !errors.phone
+                          ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20'
+                          : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15'
+                      } focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed`}
                     />
+                    {touched.phone && errors.phone && (
+                      <p id="phone-error" role="alert" className="text-[11px] text-rose-600 font-medium flex items-center gap-1.5 pt-0.5">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{errors.phone}</span>
+                      </p>
+                    )}
                   </div>
 
                 </div>
 
-                {/* Domaine d'intérêt / Type de soutien */}
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-800 block">
-                    Type de soutien ou d’échange envisagé <span className="text-rose-600">*</span>
+                {/* Type de soutien */}
+                <div className="space-y-1.5">
+                  <label htmlFor="support-type" className="font-bold text-slate-800 block text-xs">
+                    Type de soutien ou d’échange envisagé <span className="text-rose-600" aria-hidden="true">*</span>
                   </label>
                   <select
+                    id="support-type"
+                    name="supportType"
+                    disabled={isSubmitting}
                     value={formData.supportType}
-                    onChange={(e) => setFormData({ ...formData, supportType: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-slate-900 font-semibold focus:border-blue-900 focus:outline-none transition-colors"
+                    onChange={(e) => {
+                      setFormData({ ...formData, supportType: e.target.value });
+                      setSubmitError(null);
+                    }}
+                    className="w-full min-h-[48px] px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-sm text-slate-900 font-semibold focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <option value="bourse">Parrainage / Bourse de scolarité pour un élève</option>
                     <option value="fournitures">Dotation en livres et fournitures scolaires</option>
@@ -850,43 +1367,96 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                 </div>
 
                 {/* Message */}
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-800 block">
-                    Votre message ou proposition <span className="text-rose-600">*</span>
-                  </label>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="support-message" className="font-bold text-slate-800 block text-xs">
+                      Votre message ou proposition <span className="text-rose-600" aria-hidden="true">*</span>
+                    </label>
+                    <span className={`text-[11px] font-mono ${
+                      formData.message.trim().length >= 15 ? 'text-emerald-700' : 'text-slate-400'
+                    }`}>
+                      {formData.message.trim().length} / min. 15 caract.
+                    </span>
+                  </div>
                   <textarea
+                    id="support-message"
+                    name="message"
                     required
                     rows={4}
+                    disabled={isSubmitting}
                     value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    placeholder="Décrivez brièvement votre projet, vos questions ou votre disponibilité pour échanger..."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-slate-900 font-medium focus:border-blue-900 focus:outline-none transition-colors resize-y"
+                    onChange={(e) => {
+                      setFormData({ ...formData, message: e.target.value });
+                      setSubmitError(null);
+                    }}
+                    onBlur={() => handleBlur('message')}
+                    placeholder="Décrivez brièvement votre projet, vos questions ou votre disponibilité pour échanger avec la direction..."
+                    aria-required="true"
+                    aria-invalid={touched.message && !!errors.message}
+                    aria-describedby={touched.message && errors.message ? "message-error" : undefined}
+                    className={`w-full min-h-[110px] px-4 py-3 rounded-xl border text-sm text-slate-900 font-medium transition-all resize-y ${
+                      touched.message && errors.message
+                        ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20'
+                        : touched.message && !errors.message
+                        ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20'
+                        : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15'
+                    } focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed`}
                   />
+                  {touched.message && errors.message && (
+                    <p id="message-error" role="alert" className="text-[11px] text-rose-600 font-medium flex items-center gap-1.5 pt-0.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.message}</span>
+                    </p>
+                  )}
                 </div>
 
-                {/* Consentement */}
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5">
-                  <input
-                    type="checkbox"
-                    id="consent-support"
-                    required
-                    checked={formData.consent}
-                    onChange={(e) => setFormData({ ...formData, consent: e.target.checked })}
-                    className="w-4 h-4 text-blue-900 rounded-sm mt-0.5 cursor-pointer"
-                  />
-                  <label htmlFor="consent-support" className="text-[11px] text-slate-600 leading-snug cursor-pointer">
-                    J’autorise l’administration du Collège Isaac Newton à me contacter par e-mail ou téléphone pour donner suite à cette démarche. Mes données restent confidentielles et ne seront jamais cédées à des tiers.
+                {/* Consentement Mobile Friendly Touch Target */}
+                <div className={`p-4 rounded-2xl border transition-all ${
+                  touched.consent && errors.consent 
+                    ? 'border-rose-300 bg-rose-50/40' 
+                    : 'border-slate-200 bg-slate-50/70 hover:bg-slate-50'
+                }`}>
+                  <label htmlFor="consent-support" className="flex items-start gap-3 cursor-pointer min-h-[24px]">
+                    <input
+                      type="checkbox"
+                      id="consent-support"
+                      name="consent"
+                      required
+                      disabled={isSubmitting}
+                      checked={formData.consent}
+                      onChange={(e) => {
+                        setFormData({ ...formData, consent: e.target.checked });
+                        setSubmitError(null);
+                      }}
+                      onBlur={() => handleBlur('consent')}
+                      aria-required="true"
+                      aria-invalid={touched.consent && !!errors.consent}
+                      className="w-5 h-5 text-blue-900 rounded border-slate-300 focus:ring-2 focus:ring-blue-900/20 mt-0.5 cursor-pointer shrink-0 disabled:opacity-50"
+                    />
+                    <span className="text-xs text-slate-700 leading-relaxed select-none">
+                      J’autorise expressément l’administration du <strong>Collège Isaac Newton</strong> à me contacter par e-mail ou téléphone pour donner suite à cette proposition. Mes coordonnées restent strictement confidentielles et ne feront l’objet d’aucun partage commercial.
+                    </span>
                   </label>
+                  {touched.consent && errors.consent && (
+                    <p role="alert" className="text-[11px] text-rose-600 font-medium flex items-center gap-1.5 pt-2 pl-8">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <span>{errors.consent}</span>
+                    </p>
+                  )}
                 </div>
 
-                {/* Bouton de soumission */}
+                {/* Bouton de soumission avec état de chargement */}
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3 px-5 rounded-xl bg-blue-900 hover:bg-blue-950 disabled:opacity-50 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  aria-busy={isSubmitting}
+                  className="w-full min-h-[48px] py-3.5 px-6 rounded-xl bg-blue-900 hover:bg-blue-950 disabled:bg-blue-900/60 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900"
                 >
                   {isSubmitting ? (
-                    <span>Transmission en cours...</span>
+                    <>
+                      <Loader2 className="w-5 h-5 text-amber-400 animate-spin" />
+                      <span>Transmission sécurisée en cours...</span>
+                    </>
                   ) : (
                     <>
                       <Send className="w-4 h-4 text-amber-400" />
@@ -894,6 +1464,10 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                     </>
                   )}
                 </button>
+
+                <p className="text-[11px] text-center text-slate-500 font-medium">
+                  Réponse officielle garantie sous 48 heures ouvrées · Accompagnement direct par le secrétariat
+                </p>
 
               </form>
             )}

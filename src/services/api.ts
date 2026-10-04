@@ -413,6 +413,36 @@ export const apiService = {
     return newItem;
   },
 
+  async updateMedia(id: string, mediaData: Partial<MediaItem>): Promise<MediaItem> {
+    try {
+      const res = await appFetch(`/api/media/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mediaData),
+      });
+      if (res.ok) {
+        const saved = await res.json();
+        const current = await this.getMedia();
+        const updated = current.map(m => m.id === id ? saved : m);
+        setLocal(STORAGE_KEYS.MEDIA, updated);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('cin:media-updated', { detail: saved }));
+        }
+        return saved;
+      }
+    } catch {
+      // Local fallback
+    }
+
+    const current = await this.getMedia();
+    const updated = current.map(m => m.id === id ? { ...m, ...mediaData } : m);
+    setLocal(STORAGE_KEYS.MEDIA, updated);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:media-updated', { detail: { id, ...mediaData } }));
+    }
+    return { id, ...mediaData } as MediaItem;
+  },
+
   async deleteMedia(id: string): Promise<boolean> {
     try {
       await appFetch(`/api/media/${id}`, { method: 'DELETE' });

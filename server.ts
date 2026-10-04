@@ -36,6 +36,7 @@ import {
   dbDeleteEvent,
   dbGetMedia,
   dbInsertMedia,
+  dbUpdateMedia,
   dbDeleteMedia,
   dbGetHeroSlides,
   dbSaveHeroSlides,
@@ -1369,6 +1370,66 @@ app.post('/api/media', async (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
   res.status(201).json(newItem);
+});
+
+app.put('/api/media/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { url, title, category, dimensions, sizeBytes } = req.body;
+
+  if (!title) {
+    return res.status(400).json({ error: 'Le titre de l’image est obligatoire' });
+  }
+
+  const existingIndex = memoryMediaItems.findIndex(m => m.id === id);
+  const current = existingIndex !== -1 ? memoryMediaItems[existingIndex] : null;
+
+  const updatedItem = {
+    id,
+    url: url || (current ? current.url : ''),
+    title,
+    category: category || (current ? current.category : 'CAMPUS'),
+    dimensions: dimensions || (current ? current.dimensions : '1280x850'),
+    sizeBytes: sizeBytes !== undefined ? sizeBytes : (current ? (current as any).sizeBytes : 0),
+    createdAt: current ? current.createdAt : new Date().toISOString(),
+  };
+
+  if (isDbActive()) {
+    try {
+      const saved = await dbUpdateMedia(id, updatedItem);
+      if (saved) {
+        if (existingIndex !== -1) {
+          memoryMediaItems[existingIndex] = saved;
+        } else {
+          memoryMediaItems.unshift(saved);
+        }
+        auditLogs.push({
+          id: `log-${Date.now()}`,
+          action: 'MEDIA_UPDATED_POSTGRES',
+          user: 'Direction (Admin)',
+          details: `Image médiathèque mise à jour dans PostgreSQL : ${title}`,
+          timestamp: new Date().toISOString(),
+        });
+        return res.json(saved);
+      }
+    } catch (e: any) {
+      console.error('[API Media Update DB Error]', e.message);
+    }
+  }
+
+  if (existingIndex !== -1) {
+    memoryMediaItems[existingIndex] = updatedItem;
+  } else {
+    memoryMediaItems.unshift(updatedItem);
+  }
+
+  auditLogs.push({
+    id: `log-${Date.now()}`,
+    action: 'MEDIA_UPDATED',
+    user: 'Direction (Admin)',
+    details: `Image médiathèque mise à jour : ${title}`,
+    timestamp: new Date().toISOString(),
+  });
+  res.json(updatedItem);
 });
 
 app.delete('/api/media/:id', async (req: Request, res: Response) => {
