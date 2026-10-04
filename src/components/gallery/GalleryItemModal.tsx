@@ -31,6 +31,10 @@ export const GalleryItemModal: React.FC<GalleryItemModalProps> = ({
   const [title, setTitle] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [caption, setCaption] = useState('');
+  const [category, setCategory] = useState('Événements & Cérémonies');
+  const [highlight1, setHighlight1] = useState('');
+  const [highlight2, setHighlight2] = useState('');
+  const [highlight3, setHighlight3] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -39,10 +43,19 @@ export const GalleryItemModal: React.FC<GalleryItemModalProps> = ({
       setTitle(editingItem.title || '');
       setImageUrl(editingItem.imageUrl || '');
       setCaption(editingItem.caption || '');
+      setCategory(editingItem.category || 'Événements & Cérémonies');
+      const hl = editingItem.highlights || [];
+      setHighlight1(hl[0] || 'Sécurité permanente & surveillance continue à Delmas 50');
+      setHighlight2(hl[1] || 'Énergie solaire & onduleurs pour continuité pédagogique');
+      setHighlight3(hl[2] || 'Accessibilité rapide depuis l\'axe principal de Delmas');
     } else {
       setTitle('');
       setImageUrl('');
       setCaption('');
+      setCategory('Événements & Cérémonies');
+      setHighlight1('Sécurité permanente & surveillance continue à Delmas 50');
+      setHighlight2('Énergie solaire & onduleurs pour continuité pédagogique');
+      setHighlight3('Accessibilité rapide depuis l\'axe principal de Delmas');
     }
     setShowDeleteConfirm(false);
   }, [editingItem, isOpen]);
@@ -59,23 +72,24 @@ export const GalleryItemModal: React.FC<GalleryItemModalProps> = ({
     }
 
     setIsSubmitting(true);
+    const highlights = [highlight1.trim(), highlight2.trim(), highlight3.trim()].filter(Boolean);
+    const payload = {
+      title: title.trim(),
+      imageUrl: imageUrl.trim(),
+      caption: caption.trim() || undefined,
+      category: category.trim() || 'Événements & Cérémonies',
+      highlights: highlights.length > 0 ? highlights : undefined,
+    };
+
     try {
       if (editingItem) {
-        const updated = await apiService.updateGalleryItem(editingItem.id, {
-          title: title.trim(),
-          imageUrl: imageUrl.trim(),
-          caption: caption.trim() || undefined,
-        });
+        const updated = await apiService.updateGalleryItem(editingItem.id, payload);
         if (updated) {
-          toast.success('Photo mise à jour !');
+          toast.success('Photo et détails mis à jour avec succès dans PostgreSQL !');
           onSaved?.(updated);
         }
       } else {
-        const created = await apiService.createGalleryItem({
-          title: title.trim(),
-          imageUrl: imageUrl.trim(),
-          caption: caption.trim() || undefined,
-        });
+        const created = await apiService.createGalleryItem(payload);
         toast.success('Nouvelle photo ajoutée à la galerie !');
         onSaved?.(created);
       }
@@ -176,15 +190,65 @@ export const GalleryItemModal: React.FC<GalleryItemModalProps> = ({
             {/* Optional Short Caption */}
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1">
-                Légende courte <span className="font-normal text-slate-400 text-[11px]">(optionnelle)</span>
+                Description / Sous-titre <span className="font-normal text-slate-400 text-[11px]">(affiché sous le titre dans le carrousel)</span>
               </label>
               <textarea
                 rows={2}
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
-                placeholder="Brève description visible lors de l'agrandissement..."
+                placeholder="ex: Célébration annuelle de nos lauréats de 9e AF et bacheliers du Nouveau Secondaire..."
                 className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-all resize-none"
               />
+            </div>
+
+            {/* Category Selection */}
+            <div>
+              <label className="block text-xs font-bold text-slate-800 mb-1">
+                Catégorie d'Espace ou d'Activité
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-3.5 py-2 text-xs sm:text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent transition-all bg-white"
+              >
+                <option value="Événements & Cérémonies">Événements & Cérémonies</option>
+                <option value="Campus & Bâtiments">Campus & Bâtiments</option>
+                <option value="Laboratoire & Numérique">Laboratoire & Numérique</option>
+                <option value="Espaces Sportifs & Cour">Espaces Sportifs & Cour</option>
+                <option value="Vie Scolaire">Vie Scolaire</option>
+                <option value="Pédagogie & Enseignement">Pédagogie & Enseignement</option>
+                <option value="Infrastructures">Infrastructures</option>
+              </select>
+            </div>
+
+            {/* 3 Key Highlights / Atouts (Puces du panneau de droite) */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5">
+              <label className="block text-xs font-bold text-slate-800">
+                Points Clés & Atouts <span className="font-normal text-slate-500 text-[11px]">(les 3 puces affichées sur le panneau de droite)</span>
+              </label>
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={highlight1}
+                  onChange={(e) => setHighlight1(e.target.value)}
+                  placeholder="Point 1 (ex: Sécurité permanente & surveillance continue à Delmas 50)"
+                  className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-900"
+                />
+                <input
+                  type="text"
+                  value={highlight2}
+                  onChange={(e) => setHighlight2(e.target.value)}
+                  placeholder="Point 2 (ex: Énergie solaire & onduleurs pour continuité pédagogique)"
+                  className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-900"
+                />
+                <input
+                  type="text"
+                  value={highlight3}
+                  onChange={(e) => setHighlight3(e.target.value)}
+                  placeholder="Point 3 (ex: Accessibilité rapide depuis l'axe principal de Delmas)"
+                  className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-blue-900"
+                />
+              </div>
             </div>
 
             {/* Delete Confirmation Box if triggered */}

@@ -119,6 +119,8 @@ export interface GalleryItem {
   imageUrl: string;
   altText?: string;
   caption?: string;
+  badge?: string;
+  highlights?: string[];
 }
 
 export interface DocumentFile {
