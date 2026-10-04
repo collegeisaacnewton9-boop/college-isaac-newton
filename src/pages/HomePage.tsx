@@ -20,7 +20,6 @@ import { SCHOOL_IMAGES } from '../assets/images';
 import { SCHOOL_INFO, SCHOOL_VALUES, INITIAL_NEWS, INITIAL_EVENTS, DEFAULT_EDUCATIONAL_CYCLES } from '../data/mockData';
 import { HeroCarousel } from '../components/layout/HeroCarousel';
 import { EventCountdownWidget } from '../components/home/EventCountdownWidget';
-import { SchoolCalendarSection } from '../components/home/SchoolCalendarSection';
 import { InfrastructureCarousel } from '../components/home/InfrastructureCarousel';
 import { ActivityGallerySection } from '../components/home/ActivityGallerySection';
 import { TestimonialSection } from '../components/home/TestimonialsSection';
@@ -307,9 +306,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
 
         </div>
       </section>
-
-      {/* 3. CALENDRIER SCOLAIRE & DATES IMPORTANTES - Dates officielles, filtres & édition directe */}
-      <SchoolCalendarSection onNavigate={onNavigate} currentUser={currentUser} />
 
       {/* 4. LES PILIERS D'EXCELLENCE - Compact & Ergonomic Layout */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
