@@ -19,6 +19,7 @@ import {
 import { SCHOOL_IMAGES } from '../assets/images';
 import { SCHOOL_INFO, SCHOOL_VALUES, INITIAL_NEWS, INITIAL_EVENTS, DEFAULT_EDUCATIONAL_CYCLES } from '../data/mockData';
 import { HeroCarousel } from '../components/layout/HeroCarousel';
+import { EventCountdownWidget } from '../components/home/EventCountdownWidget';
 import { InfrastructureCarousel } from '../components/home/InfrastructureCarousel';
 import { ActivityGallerySection } from '../components/home/ActivityGallerySection';
 import { TestimonialSection } from '../components/home/TestimonialsSection';
@@ -80,7 +81,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
       {/* 1. HERO CAROUSEL - Framer Motion, campus building & lab photos, uncluttered layout */}
       <HeroCarousel onNavigate={onNavigate} />
 
-      {/* 2. SECTION 'ACTUALITÉS ET ÉVÉNEMENTS' - Responsive 3 Columns Desktop, 1 Column Mobile */}
+      {/* 2. COMPTE À REBOURS ÉVÉNEMENTS IMPORTANTS - Live countdown synchronized with DB */}
+      <EventCountdownWidget onNavigate={onNavigate} currentUser={currentUser} />
+
+      {/* 3. SECTION 'ACTUALITÉS ET ÉVÉNEMENTS' - Responsive 3 Columns Desktop, 1 Column Mobile */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Actualités et Événements du Collège">
         {/* Section Header - Compact & Clean */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-4 sm:mb-5 gap-2 border-b border-slate-100 pb-2.5">

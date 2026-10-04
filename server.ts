@@ -1183,6 +1183,9 @@ app.delete('/api/news/:id', async (req: Request, res: Response) => {
 
 // 5. School Events routes
 app.get('/api/events', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   if (isDbActive()) {
     try {
       const dbEvts = await dbGetEvents();

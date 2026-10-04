@@ -277,7 +277,7 @@ export const apiService = {
   // --- EVENTS ---
   async getEvents(): Promise<SchoolEvent[]> {
     try {
-      const res = await appFetch('/api/events');
+      const res = await appFetch(`/api/events?_t=${Date.now()}`);
       if (res.ok) return await res.json();
     } catch {
       // Fallback
