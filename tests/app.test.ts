@@ -2,6 +2,7 @@ import test, { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { ROLE_PERMISSIONS } from '../src/data/rolePermissions.ts';
 import { DEFAULT_EDUCATIONAL_CYCLES } from '../src/data/cyclesData.ts';
+import { validateEmail, validatePhone, formatPhoneNumber } from '../src/utils/validation.ts';
 
 describe('Collège Isaac Newton - Unit Tests', () => {
   describe('RBAC & Role Permissions', () => {
@@ -68,4 +69,64 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       }
     });
   });
+
+  describe('Validation des Champs en Temps Réel (Pré-inscription)', () => {
+    it('should validate valid emails and reject malformed ones', () => {
+      const valid = validateEmail('parent@collegeisaacnewton.com');
+      assert.strictEqual(valid.isValid, true);
+      assert.strictEqual(valid.error, null);
+
+      const empty = validateEmail('');
+      assert.strictEqual(empty.isValid, false);
+      assert.ok(empty.error?.includes('requise'));
+
+      const missingAt = validateEmail('parentcollege.com');
+      assert.strictEqual(missingAt.isValid, false);
+      assert.ok(missingAt.error?.includes('@'));
+
+      const missingDomain = validateEmail('parent@');
+      assert.strictEqual(missingDomain.isValid, false);
+
+      const spaces = validateEmail('parent @gmail.com');
+      assert.strictEqual(spaces.isValid, false);
+    });
+
+    it('should suggest corrections for common domain typos in emails', () => {
+      const typo = validateEmail('famille.jean@gmai.com');
+      assert.strictEqual(typo.suggestion, 'famille.jean@gmail.com');
+
+      const yahooTypo = validateEmail('contact@yaho.com');
+      assert.strictEqual(yahooTypo.suggestion, 'contact@yahoo.com');
+    });
+
+    it('should validate Haitian and International phone numbers accurately', () => {
+      const haitiWithCode = validatePhone('+509 3700-1234');
+      assert.strictEqual(haitiWithCode.isValid, true);
+      assert.strictEqual(haitiWithCode.carrier, 'Haïti · Digicel (+509)');
+
+      const natcomWithCode = validatePhone('+509 4800-5678');
+      assert.strictEqual(natcomWithCode.isValid, true);
+      assert.strictEqual(natcomWithCode.carrier, 'Haïti · Natcom (+509)');
+
+      const haitiLocal = validatePhone('3712-3456');
+      assert.strictEqual(haitiLocal.isValid, true);
+
+      const incomplete = validatePhone('3712');
+      assert.strictEqual(incomplete.isValid, false);
+      assert.ok(incomplete.error?.includes('incomplet'));
+
+      const usDiaspora = validatePhone('+1 (305) 555-0123');
+      assert.strictEqual(usDiaspora.isValid, true);
+      assert.strictEqual(usDiaspora.carrier, 'USA / Canada (+1)');
+    });
+
+    it('should format Haitian phone numbers cleanly on input', () => {
+      const formatted1 = formatPhoneNumber('50937001234');
+      assert.strictEqual(formatted1, '+509 3700-1234');
+
+      const formatted2 = formatPhoneNumber('37001234');
+      assert.strictEqual(formatted2, '3700-1234');
+    });
+  });
 });
+

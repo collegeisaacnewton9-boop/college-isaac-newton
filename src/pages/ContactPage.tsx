@@ -14,6 +14,7 @@ import {
 import { SCHOOL_INFO } from '../data/mockData';
 import { apiService } from '../services/api';
 import { ContactFormData } from '../types';
+import { validateEmail, validatePhone, formatPhoneNumber } from '../utils/validation';
 
 export const ContactPage: React.FC = () => {
   const [formData, setFormData] = useState<ContactFormData>({
@@ -33,6 +34,20 @@ export const ContactPage: React.FC = () => {
     if (!formData.fullName || !formData.email || !formData.message) {
       setError('Veuillez renseigner votre nom, adresse email et votre message.');
       return;
+    }
+
+    const emailCheck = validateEmail(formData.email);
+    if (!emailCheck.isValid) {
+      setError(emailCheck.error || 'Format d\'adresse email non valide.');
+      return;
+    }
+
+    if (formData.phone && formData.phone.trim()) {
+      const phoneCheck = validatePhone(formData.phone);
+      if (!phoneCheck.isValid) {
+        setError(phoneCheck.error || 'Format de numéro de téléphone non valide.');
+        return;
+      }
     }
 
     setLoading(true);
@@ -231,7 +246,7 @@ export const ContactPage: React.FC = () => {
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
                   placeholder="+509 3721-1818"
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none"
                 />

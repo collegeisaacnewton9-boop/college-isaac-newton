@@ -16,11 +16,13 @@ import {
   Mail,
   MapPin,
   Briefcase,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from 'lucide-react';
 import { AdmissionFormData, AcademicCycle } from '../types';
 import { apiService } from '../services/api';
 import { SCHOOL_INFO } from '../data/mockData';
+import { validateEmail, validatePhone, formatPhoneNumber } from '../utils/validation';
 
 interface PreRegistrationPageProps {
   onNavigate: (page: string) => void;
@@ -59,6 +61,8 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
   // Real-time validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [phoneCarrier, setPhoneCarrier] = useState<string | null>(null);
+  const [emailSuggestion, setEmailSuggestion] = useState<string | null>(null);
 
   // Field validation logic
   const validateSingleField = (field: keyof AdmissionFormData, value: any): string => {
@@ -70,18 +74,16 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
         return '';
       }
       case 'parentPhone': {
-        const trimmed = String(value || '').trim();
-        if (!trimmed) return 'Numéro de téléphone joignable requis';
-        const digits = trimmed.replace(/\D/g, '');
-        if (digits.length < 8) return 'Numéro de téléphone incomplet (au moins 8 chiffres, ex: +509 3700-0000)';
-        return '';
+        const res = validatePhone(String(value || ''));
+        if (res.carrier) {
+          setPhoneCarrier(res.carrier);
+        }
+        return res.isValid ? '' : (res.error || 'Numéro de téléphone invalide');
       }
       case 'parentEmail': {
-        const trimmed = String(value || '').trim();
-        if (!trimmed) return 'Adresse email requise pour les notifications';
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(trimmed)) return 'Format d\'email invalide (ex: contact@exemple.com)';
-        return '';
+        const res = validateEmail(String(value || ''));
+        setEmailSuggestion(res.suggestion || null);
+        return res.isValid ? '' : (res.error || 'Format d\'e-mail invalide');
       }
       case 'parentAddress': {
         const trimmed = String(value || '').trim();
@@ -125,12 +127,17 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     }
   };
 
-  // Real-time update handler
+  // Real-time update handler with smart auto-formatting
   const handleFieldChange = (field: keyof AdmissionFormData, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    let finalValue = value;
+    if (field === 'parentPhone') {
+      finalValue = formatPhoneNumber(String(value || ''));
+    }
+
+    setFormData(prev => ({ ...prev, [field]: finalValue }));
     setTouched(prev => ({ ...prev, [field]: true }));
 
-    const errorMsg = validateSingleField(field, value);
+    const errorMsg = validateSingleField(field, finalValue);
     setErrors(prev => {
       const updated = { ...prev };
       if (errorMsg) {
@@ -140,6 +147,17 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
       }
       return updated;
     });
+  };
+
+  // 1-Click Email Suggestion Fixer
+  const applyEmailSuggestion = (suggestion: string) => {
+    handleFieldChange('parentEmail', suggestion);
+    setEmailSuggestion(null);
+  };
+
+  // 1-Click Phone Country Code Helper
+  const applyPhonePrefix = (prefix: string) => {
+    handleFieldChange('parentPhone', prefix);
   };
 
   // OnBlur touch handler
@@ -473,19 +491,43 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                     <span>Téléphone joignable *</span>
                   </label>
                   {touched.parentPhone && !errors.parentPhone && formData.parentPhone && (
-                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
-                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    <span className="text-[10px] text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-bold border border-emerald-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> {phoneCarrier || 'Format Valide'}
                     </span>
                   )}
                 </div>
-                <input
-                  type="tel"
-                  value={formData.parentPhone}
-                  onChange={(e) => handleFieldChange('parentPhone', e.target.value)}
-                  onBlur={() => handleFieldBlur('parentPhone')}
-                  placeholder="+509 3700-0000"
-                  className={getInputClasses('parentPhone')}
-                />
+                <div className="relative">
+                  <input
+                    type="tel"
+                    value={formData.parentPhone}
+                    onChange={(e) => handleFieldChange('parentPhone', e.target.value)}
+                    onBlur={() => handleFieldBlur('parentPhone')}
+                    placeholder="+509 3700-0000"
+                    className={`${getInputClasses('parentPhone')} font-mono`}
+                  />
+                </div>
+
+                {/* Quick Prefix buttons if empty */}
+                {!formData.parentPhone && (
+                  <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-500">
+                    <span className="text-[9.5px]">Préfixes :</span>
+                    <button
+                      type="button"
+                      onClick={() => applyPhonePrefix('+509 ')}
+                      className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-mono text-slate-700 cursor-pointer"
+                    >
+                      +509 (Haïti)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => applyPhonePrefix('+1 ')}
+                      className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-mono text-slate-700 cursor-pointer"
+                    >
+                      +1 (Diaspora)
+                    </button>
+                  </div>
+                )}
+
                 {touched.parentPhone && errors.parentPhone && (
                   <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
                     <AlertCircle className="w-3 h-3 shrink-0" />
@@ -502,8 +544,8 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                     <span>Adresse e-mail valide *</span>
                   </label>
                   {touched.parentEmail && !errors.parentEmail && formData.parentEmail && (
-                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
-                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    <span className="text-[10px] text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full flex items-center gap-0.5 font-bold border border-emerald-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" /> E-mail Vérifié
                     </span>
                   )}
                 </div>
@@ -515,10 +557,33 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                   placeholder="parent@exemple.com"
                   className={getInputClasses('parentEmail')}
                 />
+
+                {/* Real-time Typo Suggestion Helper */}
+                {emailSuggestion && (
+                  <div className="mt-1 p-2 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-between text-[11px] text-amber-900 animate-fade-in shadow-2xs">
+                    <span className="flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      <span>Vouliez-vous dire <strong>{emailSuggestion}</strong> ?</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => applyEmailSuggestion(emailSuggestion)}
+                      className="px-2 py-0.5 rounded-md bg-amber-200 hover:bg-amber-300 font-bold text-[10px] text-amber-950 transition-colors cursor-pointer"
+                    >
+                      Corriger
+                    </button>
+                  </div>
+                )}
+
                 {touched.parentEmail && errors.parentEmail && (
                   <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
                     <AlertCircle className="w-3 h-3 shrink-0" />
                     <span>{errors.parentEmail}</span>
+                  </p>
+                )}
+                {!errors.parentEmail && (
+                  <p className="text-[9.5px] text-slate-400 mt-0.5">
+                    La convocation et le récapitulatif PDF seront envoyés ici.
                   </p>
                 )}
               </div>
