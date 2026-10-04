@@ -88,6 +88,7 @@ const STORAGE_KEYS = {
   MEDIA: 'cin_media_items_v1',
   HERO_SLIDES: 'cin_hero_slides_v1',
   GALLERY: 'cin_gallery_items_v1',
+  CONTENT_BLOCKS: 'cin_content_blocks_v1',
 };
 
 // Helper for local persistent fallback
@@ -982,5 +983,77 @@ export const apiService = {
     } catch {
       return { success: true, message: 'Permissions système réparées avec succès (mode hors-ligne)' };
     }
+  },
+
+  // --- INLINE EDITABLE CONTENT BLOCKS (DIRECT HOME & CMS) ---
+  async getContentBlocks(): Promise<Record<string, string>> {
+    try {
+      const res = await appFetch(`/api/content-blocks?_t=${Date.now()}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && typeof data === 'object') {
+          setLocal(STORAGE_KEYS.CONTENT_BLOCKS, data);
+          return data;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+    return getLocal<Record<string, string>>(STORAGE_KEYS.CONTENT_BLOCKS, {});
+  },
+
+  async saveContentBlock(key: string, content: string): Promise<Record<string, string>> {
+    const current = await this.getContentBlocks();
+    const updated = { ...current, [key]: content };
+    setLocal(STORAGE_KEYS.CONTENT_BLOCKS, updated);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:content-blocks-updated', { detail: { key, content, blocks: updated } }));
+    }
+
+    try {
+      const res = await appFetch('/api/content-blocks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key, content }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.blocks) {
+          setLocal(STORAGE_KEYS.CONTENT_BLOCKS, json.blocks);
+          return json.blocks;
+        }
+      }
+    } catch {
+      // Local fallback active
+    }
+    return updated;
+  },
+
+  async resetContentBlock(key: string): Promise<Record<string, string>> {
+    const current = await this.getContentBlocks();
+    const updated = { ...current };
+    delete updated[key];
+    setLocal(STORAGE_KEYS.CONTENT_BLOCKS, updated);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:content-blocks-updated', { detail: { key, reset: true, blocks: updated } }));
+    }
+
+    try {
+      const res = await appFetch(`/api/content-blocks/${encodeURIComponent(key)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.blocks) {
+          setLocal(STORAGE_KEYS.CONTENT_BLOCKS, json.blocks);
+          return json.blocks;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+    return updated;
   },
 };

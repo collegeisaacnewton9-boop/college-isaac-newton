@@ -33,6 +33,8 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { User, Language } from './types';
 import { apiService } from './services/api';
 import { Toaster } from 'sonner';
+import { ContentBlockProvider } from './context/ContentBlockContext';
+import { FloatingEditorToolbar } from './components/common/FloatingEditorToolbar';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<string>('home');
@@ -85,7 +87,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50 text-slate-800 font-sans selection:bg-blue-900 selection:text-white relative">
+    <ContentBlockProvider currentUser={currentUser}>
+      <div className="min-h-screen flex flex-col bg-stone-50 text-slate-800 font-sans selection:bg-blue-900 selection:text-white relative">
       
       {/* Dynamic SEO Meta Tags & Schema.org Structured Data */}
       <DynamicMetaTags
@@ -237,9 +240,13 @@ export default function App() {
       {/* Dynamic Floating WhatsApp Quick Contact Button */}
       <WhatsAppFloatingButton />
 
+      {/* Floating Formatting Toolbar & Admin Inline Editor Toggle (Visible only to authorized admins) */}
+      <FloatingEditorToolbar currentUser={currentUser} />
+
       {/* Global Toast Notifications Provider (Sonner) */}
       <Toaster richColors position="top-right" closeButton />
 
     </div>
+    </ContentBlockProvider>
   );
 }

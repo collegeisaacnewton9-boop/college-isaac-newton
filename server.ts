@@ -45,7 +45,9 @@ import {
   dbUpdateUserPassword,
   dbRepairSystemPermissions,
   dbGetGitHubConfig,
-  dbSaveGitHubConfig
+  dbSaveGitHubConfig,
+  dbGetContentBlocks,
+  dbSaveContentBlocks
 } from './server-db';
 
 const execPromise = util.promisify(exec);
@@ -644,6 +646,37 @@ const cachedDiskSettings = loadSettingsFromDisk();
 if (cachedDiskSettings) {
   siteSettings = { ...siteSettings, ...cachedDiskSettings };
 }
+
+// Disk & Memory Persistence for ContentEditable Blocks
+let memoryContentBlocks: Record<string, string> = {};
+const CONTENT_BLOCKS_FILE_PATH = path.join(__dirname, 'data', 'content-blocks.json');
+
+function saveContentBlocksToDisk(blocks: Record<string, string>) {
+  try {
+    const dir = path.dirname(CONTENT_BLOCKS_FILE_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(CONTENT_BLOCKS_FILE_PATH, JSON.stringify(blocks, null, 2), 'utf-8');
+  } catch (err: any) {
+    console.error('[ContentBlocks Disk Save Error]', err.message);
+  }
+}
+
+function loadContentBlocksFromDisk(): Record<string, string> {
+  try {
+    if (fs.existsSync(CONTENT_BLOCKS_FILE_PATH)) {
+      const data = fs.readFileSync(CONTENT_BLOCKS_FILE_PATH, 'utf-8');
+      return JSON.parse(data) || {};
+    }
+  } catch (err: any) {
+    console.error('[ContentBlocks Disk Read Error]', err.message);
+  }
+  return {};
+}
+
+// Initial disk load
+memoryContentBlocks = loadContentBlocksFromDisk();
 
 let contactMessages = [
   {
@@ -1904,6 +1937,71 @@ app.put('/api/settings', async (req: Request, res: Response) => {
   res.json(siteSettings);
 });
 
+// --- INLINE EDITABLE CONTENT BLOCKS API (POUR MODIFICATION DIRECTE SUR LE SITE) ---
+app.get('/api/content-blocks', (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.json(memoryContentBlocks);
+});
+
+app.put('/api/content-blocks', async (req: Request, res: Response) => {
+  const { key, content, blocks } = req.body;
+  if (blocks && typeof blocks === 'object') {
+    memoryContentBlocks = { ...memoryContentBlocks, ...blocks };
+  } else if (key && typeof content === 'string') {
+    memoryContentBlocks[key] = content;
+  } else {
+    return res.status(400).json({ error: 'Format invalide. Clé et contenu requis.' });
+  }
+
+  saveContentBlocksToDisk(memoryContentBlocks);
+
+  if (isDbActive()) {
+    try {
+      await dbSaveContentBlocks(memoryContentBlocks);
+    } catch (e: any) {
+      console.error('[DB Save Content Blocks Error]', e.message);
+    }
+  }
+
+  auditLogs.push({
+    id: `log-${Date.now()}`,
+    action: 'CONTENT_BLOCK_UPDATED',
+    user: 'Éditeur En Direct (Admin)',
+    details: `Bloc de texte mis à jour : ${key || 'plusieurs blocs'}`,
+    timestamp: new Date().toISOString(),
+  });
+
+  res.json({ success: true, blocks: memoryContentBlocks });
+});
+
+app.delete('/api/content-blocks/:key', async (req: Request, res: Response) => {
+  const { key } = req.params;
+  if (memoryContentBlocks[key] !== undefined) {
+    delete memoryContentBlocks[key];
+    saveContentBlocksToDisk(memoryContentBlocks);
+
+    if (isDbActive()) {
+      try {
+        await dbSaveContentBlocks(memoryContentBlocks);
+      } catch (e: any) {
+        console.error('[DB Save Content Blocks Error]', e.message);
+      }
+    }
+
+    auditLogs.push({
+      id: `log-${Date.now()}`,
+      action: 'CONTENT_BLOCK_RESET',
+      user: 'Éditeur En Direct (Admin)',
+      details: `Bloc de texte réinitialisé à sa valeur d'origine : ${key}`,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  res.json({ success: true, blocks: memoryContentBlocks });
+});
+
 // 8. Delete admission
 app.delete('/api/admissions/:id', async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -2389,6 +2487,14 @@ async function startServer() {
       } else {
         await dbSaveSettings(siteSettings);
         console.log('[Database] Paramètres initiaux enregistrés dans la table PostgreSQL site_settings.');
+      }
+
+      // Synchronize Content Blocks from PostgreSQL
+      const dbBlocks = await dbGetContentBlocks();
+      if (dbBlocks && Object.keys(dbBlocks).length > 0) {
+        memoryContentBlocks = { ...memoryContentBlocks, ...dbBlocks };
+        console.log(`[Database] ${Object.keys(dbBlocks).length} blocs de texte éditables synchronisés depuis PostgreSQL.`);
+        saveContentBlocksToDisk(memoryContentBlocks);
       }
     }
   } catch (err: any) {

@@ -25,6 +25,7 @@ import { ActivityGallerySection } from '../components/home/ActivityGallerySectio
 import { TestimonialSection } from '../components/home/TestimonialsSection';
 import { apiService } from '../services/api';
 import { NewsArticle, SchoolEvent, User, SiteSettings } from '../types';
+import { ContentEditable } from '../components/common/ContentEditable';
 
 interface HomePageProps {
   onNavigate: (page: string, subSection?: string) => void;
@@ -91,15 +92,30 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-900 mb-0.5">
               <Flame className="w-3.5 h-3.5 text-amber-500" />
-              <span>Vie Scolaire & Dates Clés</span>
+              <ContentEditable
+                contentKey="home.news.badge"
+                defaultContent="Vie Scolaire & Dates Clés"
+                as="span"
+                currentUser={currentUser}
+                multiline={false}
+              />
             </div>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-              Actualités & Événements
-            </h2>
+            <ContentEditable
+              contentKey="home.news.title"
+              defaultContent="Actualités & Événements"
+              as="h2"
+              className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+              currentUser={currentUser}
+              multiline={false}
+            />
           </div>
-          <p className="text-xs sm:text-sm text-slate-600 max-w-md">
-            Les dernières nouvelles de l’établissement et l'agenda officiel des activités du campus à Delmas 50.
-          </p>
+          <ContentEditable
+            contentKey="home.news.subtitle"
+            defaultContent="Les dernières nouvelles de l’établissement et l'agenda officiel des activités du campus à Delmas 50."
+            as="p"
+            className="text-xs sm:text-sm text-slate-600 max-w-md"
+            currentUser={currentUser}
+          />
         </div>
 
         {/* 3-Column Responsive Grid (1 col on mobile, 3 cols on desktop) */}
@@ -311,16 +327,30 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-3.5 sm:mb-4 gap-2">
           <div>
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-900">
-              Pédagogie d’Excellence
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-              Les 4 Piliers du Collège Isaac Newton
-            </h2>
+            <ContentEditable
+              contentKey="home.pillars.badge"
+              defaultContent="Pédagogie d’Excellence"
+              as="span"
+              className="text-xs font-bold uppercase tracking-wider text-blue-900"
+              currentUser={currentUser}
+              multiline={false}
+            />
+            <ContentEditable
+              contentKey="home.pillars.title"
+              defaultContent="Les 4 Piliers du Collège Isaac Newton"
+              as="h2"
+              className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+              currentUser={currentUser}
+              multiline={false}
+            />
           </div>
-          <p className="text-xs sm:text-sm text-slate-600 max-w-md">
-            Un équilibre mesuré entre savoirs académiques traditionnels et compétences modernes du XXIe siècle.
-          </p>
+          <ContentEditable
+            contentKey="home.pillars.desc"
+            defaultContent="Un équilibre mesuré entre savoirs académiques traditionnels et compétences modernes du XXIe siècle."
+            as="p"
+            className="text-xs sm:text-sm text-slate-600 max-w-md"
+            currentUser={currentUser}
+          />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
@@ -336,12 +366,21 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                   <div className="w-9 h-9 rounded-lg bg-slate-50 text-blue-900 group-hover:bg-blue-900 group-hover:text-white flex items-center justify-center transition-colors mb-2.5">
                     <Icon className="w-4 h-4" />
                   </div>
-                  <h3 className="font-serif font-bold text-sm sm:text-base text-slate-900 mb-1">
-                    {val.title}
-                  </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {val.desc}
-                  </p>
+                  <ContentEditable
+                    contentKey={`home.pillar.${idx}.title`}
+                    defaultContent={val.title}
+                    as="h3"
+                    className="font-serif font-bold text-sm sm:text-base text-slate-900 mb-1"
+                    currentUser={currentUser}
+                    multiline={false}
+                  />
+                  <ContentEditable
+                    contentKey={`home.pillar.${idx}.desc`}
+                    defaultContent={val.desc}
+                    as="p"
+                    className="text-xs text-slate-600 leading-relaxed"
+                    currentUser={currentUser}
+                  />
                 </div>
                 <div 
                   onClick={() => onNavigate('college')}
@@ -357,7 +396,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
       </section>
 
       {/* 4. TÉMOIGNAGES DE NOTRE COMMUNAUTÉ (Slideshow Parents, Lauréats, Enseignants) */}
-      <TestimonialSection onNavigate={onNavigate} />
+      <TestimonialSection onNavigate={onNavigate} currentUser={currentUser} />
 
       {/* 4.5. GALERIE DES ACTIVITÉS SCOLAIRES & PÉRISCOLAIRES */}
       <ActivityGallerySection onNavigate={onNavigate} currentUser={currentUser} />
@@ -369,9 +408,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-2.5">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-900">
-                  Parcours d’Apprentissage
-                </span>
+                <ContentEditable
+                  contentKey="home.cycles.badge"
+                  defaultContent="Parcours d’Apprentissage"
+                  as="span"
+                  className="text-xs font-bold uppercase tracking-wider text-blue-900"
+                  currentUser={currentUser}
+                  multiline={false}
+                />
                 {currentUser && ['ADMIN', 'EDITOR'].includes(currentUser.role) && (
                   <button
                     type="button"
@@ -384,12 +428,21 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                   </button>
                 )}
               </div>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 mt-0.5">
-                Nos Cycles d’Enseignement
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-                Cliquez sur un cycle pour visualiser ses caractéristiques pédagogiques et préinscrire votre enfant.
-              </p>
+              <ContentEditable
+                contentKey="home.cycles.title"
+                defaultContent="Nos Cycles d’Enseignement"
+                as="h2"
+                className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 mt-0.5"
+                currentUser={currentUser}
+                multiline={false}
+              />
+              <ContentEditable
+                contentKey="home.cycles.desc"
+                defaultContent="Un accompagnement continu de la Petite Enfance jusqu'au Baccalauréat d'État. Cliquez sur un cycle pour visualiser ses spécificités."
+                as="p"
+                className="text-xs sm:text-sm text-slate-600 mt-0.5"
+                currentUser={currentUser}
+              />
             </div>
 
             {/* Quick tab switcher buttons */}

@@ -1488,6 +1488,43 @@ export async function dbSaveGitHubConfig(config: any): Promise<boolean> {
   }
 }
 
+// --- CONTENT BLOCKS PERSISTENCE (POSTGRESQL) ---
+export async function dbGetContentBlocks(): Promise<Record<string, string>> {
+  const p = getDbPool();
+  if (!p || !isConnected) return {};
+  try {
+    const res = await p.query('SELECT data FROM site_settings WHERE id = $1', ['content_blocks']);
+    if (res.rows.length > 0) {
+      let data = res.rows[0].data;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch {}
+      }
+      return data || {};
+    }
+    return {};
+  } catch (err: any) {
+    console.error('[DB Get Content Blocks Error]', err.message);
+    return {};
+  }
+}
+
+export async function dbSaveContentBlocks(blocks: Record<string, string>): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query(
+      `INSERT INTO site_settings (id, data, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
+      ['content_blocks', JSON.stringify(blocks)]
+    );
+    return true;
+  } catch (err: any) {
+    console.error('[DB Save Content Blocks Error]', err.message);
+    return false;
+  }
+}
+
 
 
 

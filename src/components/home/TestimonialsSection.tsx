@@ -9,13 +9,15 @@ import {
   Award
 } from 'lucide-react';
 import { INITIAL_TESTIMONIALS } from '../../data/mockData';
-import { Testimonial } from '../../types';
+import { Testimonial, User } from '../../types';
+import { ContentEditable } from '../common/ContentEditable';
 
 interface TestimonialSectionProps {
   onNavigate?: (page: string, subSection?: string) => void;
+  currentUser?: User | null;
 }
 
-export const TestimonialSection: React.FC<TestimonialSectionProps> = () => {
+export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ currentUser }) => {
   const [testimonials] = useState<Testimonial[]>(INITIAL_TESTIMONIALS);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -53,11 +55,22 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = () => {
         <div>
           <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-900 mb-1">
             <Award className="w-4 h-4 text-amber-500" />
-            <span>Communauté & Réussite</span>
+            <ContentEditable
+              contentKey="home.testimonials.badge"
+              defaultContent="Communauté & Réussite"
+              as="span"
+              currentUser={currentUser}
+              multiline={false}
+            />
           </div>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-            Témoignages & Paroles de notre Communauté
-          </h2>
+          <ContentEditable
+            contentKey="home.testimonials.title"
+            defaultContent="Témoignages & Paroles de notre Communauté"
+            as="h2"
+            className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+            currentUser={currentUser}
+            multiline={false}
+          />
         </div>
       </div>
 
