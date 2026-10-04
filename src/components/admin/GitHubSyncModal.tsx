@@ -8,9 +8,7 @@ import {
   EyeOff, 
   Loader2, 
   CheckCircle2, 
-  AlertCircle,
-  ExternalLink,
-  ShieldCheck
+  AlertCircle
 } from 'lucide-react';
 import { githubService, GitHubRepoConfig, DEFAULT_GITHUB_CONFIG } from '../../services/githubService';
 
@@ -78,7 +76,7 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
 
     setIsSyncing(true);
     setStatusResult(null);
-    setSyncProgress(10);
+    setSyncProgress(15);
     setSyncStage('Vérification des droits et du dépôt GitHub...');
 
     // Persist full current form values
@@ -99,14 +97,20 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
 
       setStatusResult({
         success: true,
-        message: 'Toutes les sources du SI Scolaire ont été synchronisées et poussées vers votre dépôt GitHub avec succès !',
+        message: result.message || 'Toutes les sources du SI Scolaire ont été synchronisées et poussées vers votre dépôt GitHub avec succès !',
         commitSha: result.commitSha,
       });
       setCommitMessage('');
     } catch (err: any) {
+      let friendlyError = err.message || 'Erreur lors de la synchronisation.';
+      if (friendlyError.includes('Bad credentials')) {
+        friendlyError = 'Token GitHub (PAT) invalide ou expiré. Veuillez vérifier votre token.';
+      } else if (friendlyError.includes('Not Found') || friendlyError.includes('Accès refusé')) {
+        friendlyError = `Dépôt introuvable ou droits insuffisants sur ${config.owner}/${config.repo}.`;
+      }
       setStatusResult({
         success: false,
-        message: err.message || 'Erreur lors de la synchronisation vers GitHub. Vérifiez les permissions de votre PAT.',
+        message: friendlyError,
       });
     } finally {
       setIsSyncing(false);
@@ -115,23 +119,23 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="github-modal-title"
     >
-      <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xl max-w-xl sm:max-w-2xl w-full p-5 sm:p-7 space-y-5 animate-scale-in my-auto">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-2xl max-w-xl sm:max-w-2xl w-full p-4 sm:p-5.5 space-y-3 sm:space-y-3.5 animate-scale-in my-auto max-h-[94vh] overflow-y-auto">
         
-        {/* TOP HEADER */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-200/70 flex items-center justify-center text-blue-600 shrink-0">
-              <Info className="w-5 h-5" />
+        {/* TOP HEADER - COMPACT & ERGONOMIC */}
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5 sm:pb-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-50 border border-blue-200/70 flex items-center justify-center text-blue-600 shrink-0">
+              <Info className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </div>
-            <div className="w-10 h-10 rounded-2xl bg-slate-950 flex items-center justify-center text-emerald-400 shrink-0 shadow-sm">
-              <GitBranch className="w-5 h-5" />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-950 flex items-center justify-center text-emerald-400 shrink-0 shadow-xs">
+              <GitBranch className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             </div>
-            <h3 id="github-modal-title" className="font-bold text-slate-900 text-lg sm:text-xl tracking-tight">
+            <h3 id="github-modal-title" className="font-bold text-slate-900 text-sm sm:text-base md:text-lg tracking-tight">
               Exporter et Synchroniser vers GitHub
             </h3>
           </div>
@@ -139,48 +143,48 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+            className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
             aria-label="Fermer la fenêtre"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4.5 h-4.5" />
           </button>
         </div>
 
-        {/* DARK HERO BANNER */}
-        <div className="bg-[#0e131f] rounded-2xl p-4 sm:p-5 text-white border border-slate-800 flex items-start gap-3.5 shadow-inner">
-          <div className="w-11 h-11 rounded-2xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-emerald-400 shrink-0">
-            <GitBranch className="w-5 h-5" />
+        {/* DARK HERO BANNER - COMPACT VERTICAL RHYTHM */}
+        <div className="bg-[#0e131f] rounded-xl sm:rounded-2xl p-2.5 sm:p-3.5 text-white border border-slate-800 flex items-start gap-2.5 sm:gap-3 shadow-inner">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5">
+            <GitBranch className="w-4 h-4" />
           </div>
-          <div className="space-y-1 min-w-0 flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-bold text-white text-sm sm:text-base">
+          <div className="space-y-0.5 min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <span className="font-bold text-white text-xs sm:text-sm">
                 Synchronisation des sources du SI Scolaire
               </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950/90 text-emerald-400 border border-emerald-500/30">
+              <span className="text-[9.5px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-950/90 text-emerald-400 border border-emerald-500/30">
                 Delta Express
               </span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-950/90 text-indigo-300 border border-indigo-500/30">
+              <span className="text-[9.5px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded bg-indigo-950/90 text-indigo-300 border border-indigo-500/30">
                 Dev Workstation
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-light leading-relaxed">
+            <p className="text-[10.5px] sm:text-[11.5px] text-slate-400 font-light leading-snug">
               Différentiel automatique et commit instantané sur votre dépôt institutionnel sécurisé.
             </p>
           </div>
         </div>
 
-        {/* FORM CONTENT */}
-        <div className="space-y-4">
+        {/* FORM CONTENT - DENSE & RESPONSIVE */}
+        <div className="space-y-2.5 sm:space-y-3">
           
           {/* FIELD 1: TOKEN D'ACCÈS PERSONNEL GITHUB (PAT) */}
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-700">
-                <Key className="w-3.5 h-3.5 text-slate-500" />
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-700">
+                <Key className="w-3 h-3 text-slate-500" />
                 <span>TOKEN D'ACCÈS PERSONNEL GITHUB (PAT)</span>
                 <span className="text-rose-500 font-bold">*</span>
               </div>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded border border-amber-300 bg-amber-50 text-amber-700">
+              <span className="text-[9.5px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded border border-amber-300 bg-amber-50 text-amber-700">
                 Requis
               </span>
             </div>
@@ -191,39 +195,39 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
                 value={config.token}
                 onChange={(e) => handleChangeField('token', e.target.value)}
                 placeholder="ghp_..."
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 font-mono text-xs sm:text-sm focus:outline-none focus:border-blue-900 focus:bg-white pr-10 transition-colors shadow-xs"
+                className="w-full px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50/60 text-slate-900 font-mono text-xs sm:text-sm focus:outline-none focus:border-blue-900 focus:bg-white pr-9 transition-colors shadow-2xs"
               />
               <button
                 type="button"
                 onClick={() => setShowToken(!showToken)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer p-1"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer p-0.5"
                 title={showToken ? 'Masquer le token' : 'Afficher le token'}
               >
-                {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showToken ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               </button>
             </div>
-            <p className="text-[11px] text-slate-500 mt-1">
+            <p className="text-[9.5px] sm:text-[10px] text-slate-500 mt-0.5">
               Classic PAT avec portée repo (lecture / écriture). Enregistrement et persistance automatique.
             </p>
           </div>
 
           {/* ROW 2: PROPRIÉTAIRE / ORGANISATION & NOM DU DÉPÔT */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1">
                 PROPRIÉTAIRE / ORGANISATION <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
                 value={config.owner}
                 onChange={(e) => handleChangeField('owner', e.target.value)}
-                placeholder="Ex: collegeisaacnewton9-boop ou Jackito46"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-900 focus:bg-white transition-colors"
+                placeholder="Ex: collegeisaacnewton9-boop"
+                className="w-full px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50/60 text-slate-900 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-900 focus:bg-white transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1">
                 NOM DU DÉPÔT <span className="text-rose-500">*</span>
               </label>
               <input
@@ -231,15 +235,15 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
                 value={config.repo}
                 onChange={(e) => handleChangeField('repo', e.target.value)}
                 placeholder="Ex: college-isaac-newton"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-900 focus:bg-white transition-colors"
+                className="w-full px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50/60 text-slate-900 text-xs sm:text-sm font-semibold focus:outline-none focus:border-blue-900 focus:bg-white transition-colors"
               />
             </div>
           </div>
 
           {/* ROW 3: BRANCHE CIBLE & MESSAGE DU COMMIT */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5">
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1">
                 BRANCHE CIBLE
               </label>
               <input
@@ -247,12 +251,12 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
                 value={config.branch}
                 onChange={(e) => handleChangeField('branch', e.target.value)}
                 placeholder="main"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 font-mono text-xs sm:text-sm font-bold focus:outline-none focus:border-blue-900 focus:bg-white transition-colors"
+                className="w-full px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50/60 text-slate-900 font-mono text-xs sm:text-sm font-bold focus:outline-none focus:border-blue-900 focus:bg-white transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
+              <label className="block text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-700 mb-1">
                 MESSAGE DU COMMIT (OPTIONNEL)
               </label>
               <input
@@ -260,7 +264,7 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
                 value={commitMessage}
                 onChange={(e) => setCommitMessage(e.target.value)}
                 placeholder="Mise à jour synchronisée depuis le SI Collège Isaac Newton..."
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-blue-900 focus:bg-white transition-colors"
+                className="w-full px-3 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-slate-200 bg-slate-50/60 text-slate-900 text-xs sm:text-sm focus:outline-none focus:border-blue-900 focus:bg-white transition-colors"
               />
             </div>
           </div>
@@ -269,7 +273,7 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
 
         {/* PROGRESS BAR DURING SYNC */}
         {isSyncing && (
-          <div className="space-y-2 p-3.5 rounded-2xl bg-slate-900 text-white border border-slate-800 animate-pulse">
+          <div className="space-y-1.5 p-2.5 sm:p-3 rounded-xl bg-slate-900 text-white border border-slate-800">
             <div className="flex justify-between text-xs font-bold text-slate-200">
               <span className="flex items-center gap-1.5">
                 <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
@@ -277,7 +281,7 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
               </span>
               <span className="font-mono text-emerald-400">{syncProgress}%</span>
             </div>
-            <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+            <div className="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
                 style={{ width: `${syncProgress}%` }}
@@ -286,22 +290,22 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
           </div>
         )}
 
-        {/* STATUS RESULT BANNER */}
+        {/* STATUS RESULT BANNER - COMPACT */}
         {statusResult && (
-          <div className={`p-4 rounded-2xl text-xs sm:text-sm flex items-start gap-3 border ${
+          <div className={`p-2.5 sm:p-3 rounded-xl text-xs flex items-start gap-2.5 border ${
             statusResult.success
               ? 'bg-emerald-50 text-emerald-950 border-emerald-200'
               : 'bg-rose-50 text-rose-950 border-rose-200'
           }`}>
             {statusResult.success ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
             ) : (
-              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
             )}
-            <div className="space-y-1">
-              <p className="font-bold">{statusResult.message}</p>
+            <div className="space-y-0.5 min-w-0 flex-1">
+              <p className="font-bold leading-snug">{statusResult.message}</p>
               {statusResult.commitSha && (
-                <p className="font-mono text-xs text-slate-600">
+                <p className="font-mono text-[11px] text-slate-600">
                   Dernier Commit SHA : <span className="font-bold text-slate-900">{statusResult.commitSha}</span>
                 </p>
               )}
@@ -309,12 +313,12 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
           </div>
         )}
 
-        {/* FOOTER ACTIONS */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+        {/* FOOTER ACTIONS - COMPACT */}
+        <div className="flex items-center justify-end gap-2 pt-2 sm:pt-2.5 border-t border-slate-100">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-bold transition-colors cursor-pointer"
+            className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-bold transition-colors cursor-pointer"
           >
             Fermer
           </button>
@@ -323,16 +327,16 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
             type="button"
             onClick={handleLaunchSync}
             disabled={isSyncing}
-            className="px-6 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-slate-900/10 disabled:opacity-50"
+            className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-slate-700 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer shadow-xs disabled:opacity-50"
           >
             {isSyncing ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
-                <span>Synchronisation en cours...</span>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                <span>Synchronisation...</span>
               </>
             ) : (
               <>
-                <GitBranch className="w-4 h-4 text-emerald-400" />
+                <GitBranch className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Lancer la Synchronisation</span>
               </>
             )}
