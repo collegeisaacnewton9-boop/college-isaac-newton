@@ -657,64 +657,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
 
       </section>
 
-      {/* 4. TRANSPARENCE ET CONFIANCE : GOUVERNANCE ADMINISTRATIVE */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 space-y-5">
-          
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-900 flex items-center justify-center font-bold shrink-0">
-              <ShieldCheck className="w-5 h-5 text-blue-900" />
-            </div>
-            <div>
-              <h2 className="font-serif text-xl sm:text-2xl font-bold text-slate-900">
-                Transparence & Gestion Responsable des Fonds
-              </h2>
-              <p className="text-xs text-slate-500">
-                Principes déontologiques garantis par la Direction Générale
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-600 leading-relaxed">
-            
-            <div className="space-y-2 p-4 rounded-xl bg-slate-50 border border-slate-200/70">
-              <h3 className="font-bold text-slate-900 text-sm">
-                1. Affectation Rigoureuse
-              </h3>
-              <p>
-                Chaque soutien versé est affecté à l'objet convenu (bourse, matériel, livres). L'école veille à ce qu'aucune contribution ne soit détournée de sa finalité éducative [critères de gestion à confirmer par la direction].
-              </p>
-            </div>
-
-            <div className="space-y-2 p-4 rounded-xl bg-slate-50 border border-slate-200/70">
-              <h3 className="font-bold text-slate-900 text-sm">
-                2. Attestations & Justificatifs
-              </h3>
-              <p>
-                Un reçu d’établissement officiel est émis pour toute contribution reçue. Les conditions précises d'attestation fiscale dépendent des réglementations applicables [modalités juridiques à confirmer par la direction].
-              </p>
-            </div>
-
-            <div className="space-y-2 p-4 rounded-xl bg-slate-50 border border-slate-200/70">
-              <h3 className="font-bold text-slate-900 text-sm">
-                3. Informations Sécurisées
-              </h3>
-              <p>
-                Les coordonnées bancaires de l’établissement et les protocoles de virement sont transmis exclusivement par courrier ou messagerie officielle vérifiée, pour éviter tout risque de fraude ou d'intermédiation douteuse.
-              </p>
-            </div>
-
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-600 text-xs">
-            <span className="font-semibold text-slate-800">Note administrative : </span>
-            Le Collège Isaac Newton n’habilite aucun individu non identifié à solliciter des fonds en son nom. Seules les personnes mandatées par la Direction Générale (M. Orphe Jean Marie, Directeur fondateur) sont habilitées à émettre des conventions de partenariat.
-          </div>
-
-        </div>
-      </section>
-
-      {/* 7. FAQ SUR LES DONS ET LE PARRAINAGE */}
+      {/* 4. FAQ SUR LES DONS ET LE PARRAINAGE */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         <div className="text-center space-y-2">

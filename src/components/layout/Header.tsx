@@ -246,7 +246,7 @@ export const Header: React.FC<HeaderProps> = ({
                     */}
                     {isDropdownOpen && (
                       <div 
-                        className={`absolute top-full pt-1.5 z-50 min-w-[250px] w-64 sm:w-72 ${
+                        className={`absolute top-full pt-1.5 z-50 min-w-[300px] sm:min-w-[340px] w-max max-w-[min(92vw,420px)] ${
                           item.id === 'school-life' ? 'right-0' : 'left-0'
                         }`}
                         onMouseEnter={() => handleDropdownMouseEnter(item.id)}
@@ -283,14 +283,14 @@ export const Header: React.FC<HeaderProps> = ({
                                   key={idx}
                                   type="button"
                                   onClick={() => handleNavClick(subItem.id, subItem.subSection)}
-                                  className="w-full text-left px-2.5 py-1.5 sm:py-2 rounded-xl text-slate-700 hover:text-blue-950 hover:bg-blue-50/80 transition-all flex items-center justify-between gap-2.5 cursor-pointer group"
+                                  className="w-full text-left px-2.5 py-1.5 sm:py-2 rounded-xl text-slate-700 hover:text-blue-950 hover:bg-blue-50/80 transition-all flex items-center justify-between gap-3 cursor-pointer group"
                                   role="menuitem"
                                 >
-                                  <div className="flex items-center gap-2.5 min-w-0">
+                                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
                                     <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-blue-900 text-slate-500 group-hover:text-amber-400 flex items-center justify-center shrink-0 border border-slate-200/60 group-hover:border-blue-900 transition-colors">
                                       <Icon className="w-3.5 h-3.5" />
                                     </div>
-                                    <span className="text-xs sm:text-[13px] font-semibold text-slate-800 group-hover:text-blue-950 truncate">
+                                    <span className="text-xs sm:text-[13px] font-semibold text-slate-800 group-hover:text-blue-950 whitespace-nowrap leading-snug">
                                       {subItem.label}
                                     </span>
                                   </div>
