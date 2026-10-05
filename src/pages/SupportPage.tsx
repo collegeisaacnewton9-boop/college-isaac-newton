@@ -24,7 +24,6 @@ import {
   Lock,
   Loader2,
   RefreshCw,
-  User,
   Building2,
   Check,
   Copy
@@ -33,12 +32,15 @@ import { SCHOOL_INFO } from '../data/mockData';
 import { apiService } from '../services/api';
 import { validateEmail, validatePhone, formatPhoneNumber } from '../utils/validation';
 import { toast } from 'sonner';
+import { ContentEditable } from '../components/common/ContentEditable';
+import { User } from '../types';
 
 interface SupportPageProps {
   onNavigate: (page: string, subSection?: string) => void;
+  currentUser?: User | null;
 }
 
-export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
+export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate, currentUser }) => {
   // Form state
   const [formData, setFormData] = useState({
     fullName: '',
@@ -300,17 +302,33 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
           <div className="relative z-10 max-w-4xl p-5 sm:p-8 lg:p-10 space-y-4 sm:space-y-5">
             
             <div className="space-y-1.5">
-              <span className="text-[11px] uppercase tracking-widest text-amber-400 font-bold font-mono block">
-                Engagement Communautaire & Avenir des Jeunes · Delmas 50
-              </span>
-              <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight">
-                Soutenir l’éducation, bâtir l’excellence de demain.
-              </h1>
+              <div className="inline-block text-[11px] uppercase tracking-widest text-amber-400 font-bold font-mono">
+                <ContentEditable
+                  contentKey="support.hero.badge"
+                  defaultContent="Engagement Communautaire & Avenir des Jeunes · Delmas 50"
+                  as="span"
+                  currentUser={currentUser}
+                  multiline={false}
+                />
+              </div>
+              <ContentEditable
+                contentKey="support.hero.title"
+                defaultContent="Soutenir l’éducation, bâtir l’excellence de demain."
+                as="h1"
+                className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight"
+                currentUser={currentUser}
+                multiline={false}
+              />
             </div>
 
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
-              Au <strong>Collège Isaac Newton</strong>, nous croyons que chaque enfant d’Haïti porte en lui un potentiel scientifique, intellectuel et humain inestimable. Particuliers, anciens élèves, membres de la diaspora, entreprises et fondations : votre engagement contribue concrètement à offrir un cadre d'études digne, stimulant et tourné vers l'avenir.
-            </p>
+            <ContentEditable
+              contentKey="support.hero.desc"
+              defaultContent="Au Collège Isaac Newton, nous croyons que chaque enfant d’Haïti porte en lui un potentiel scientifique, intellectuel et humain inestimable. Particuliers, anciens élèves, membres de la diaspora, entreprises et fondations : votre engagement contribue concrètement à offrir un cadre d'études digne, stimulant et tourné vers l'avenir."
+              as="p"
+              className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light"
+              currentUser={currentUser}
+              multiline={true}
+            />
 
             {/* Devise & Cadre de confiance */}
             <div className="p-3.5 sm:p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs space-y-1.5">
@@ -351,15 +369,31 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
         <div className="max-w-3xl space-y-2">
-          <span className="text-xs font-bold uppercase tracking-widest text-blue-900 block">
-            Domaines d'intervention prioritaires
-          </span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-            Des besoins concrets au service de la réussite scolaire
-          </h2>
-          <p className="text-sm text-slate-600 leading-relaxed">
-            Chaque donateur ou partenaire peut orienter son appui vers les priorités éducatives qui lui tiennent à cœur. Les besoins sont présentés ci-dessous à titre indicatif et restent sujets à validation directe avec la direction pédagogique.
-          </p>
+          <div className="inline-block text-xs font-bold uppercase tracking-widest text-blue-900">
+            <ContentEditable
+              contentKey="support.priorities.badge"
+              defaultContent="Domaines d'intervention prioritaires"
+              as="span"
+              currentUser={currentUser}
+              multiline={false}
+            />
+          </div>
+          <ContentEditable
+            contentKey="support.priorities.title"
+            defaultContent="Des besoins concrets au service de la réussite scolaire"
+            as="h2"
+            className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+            currentUser={currentUser}
+            multiline={false}
+          />
+          <ContentEditable
+            contentKey="support.priorities.desc"
+            defaultContent="Chaque donateur ou partenaire peut orienter son appui vers les priorités éducatives qui lui tiennent à cœur. Les besoins sont présentés ci-dessous à titre indicatif et restent sujets à validation directe avec la direction pédagogique."
+            as="p"
+            className="text-sm text-slate-600 leading-relaxed"
+            currentUser={currentUser}
+            multiline={true}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">

@@ -7,16 +7,20 @@ import {
   Send, 
   CheckCircle2, 
   ShieldCheck, 
-  Building,
   Navigation,
   ExternalLink
 } from 'lucide-react';
 import { SCHOOL_INFO } from '../data/mockData';
 import { apiService } from '../services/api';
-import { ContactFormData } from '../types';
+import { ContactFormData, User } from '../types';
 import { validateEmail, validatePhone, formatPhoneNumber } from '../utils/validation';
+import { ContentEditable } from '../components/common/ContentEditable';
 
-export const ContactPage: React.FC = () => {
+interface ContactPageProps {
+  currentUser?: User | null;
+}
+
+export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
   const [formData, setFormData] = useState<ContactFormData>({
     fullName: '',
     email: '',
@@ -70,19 +74,35 @@ export const ContactPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 sm:py-5 space-y-4 sm:space-y-5">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 sm:py-5 space-y-4 sm:space-y-5 font-sans">
       
       {/* Header - Compact */}
-      <div className="max-w-2xl space-y-0.5">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-blue-900 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-          Secrétariat & Accueil des Familles · Delmas 50
-        </span>
-        <h1 className="font-serif text-xl sm:text-2xl font-bold text-slate-900">
-          Contactez le Collège Isaac Newton
-        </h1>
-        <p className="text-[11px] sm:text-xs text-slate-600">
-          Notre équipe pédagogique et administrative vous accueille à Delmas 50 et répond à toutes vos questions.
-        </p>
+      <div className="max-w-2xl space-y-1">
+        <div className="inline-block text-[10px] font-bold uppercase tracking-widest text-blue-900 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+          <ContentEditable
+            contentKey="contact.hero.badge"
+            defaultContent="Secrétariat & Accueil des Familles · Delmas 50"
+            as="span"
+            currentUser={currentUser}
+            multiline={false}
+          />
+        </div>
+        <ContentEditable
+          contentKey="contact.hero.title"
+          defaultContent="Contactez le Collège Isaac Newton"
+          as="h1"
+          className="font-serif text-xl sm:text-2xl font-bold text-slate-900"
+          currentUser={currentUser}
+          multiline={false}
+        />
+        <ContentEditable
+          contentKey="contact.hero.subtitle"
+          defaultContent="Notre équipe pédagogique et administrative vous accueille à Delmas 50 et répond à toutes vos questions."
+          as="p"
+          className="text-[11px] sm:text-xs text-slate-600"
+          currentUser={currentUser}
+          multiline={true}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
@@ -93,9 +113,14 @@ export const ContactPage: React.FC = () => {
           {/* Card reproducing the exact institutional "Contact & Horaires" visual */}
           <div className="bg-[#0f172a] text-white rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg border border-slate-800">
             <div>
-              <h2 className="font-serif text-lg font-bold text-white tracking-wide">
-                Contact & Horaires
-              </h2>
+              <ContentEditable
+                contentKey="contact.hours.title"
+                defaultContent="Contact & Horaires"
+                as="h2"
+                className="font-serif text-lg font-bold text-white tracking-wide"
+                currentUser={currentUser}
+                multiline={false}
+              />
               <div className="w-10 h-0.5 bg-amber-400 mt-1.5 rounded-full" />
             </div>
 
@@ -160,54 +185,69 @@ export const ContactPage: React.FC = () => {
                   <Clock className="w-3.5 h-3.5 text-amber-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-amber-300">Secrétariat ouvert jusqu'à 3:30 PM</p>
-                  <p className="text-[10px] text-slate-400">Dépôt de dossiers, reçus & renseignements</p>
+                  <p className="font-semibold text-white">Samedi : 9:00 AM - 1:00 PM</p>
+                  <p className="text-[10px] text-slate-400">Permanence administrative sur rendez-vous</p>
                 </div>
               </div>
             </div>
 
-            {/* Quick Action Buttons */}
-            <div className="pt-2.5 border-t border-slate-800/80 flex flex-wrap gap-2">
-              <a
-                href={`tel:${SCHOOL_INFO.phone}`}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors"
-              >
-                <Phone className="w-3.5 h-3.5" />
-                <span>Appeler maintenant</span>
-              </a>
-              <a
-                href="https://maps.google.com/?q=Delmas+50+Haiti"
+            {/* Google Maps quick redirect button */}
+            <div className="pt-2 border-t border-slate-700/60">
+              <a 
+                href="https://maps.google.com/?q=Delmas+50+Port-au-Prince+Haiti"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium text-xs transition-colors"
+                className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors cursor-pointer"
               >
-                <Navigation className="w-3.5 h-3.5 text-amber-400" />
-                <span>Itinéraire</span>
+                <Navigation className="w-3.5 h-3.5" />
+                <span>Ouvrir dans Google Maps</span>
+                <ExternalLink className="w-3 h-3 ml-0.5 opacity-70" />
               </a>
             </div>
           </div>
 
           {/* Quick Access Note */}
           <div className="bg-white rounded-xl p-3 sm:p-3.5 border border-slate-200/80 shadow-2xs space-y-1 text-xs">
-            <h3 className="font-serif font-bold text-slate-900 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-900" />
-              <span>Accès & Sécurité Campus (Delmas 50)</span>
-            </h3>
-            <p className="text-slate-600 text-[11px] leading-relaxed">
-              Le campus dispose d'un poste de contrôle à l'entrée, d'un parking intérieur et d'une aire surveillée pour la sécurité intégrale des élèves.
-            </p>
+            <div className="flex items-center gap-1.5 font-serif font-bold text-slate-900">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-900 shrink-0" />
+              <ContentEditable
+                contentKey="contact.security.title"
+                defaultContent="Accès & Sécurité Campus (Delmas 50)"
+                as="h3"
+                currentUser={currentUser}
+                multiline={false}
+              />
+            </div>
+            <ContentEditable
+              contentKey="contact.security.desc"
+              defaultContent="Le campus dispose d'un poste de contrôle à l'entrée, d'un parking intérieur et d'une aire surveillée pour la sécurité intégrale des élèves."
+              as="p"
+              className="text-slate-600 text-[11px] leading-relaxed"
+              currentUser={currentUser}
+              multiline={true}
+            />
           </div>
         </div>
 
         {/* Right Col: Contact Form (7 cols) - Dense & Ergonomic */}
         <div className="lg:col-span-7 bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-2xs">
           <div className="border-b border-slate-100 pb-2 mb-3">
-            <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900">
-              Formulaire de Contact Direct
-            </h2>
-            <p className="text-[11px] text-slate-500">
-              Remplissez les champs ci-dessous pour joindre notre équipe administrative.
-            </p>
+            <ContentEditable
+              contentKey="contact.form.title"
+              defaultContent="Formulaire de Contact Direct"
+              as="h2"
+              className="font-serif text-base sm:text-lg font-bold text-slate-900"
+              currentUser={currentUser}
+              multiline={false}
+            />
+            <ContentEditable
+              contentKey="contact.form.subtitle"
+              defaultContent="Remplissez les champs ci-dessous pour joindre notre équipe administrative."
+              as="p"
+              className="text-[11px] text-slate-500"
+              currentUser={currentUser}
+              multiline={true}
+            />
           </div>
 
           {success && (
@@ -241,14 +281,15 @@ export const ContactPage: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Numéro de téléphone
+                  Adresse e-mail *
                 </label>
                 <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
-                  placeholder="+509 3721-1818"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="famille@gmail.com"
                   className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none"
+                  required
                 />
               </div>
             </div>
@@ -256,33 +297,31 @@ export const ContactPage: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Adresse e-mail valide *
+                  Numéro de téléphone
                 </label>
                 <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  placeholder="votre.email@exemple.com"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none"
-                  required
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: formatPhoneNumber(e.target.value) })}
+                  placeholder="+509 3700-0000"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none font-mono"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Objet de la demande
+                  Objet du message
                 </label>
                 <select
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none bg-white cursor-pointer"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none bg-white"
                 >
                   <option value="Renseignement général">Renseignement général</option>
-                  <option value="Admissions & Inscriptions">Admissions & Inscriptions {SCHOOL_INFO.currentYear}</option>
-                  <option value="Visite du Campus Delmas 50">Visite du Campus à Delmas 50</option>
-                  <option value="Vie scolaire & Pédagogie">Vie scolaire & Pédagogie</option>
-                  <option value="Laboratoire & Numérique">Laboratoire & Numérique</option>
-                  <option value="Rendez-vous Direction">Rendez-vous avec la direction</option>
+                  <option value="Admission & Inscription">Admission & Inscription</option>
+                  <option value="Pôle Numérique">Pôle Numérique</option>
+                  <option value="Vie Scolaire">Vie Scolaire</option>
+                  <option value="Autre demande">Autre demande</option>
                 </select>
               </div>
             </div>
@@ -292,23 +331,34 @@ export const ContactPage: React.FC = () => {
                 Votre message *
               </label>
               <textarea
-                rows={3}
+                rows={4}
                 value={formData.message}
                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                placeholder="Précisez votre demande ou vos questions..."
-                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none"
+                placeholder="Rédigez votre demande ici avec le plus de précisions possibles..."
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:border-blue-900 outline-none resize-none"
                 required
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 px-4 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs sm:text-sm transition-colors shadow-xs disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Send className="w-3.5 h-3.5 text-amber-400" />
-              <span>{loading ? 'Transmission en cours...' : 'Envoyer mon message'}</span>
-            </button>
+            <div className="pt-1">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-2.5 px-4 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Envoi en cours...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Envoyer mon message</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
         </div>
 

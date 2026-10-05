@@ -11,13 +11,16 @@ import {
   FileCheck
 } from 'lucide-react';
 import { SCHOOL_IMAGES } from '../assets/images';
+import { ContentEditable } from '../components/common/ContentEditable';
+import { User } from '../types';
 
 interface ProgramsPageProps {
   subSection?: string;
   onNavigate: (page: string) => void;
+  currentUser?: User | null;
 }
 
-export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNavigate }) => {
+export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNavigate, currentUser }) => {
   const [activeTab, setActiveTab] = useState<'prescolaire' | 'fondamental' | 'secondaire' | 'numerique'>('fondamental');
 
   useEffect(() => {
@@ -27,19 +30,35 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
   }, [subSection]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-8 sm:space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-8 sm:space-y-10 font-sans">
       
       {/* Page Header */}
       <div className="max-w-3xl space-y-3">
-        <span className="text-xs font-semibold uppercase tracking-widest text-blue-900">
-          Cursus & Offre Pédagogique
-        </span>
-        <h1 className="font-serif text-3xl sm:text-5xl font-bold text-slate-900">
-          Nos Programmes Scolaires
-        </h1>
-        <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-light">
-          Un cheminement continu d'excellence académique, de l'éveil de la petite enfance jusqu'aux épreuves du baccalauréat et à la préparation aux études supérieures.
-        </p>
+        <div className="inline-block text-xs font-semibold uppercase tracking-widest text-blue-900">
+          <ContentEditable
+            contentKey="programs.hero.badge"
+            defaultContent="Cursus & Offre Pédagogique"
+            as="span"
+            currentUser={currentUser}
+            multiline={false}
+          />
+        </div>
+        <ContentEditable
+          contentKey="programs.hero.title"
+          defaultContent="Nos Programmes Scolaires"
+          as="h1"
+          className="font-serif text-3xl sm:text-5xl font-bold text-slate-900"
+          currentUser={currentUser}
+          multiline={false}
+        />
+        <ContentEditable
+          contentKey="programs.hero.subtitle"
+          defaultContent="Un cheminement continu d'excellence académique, de l'éveil de la petite enfance jusqu'aux épreuves du baccalauréat et à la préparation aux études supérieures."
+          as="p"
+          className="text-sm sm:text-base text-slate-600 leading-relaxed font-light"
+          currentUser={currentUser}
+          multiline={true}
+        />
       </div>
 
       {/* Program Selector Tabs */}
@@ -56,7 +75,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
                 isActive 
                   ? 'bg-blue-900 text-white shadow-md' 
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
@@ -74,15 +93,31 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
         <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80 space-y-8 animate-in fade-in duration-200">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-8 space-y-4">
-              <span className="text-xs font-mono font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded">
-                Petite Section · Moyenne Section · Grande Section
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-                Cycle Préscolaire : L'Éveil Heureux et Structuré
-              </h2>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Le cycle préscolaire du Collège Isaac Newton accueille les enfants dans un environnement rassurant, coloré et stimulant. Notre objectif premier est de développer la confiance en soi, la curiosité naturelle et les habiletés motrices et langagières.
-              </p>
+              <div className="inline-block text-xs font-mono font-medium text-amber-600 bg-amber-50 px-2.5 py-1 rounded">
+                <ContentEditable
+                  contentKey="programs.prescolaire.badge"
+                  defaultContent="Petite Section · Moyenne Section · Grande Section"
+                  as="span"
+                  currentUser={currentUser}
+                  multiline={false}
+                />
+              </div>
+              <ContentEditable
+                contentKey="programs.prescolaire.title"
+                defaultContent="Cycle Préscolaire : L'Éveil Heureux et Structuré"
+                as="h2"
+                className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+                currentUser={currentUser}
+                multiline={false}
+              />
+              <ContentEditable
+                contentKey="programs.prescolaire.desc"
+                defaultContent="Le cycle préscolaire du Collège Isaac Newton accueille les enfants dans un environnement rassurant, coloré et stimulant. Notre objectif premier est de développer la confiance en soi, la curiosité naturelle et les habiletés motrices et langagières."
+                as="p"
+                className="text-sm text-slate-600 leading-relaxed"
+                currentUser={currentUser}
+                multiline={true}
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
@@ -126,7 +161,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
               </ul>
               <button
                 onClick={() => onNavigate('pre-registration')}
-                className="w-full py-2.5 px-4 rounded-xl bg-blue-900 text-white font-semibold text-xs hover:bg-blue-950 transition-colors shadow-sm"
+                className="w-full py-2.5 px-4 rounded-xl bg-blue-900 text-white font-semibold text-xs hover:bg-blue-950 transition-colors shadow-sm cursor-pointer"
               >
                 Préinscrire en préscolaire
               </button>
@@ -140,15 +175,31 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
         <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80 space-y-8 animate-in fade-in duration-200">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-8 space-y-4">
-              <span className="text-xs font-mono font-medium text-blue-700 bg-blue-50 px-2.5 py-1 rounded">
-                1ère à 9ème Année Fondamentale (1e, 2e & 3e Cycles)
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-                L'Enseignement Fondamental : Les Socles de la Réussite
-              </h2>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Le cycle fondamental constitue le cœur de la formation académique. Il structure la pensée logique, consolide l'expression orale et écrite, et installe des habitudes de travail rigoureuses et régulières.
-              </p>
+              <div className="inline-block text-xs font-mono font-medium text-blue-700 bg-blue-50 px-2.5 py-1 rounded">
+                <ContentEditable
+                  contentKey="programs.fondamental.badge"
+                  defaultContent="1ère à 9ème Année Fondamentale (1e, 2e & 3e Cycles)"
+                  as="span"
+                  currentUser={currentUser}
+                  multiline={false}
+                />
+              </div>
+              <ContentEditable
+                contentKey="programs.fondamental.title"
+                defaultContent="L'Enseignement Fondamental : Les Socles de la Réussite"
+                as="h2"
+                className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+                currentUser={currentUser}
+                multiline={false}
+              />
+              <ContentEditable
+                contentKey="programs.fondamental.desc"
+                defaultContent="Le cycle fondamental constitue le cœur de la formation académique. Il structure la pensée logique, consolide l'expression orale et écrite, et installe des habitudes de travail rigoureuses et régulières."
+                as="p"
+                className="text-sm text-slate-600 leading-relaxed"
+                currentUser={currentUser}
+                multiline={true}
+              />
 
               {/* Cycle breakdown */}
               <div className="space-y-4 pt-2">
@@ -200,7 +251,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
               </ul>
               <button
                 onClick={() => onNavigate('pre-registration')}
-                className="w-full py-2.5 px-4 rounded-xl bg-blue-900 text-white font-semibold text-xs hover:bg-blue-950 transition-colors shadow-sm"
+                className="w-full py-2.5 px-4 rounded-xl bg-blue-900 text-white font-semibold text-xs hover:bg-blue-950 transition-colors shadow-sm cursor-pointer"
               >
                 Préinscrire au fondamental
               </button>
@@ -214,15 +265,31 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
         <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200/80 space-y-8 animate-in fade-in duration-200">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             <div className="lg:col-span-8 space-y-4">
-              <span className="text-xs font-mono font-medium text-purple-700 bg-purple-50 px-2.5 py-1 rounded">
-                Nouveau Secondaire 1 à 4 (NS1, NS2, NS3, NS4)
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-                Le Nouveau Secondaire : Préparer l'Excellence Universitaire
-              </h2>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Conforme à la réforme du Nouveau Secondaire, le programme du Collège Isaac Newton forme les esprits à l'abstraction, à l'analyse critique et à la recherche personnelle. Les élèves y acquièrent les méthodes rigoureuses attendues dans l'enseignement supérieur.
-              </p>
+              <div className="inline-block text-xs font-mono font-medium text-purple-700 bg-purple-50 px-2.5 py-1 rounded">
+                <ContentEditable
+                  contentKey="programs.secondaire.badge"
+                  defaultContent="Nouveau Secondaire 1 à 4 (NS1, NS2, NS3, NS4)"
+                  as="span"
+                  currentUser={currentUser}
+                  multiline={false}
+                />
+              </div>
+              <ContentEditable
+                contentKey="programs.secondaire.title"
+                defaultContent="Le Nouveau Secondaire : Préparer l'Excellence Universitaire"
+                as="h2"
+                className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+                currentUser={currentUser}
+                multiline={false}
+              />
+              <ContentEditable
+                contentKey="programs.secondaire.desc"
+                defaultContent="Conforme à la réforme du Nouveau Secondaire, le programme du Collège Isaac Newton forme les esprits à l'abstraction, à l'analyse critique et à la recherche personnelle. Les élèves y acquièrent les méthodes rigoureuses attendues dans l'enseignement supérieur."
+                as="p"
+                className="text-sm text-slate-600 leading-relaxed"
+                currentUser={currentUser}
+                multiline={true}
+              />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-2">
@@ -270,7 +337,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
               </ul>
               <button
                 onClick={() => onNavigate('pre-registration')}
-                className="w-full py-2.5 px-4 rounded-xl bg-blue-900 text-white font-semibold text-xs hover:bg-blue-950 transition-colors shadow-sm"
+                className="w-full py-2.5 px-4 rounded-xl bg-blue-900 text-white font-semibold text-xs hover:bg-blue-950 transition-colors shadow-sm cursor-pointer"
               >
                 Préinscrire au secondaire
               </button>
@@ -285,19 +352,35 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
             <div className="lg:col-span-6 space-y-4">
-              <span className="text-xs font-mono font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded">
-                Laboratoire Informatique & Compétences Technologiques
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-                Un Pôle Informatique Conçu pour Bâtir l'Avenir
-              </h2>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                Le Collège Isaac Newton se distingue par son laboratoire informatique moderne climatisé, doté d'ordinateurs récents et d'une infrastructure conçue pour donner à chaque élève les outils de son autonomie technologique.
-              </p>
+              <div className="inline-block text-xs font-mono font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded">
+                <ContentEditable
+                  contentKey="programs.numerique.badge"
+                  defaultContent="Laboratoire Informatique & Compétences Technologiques"
+                  as="span"
+                  currentUser={currentUser}
+                  multiline={false}
+                />
+              </div>
+              <ContentEditable
+                contentKey="programs.numerique.title"
+                defaultContent="Un Pôle Informatique Conçu pour Bâtir l'Avenir"
+                as="h2"
+                className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+                currentUser={currentUser}
+                multiline={false}
+              />
+              <ContentEditable
+                contentKey="programs.numerique.desc"
+                defaultContent="Le Collège Isaac Newton se distingue par son laboratoire informatique moderne climatisé, doté d'ordinateurs récents et d'une infrastructure conçue pour donner à chaque élève les outils de son autonomie technologique."
+                as="p"
+                className="text-sm text-slate-600 leading-relaxed"
+                currentUser={currentUser}
+                multiline={true}
+              />
 
               <div className="space-y-3 pt-2 text-xs">
                 <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center shrink-0 mt-0.5 font-bold">
                     1
                   </div>
                   <div>
@@ -307,7 +390,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center shrink-0 mt-0.5 font-bold">
                     2
                   </div>
                   <div>
@@ -317,7 +400,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center shrink-0 mt-0.5 font-bold">
                     3
                   </div>
                   <div>
@@ -344,7 +427,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
                 </div>
                 <button
                   onClick={() => onNavigate('pre-registration')}
-                  className="px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold text-[11px] hover:bg-amber-300 transition-colors whitespace-nowrap"
+                  className="px-3 py-1.5 rounded-lg bg-amber-400 text-slate-950 font-bold text-[11px] hover:bg-amber-300 transition-colors whitespace-nowrap cursor-pointer"
                 >
                   S'inscrire
                 </button>

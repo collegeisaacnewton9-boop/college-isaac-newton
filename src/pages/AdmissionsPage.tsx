@@ -3,22 +3,20 @@ import {
   CheckCircle2, 
   ArrowRight, 
   FileCheck, 
-  Calendar, 
-  HelpCircle, 
   ChevronDown, 
-  AlertCircle,
-  FileText,
-  Clock,
-  Sparkles
+  FileText
 } from 'lucide-react';
 import { FAQS, SCHOOL_INFO } from '../data/mockData';
+import { ContentEditable } from '../components/common/ContentEditable';
+import { User } from '../types';
 
 interface AdmissionsPageProps {
   onNavigate: (page: string) => void;
   subSection?: string;
+  currentUser?: User | null;
 }
 
-export const AdmissionsPage: React.FC<AdmissionsPageProps> = ({ onNavigate }) => {
+export const AdmissionsPage: React.FC<AdmissionsPageProps> = ({ onNavigate, currentUser }) => {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const toggleFaq = (index: number) => {
@@ -26,24 +24,40 @@ export const AdmissionsPage: React.FC<AdmissionsPageProps> = ({ onNavigate }) =>
   };
 
   return (
-    <div className="space-y-8 sm:space-y-10 lg:space-y-12 py-5 sm:py-7 lg:py-8">
+    <div className="space-y-8 sm:space-y-10 lg:space-y-12 py-5 sm:py-7 lg:py-8 font-sans">
       
       {/* Header */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl space-y-3">
-          <span className="text-xs font-semibold uppercase tracking-widest text-blue-900">
-            Rejoindre la Communauté Newtonienne
-          </span>
-          <h1 className="font-serif text-2xl sm:text-4xl font-bold text-slate-900">
-            Admissions & Inscriptions {SCHOOL_INFO.currentYear}
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-light">
-            Découvrez la procédure d'admission pour intégrer le Collège Isaac Newton, les conditions requises et les documents à préparer.
-          </p>
+          <div className="inline-block text-xs font-semibold uppercase tracking-widest text-blue-900">
+            <ContentEditable
+              contentKey="admissions.hero.badge"
+              defaultContent="Rejoindre la Communauté Newtonienne"
+              as="span"
+              currentUser={currentUser}
+              multiline={false}
+            />
+          </div>
+          <ContentEditable
+            contentKey="admissions.hero.title"
+            defaultContent={`Admissions & Inscriptions ${SCHOOL_INFO.currentYear}`}
+            as="h1"
+            className="font-serif text-2xl sm:text-4xl font-bold text-slate-900"
+            currentUser={currentUser}
+            multiline={false}
+          />
+          <ContentEditable
+            contentKey="admissions.hero.subtitle"
+            defaultContent="Découvrez la procédure d'admission pour intégrer le Collège Isaac Newton, les conditions requises et les documents à préparer."
+            as="p"
+            className="text-sm sm:text-base text-slate-600 leading-relaxed font-light"
+            currentUser={currentUser}
+            multiline={true}
+          />
           <div className="pt-1.5">
             <button
               onClick={() => onNavigate('pre-registration')}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs sm:text-sm shadow-md transition-all active:scale-98"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs sm:text-sm shadow-md transition-all active:scale-98 cursor-pointer"
             >
               <FileCheck className="w-4 h-4 text-amber-400" />
               <span>Accéder au formulaire de préinscription en ligne</span>
@@ -56,15 +70,31 @@ export const AdmissionsPage: React.FC<AdmissionsPageProps> = ({ onNavigate }) =>
       {/* 1. Procédure étape par étape */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8 space-y-1.5">
-          <span className="text-xs font-semibold uppercase tracking-wider text-blue-900">
-            Simplicité & Rigueur
-          </span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-            La Procédure d'Admission en 4 Étapes
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-600">
-            Un processus clair et transparent pour accueillir au mieux votre enfant.
-          </p>
+          <div className="inline-block text-xs font-semibold uppercase tracking-wider text-blue-900">
+            <ContentEditable
+              contentKey="admissions.procedure.badge"
+              defaultContent="Simplicité & Rigueur"
+              as="span"
+              currentUser={currentUser}
+              multiline={false}
+            />
+          </div>
+          <ContentEditable
+            contentKey="admissions.procedure.title"
+            defaultContent="La Procédure d'Admission en 4 Étapes"
+            as="h2"
+            className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+            currentUser={currentUser}
+            multiline={false}
+          />
+          <ContentEditable
+            contentKey="admissions.procedure.subtitle"
+            defaultContent="Un processus clair et transparent pour accueillir au mieux votre enfant."
+            as="p"
+            className="text-xs sm:text-sm text-slate-600"
+            currentUser={currentUser}
+            multiline={true}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-5 relative">
@@ -119,11 +149,22 @@ export const AdmissionsPage: React.FC<AdmissionsPageProps> = ({ onNavigate }) =>
             <div className="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-2xs space-y-4">
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-900">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Critères Généraux</span>
+                <ContentEditable
+                  contentKey="admissions.conditions.badge"
+                  defaultContent="Critères Généraux"
+                  as="span"
+                  currentUser={currentUser}
+                  multiline={false}
+                />
               </div>
-              <h3 className="font-serif text-2xl font-bold text-slate-900">
-                Conditions d'Admission
-              </h3>
+              <ContentEditable
+                contentKey="admissions.conditions.title"
+                defaultContent="Conditions d'Admission"
+                as="h3"
+                className="font-serif text-2xl font-bold text-slate-900"
+                currentUser={currentUser}
+                multiline={false}
+              />
               <ul className="space-y-3 text-xs sm:text-sm text-slate-700">
                 <li className="flex items-start gap-2.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -145,14 +186,25 @@ export const AdmissionsPage: React.FC<AdmissionsPageProps> = ({ onNavigate }) =>
             </div>
 
             {/* Dossier de pièces */}
-            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm space-y-5">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-600">
                 <FileText className="w-4 h-4 text-amber-600" />
-                <span>Pièces à Fournir</span>
+                <ContentEditable
+                  contentKey="admissions.dossier.badge"
+                  defaultContent="Pièces à Fournir"
+                  as="span"
+                  currentUser={currentUser}
+                  multiline={false}
+                />
               </div>
-              <h3 className="font-serif text-2xl font-bold text-slate-900">
-                Constitution du Dossier
-              </h3>
+              <ContentEditable
+                contentKey="admissions.dossier.title"
+                defaultContent="Constitution du Dossier"
+                as="h3"
+                className="font-serif text-2xl font-bold text-slate-900"
+                currentUser={currentUser}
+                multiline={false}
+              />
               <ul className="space-y-3 text-xs sm:text-sm text-slate-700">
                 <li className="flex items-start gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-800 text-[11px] font-bold flex items-center justify-center shrink-0">1</span>
@@ -184,15 +236,31 @@ export const AdmissionsPage: React.FC<AdmissionsPageProps> = ({ onNavigate }) =>
       {/* 3. Foire aux Questions (FAQ) */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <div className="text-center space-y-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-blue-900">
-            Réponses & Éclaircissements
-          </span>
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-            Questions Fréquentes
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-600">
-            Retrouvez les réponses aux interrogations courantes des futurs parents.
-          </p>
+          <div className="inline-block text-xs font-semibold uppercase tracking-wider text-blue-900">
+            <ContentEditable
+              contentKey="admissions.faq.badge"
+              defaultContent="Réponses & Éclaircissements"
+              as="span"
+              currentUser={currentUser}
+              multiline={false}
+            />
+          </div>
+          <ContentEditable
+            contentKey="admissions.faq.title"
+            defaultContent="Questions Fréquentes"
+            as="h2"
+            className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+            currentUser={currentUser}
+            multiline={false}
+          />
+          <ContentEditable
+            contentKey="admissions.faq.subtitle"
+            defaultContent="Retrouvez les réponses aux interrogations courantes des futurs parents."
+            as="p"
+            className="text-xs sm:text-sm text-slate-600"
+            currentUser={currentUser}
+            multiline={true}
+          />
         </div>
 
         <div className="space-y-3 pt-4">
@@ -205,7 +273,7 @@ export const AdmissionsPage: React.FC<AdmissionsPageProps> = ({ onNavigate }) =>
               >
                 <button
                   onClick={() => toggleFaq(idx)}
-                  className="w-full text-left p-5 flex items-center justify-between gap-4 font-serif font-bold text-sm sm:text-base text-slate-900 hover:text-blue-900"
+                  className="w-full text-left p-5 flex items-center justify-between gap-4 font-serif font-bold text-sm sm:text-base text-slate-900 hover:text-blue-900 cursor-pointer"
                   aria-expanded={isOpen}
                 >
                   <span>{faq.question}</span>
@@ -224,23 +292,33 @@ export const AdmissionsPage: React.FC<AdmissionsPageProps> = ({ onNavigate }) =>
         </div>
 
         {/* CTA Banner */}
-        <div className="mt-10 p-8 rounded-3xl bg-blue-900 text-white text-center space-y-4">
-          <h3 className="font-serif text-xl sm:text-2xl font-bold">
-            Vous avez d'autres questions sur l'admission ?
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-200 max-w-lg mx-auto">
-            Notre secrétariat d'admission est à votre écoute pour vous conseiller et vous accueillir lors des permanences hebdomadaires.
-          </p>
+        <div className="mt-10 p-8 rounded-3xl bg-blue-900 text-white text-center space-y-4 shadow-xl">
+          <ContentEditable
+            contentKey="admissions.cta.title"
+            defaultContent="Vous avez d'autres questions sur l'admission ?"
+            as="h3"
+            className="font-serif text-xl sm:text-2xl font-bold"
+            currentUser={currentUser}
+            multiline={false}
+          />
+          <ContentEditable
+            contentKey="admissions.cta.subtitle"
+            defaultContent="Notre secrétariat d'admission est à votre écoute pour vous conseiller et vous accueillir lors des permanences hebdomadaires."
+            as="p"
+            className="text-xs sm:text-sm text-slate-200 max-w-lg mx-auto"
+            currentUser={currentUser}
+            multiline={true}
+          />
           <div className="pt-2 flex flex-wrap justify-center gap-3">
             <button
               onClick={() => onNavigate('contact')}
-              className="px-5 py-2.5 rounded-xl bg-white text-blue-950 font-semibold text-xs hover:bg-slate-100 transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-white text-blue-950 font-semibold text-xs hover:bg-slate-100 transition-colors cursor-pointer"
             >
               Poser une question au secrétariat
             </button>
             <button
               onClick={() => onNavigate('pre-registration')}
-              className="px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs hover:bg-amber-300 transition-colors"
+              className="px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs hover:bg-amber-300 transition-colors cursor-pointer"
             >
               Remplir la préinscription
             </button>

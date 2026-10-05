@@ -152,6 +152,7 @@ export default function App() {
           <ProgramsPage
             subSection={currentSubSection}
             onNavigate={handleNavigate}
+            currentUser={currentUser}
           />
         )}
 
@@ -159,6 +160,7 @@ export default function App() {
           <AdmissionsPage
             subSection={currentSubSection}
             onNavigate={handleNavigate}
+            currentUser={currentUser}
           />
         )}
 
@@ -171,6 +173,7 @@ export default function App() {
         {currentPage === 'school-life' && (
           <SchoolLifePage
             onNavigate={handleNavigate}
+            currentUser={currentUser}
           />
         )}
 
@@ -197,11 +200,16 @@ export default function App() {
         )}
 
         {currentPage === 'contact' && (
-          <ContactPage />
+          <ContactPage
+            currentUser={currentUser}
+          />
         )}
 
         {currentPage === 'support' && (
-          <SupportPage onNavigate={handleNavigate} />
+          <SupportPage
+            onNavigate={handleNavigate}
+            currentUser={currentUser}
+          />
         )}
 
         {currentPage === 'legal' && (
