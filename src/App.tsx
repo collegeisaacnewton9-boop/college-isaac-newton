@@ -144,6 +144,7 @@ export default function App() {
           <AboutPage
             subSection={currentSubSection}
             onNavigate={handleNavigate}
+            currentUser={currentUser}
           />
         )}
 
