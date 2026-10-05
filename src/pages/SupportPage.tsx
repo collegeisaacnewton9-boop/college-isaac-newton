@@ -22,7 +22,6 @@ import {
   Globe, 
   Award,
   Lock,
-  Quote,
   Loader2,
   RefreshCw,
   User,
@@ -30,7 +29,6 @@ import {
   Check,
   Copy
 } from 'lucide-react';
-import { SCHOOL_IMAGES } from '../assets/images';
 import { SCHOOL_INFO } from '../data/mockData';
 import { apiService } from '../services/api';
 import { validateEmail, validatePhone, formatPhoneNumber } from '../utils/validation';
@@ -290,117 +288,59 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
     },
   ];
 
-  // Témoignages partenaires & retours d'expérience (emplacements et simulations éditoriales déontologiques)
-  const placeholderTestimonials = [
-    {
-      category: 'Entreprise & Dotation Numérique',
-      badge: '[TÉMOIGNAGE EN ATTENTE DE VALIDATION]',
-      role: 'Représentant du Secteur Privé / Entreprise Partenaire',
-      organization: '[Entreprise Partenaire — À Confirmer]',
-      quote:
-        '« Accompagner l’aménagement des ateliers technologiques et du laboratoire informatique du Collège Isaac Newton a permis aux jeunes d’acquérir des réflexes numériques concrets dès le secondaire. La rigueur des bilans périodiques transmis par la direction consolide une relation partenariale de confiance mutuelle. »',
-      impact: 'Dotation d’équipements informatiques & Ateliers numériques',
-      initials: 'EP',
-      badgeColor: 'bg-blue-100 text-blue-800 border-blue-200',
-    },
-    {
-      category: 'Diaspora & Bourses d’Études',
-      badge: '[TÉMOIGNAGE EN ATTENTE DE VALIDATION]',
-      role: 'Ancien Élève & Donateur Individuel (Diaspora)',
-      organization: '[Réseau Diaspora & Anciens Élèves — À Confirmer]',
-      quote:
-        '« En tant qu’ancien élève installé à l’étranger, parrainer les frais de scolarité de jeunes motivés de Delmas 50 est un geste naturel pour redonner à mon école d’origine. Le fait que l’établissement gère le soutien sans intermédiaire direct protège la dignité des élèves tout en garantissant un impact immédiat. »',
-      impact: 'Financement de bourses d’études & Manuels de cours',
-      initials: 'AD',
-      badgeColor: 'bg-amber-100 text-amber-800 border-amber-200',
-    },
-    {
-      category: 'Fondation & Projets Éducatifs',
-      badge: '[TÉMOIGNAGE EN ATTENTE DE VALIDATION]',
-      role: 'Responsable de Projets Pédagogiques / Fondation Éducative',
-      organization: '[Fondation Partenaire — À Confirmer]',
-      quote:
-        '« La transparence administrative et la régularité des comptes rendus pédagogiques consolidés font du Collège Isaac Newton un interlocuteur exemplaire à Port-au-Prince. Chaque projet est mené avec un souci constant d’éthique et de sécurité pour la communauté éducative. »',
-      impact: 'Rénovation de la bibliothèque & Matériel de laboratoire',
-      initials: 'FP',
-      badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    },
-  ];
-
   return (
-    <div className="space-y-12 sm:space-y-16 py-6 sm:py-10">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10 py-4 sm:py-6">
       
-      {/* 1. HERO BANNER: Chaleureuse, sobre, inspirante */}
+      {/* 1. HERO BANNER: Chaleureuse, sobre, inspirante & compacte (Sans image intrusive) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative rounded-3xl overflow-hidden bg-slate-950 text-white border border-slate-800 shadow-xl">
           {/* Subtle gradient pattern backdrop */}
           <div className="absolute inset-0 bg-gradient-to-br from-blue-950/95 via-slate-900/90 to-slate-950/95 z-0" />
           
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 p-6 sm:p-10 lg:p-14 items-center">
+          <div className="relative z-10 max-w-4xl p-5 sm:p-8 lg:p-10 space-y-4 sm:space-y-5">
             
-            {/* Left Content */}
-            <div className="lg:col-span-7 space-y-6">
-              
-              <div className="space-y-2">
-                <span className="text-xs uppercase tracking-widest text-amber-400 font-bold block">
-                  Engagement Communautaire & Avenir des Jeunes · Delmas 50
-                </span>
-                <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
-                  Soutenir l’éducation, bâtir l’excellence de demain.
-                </h1>
-              </div>
-
-              <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-light">
-                Au <strong>Collège Isaac Newton</strong>, nous croyons que chaque enfant d’Haïti porte en lui un potentiel scientifique, intellectuel et humain inestimable. Particuliers, anciens élèves, membres de la diaspora, entreprises et fondations : votre engagement contribue concrètement à offrir un cadre d'études digne, stimulant et tourné vers l'avenir.
-              </p>
-
-              {/* Devise & Cadre de confiance */}
-              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs space-y-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
-                  <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Devise de l'établissement : « {SCHOOL_INFO.founderMotto} »</span>
-                </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Toutes les démarches de don, de parrainage et de partenariat sont encadrées avec rigueur par la direction afin de garantir la transparence, le respect des familles et la protection de la vie privée des élèves.
-                </p>
-              </div>
-
-              {/* Boutons d'Action Principaux */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={scrollToForm}
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
-                >
-                  <HeartHandshake className="w-4 h-4" />
-                  <span>Proposer un partenariat</span>
-                </button>
-
-                <a
-                  href="tel:+50937211818"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs sm:text-sm transition-all cursor-pointer"
-                >
-                  <Phone className="w-4 h-4 text-amber-400" />
-                  <span>Parler à l’administration (+509 3721-1818)</span>
-                </a>
-              </div>
-
+            <div className="space-y-1.5">
+              <span className="text-[11px] uppercase tracking-widest text-amber-400 font-bold font-mono block">
+                Engagement Communautaire & Avenir des Jeunes · Delmas 50
+              </span>
+              <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white leading-tight">
+                Soutenir l’éducation, bâtir l’excellence de demain.
+              </h1>
             </div>
 
-            {/* Right Media Illustration */}
-            <div className="lg:col-span-5">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 group">
-                <img
-                  src={SCHOOL_IMAGES.graduationPromo}
-                  alt="Élèves et lauréats du Collège Isaac Newton"
-                  className="w-full h-72 sm:h-84 object-cover object-center group-hover:scale-102 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
-                <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl bg-slate-950/80 backdrop-blur-xs border border-white/10 text-xs text-slate-200">
-                  <span className="font-bold text-white block">Investir dans les bâtisseurs de demain</span>
-                  <span className="text-[11px] text-slate-400">Campus Delmas 50 · Formation d'excellence</span>
-                </div>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
+              Au <strong>Collège Isaac Newton</strong>, nous croyons que chaque enfant d’Haïti porte en lui un potentiel scientifique, intellectuel et humain inestimable. Particuliers, anciens élèves, membres de la diaspora, entreprises et fondations : votre engagement contribue concrètement à offrir un cadre d'études digne, stimulant et tourné vers l'avenir.
+            </p>
+
+            {/* Devise & Cadre de confiance */}
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xs space-y-1.5">
+              <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>Devise de l'établissement : « {SCHOOL_INFO.founderMotto} »</span>
               </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Toutes les démarches de don, de parrainage et de partenariat sont encadrées avec rigueur par la direction afin de garantir la transparence, le respect des familles et la protection de la vie privée des élèves.
+              </p>
+            </div>
+
+            {/* Boutons d'Action Principaux */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={scrollToForm}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
+              >
+                <HeartHandshake className="w-4 h-4" />
+                <span>Proposer un partenariat / don</span>
+              </button>
+
+              <a
+                href="tel:+50937211818"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs sm:text-sm transition-all cursor-pointer"
+              >
+                <Phone className="w-4 h-4 text-amber-400" />
+                <span>Parler à l’administration (+509 3721-1818)</span>
+              </a>
             </div>
 
           </div>
@@ -715,169 +655,13 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
 
         </div>
 
-        {/* SECTION « NOS PARTENAIRES » - EMPLACEMENTS D'ATTENTE CONFORMES */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900 text-white space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
-            <div>
-              <h3 className="text-lg font-bold text-white tracking-tight">
-                Nos Partenaires & Organisations Associées
-              </h3>
-              <p className="text-xs text-slate-400">
-                La liste des partenariats officiels est en cours de formalisation par la direction de l'établissement.
-              </p>
-            </div>
-            <span className="text-[11px] font-mono text-amber-400 px-3 py-1 rounded-lg bg-amber-400/10 border border-amber-400/20 self-start sm:self-auto">
-              [LISTE EN COURS DE VALIDATION]
-            </span>
-          </div>
-
-          <p className="text-xs text-slate-300 leading-relaxed">
-            Par souci de rigueur légale et éthique, aucun nom ni logo d’entreprise, d’association ou de fondation n’est affiché sans convention formelle préalable et autorisation écrite expresse de la direction du Collège Isaac Newton.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-            <div className="p-4 rounded-xl border border-dashed border-slate-700 bg-slate-800/40 text-center space-y-1.5">
-              <span className="text-xs font-mono text-slate-300 block font-semibold">
-                [NOM DU PARTENAIRE — À CONFIRMER]
-              </span>
-              <span className="text-[10px] text-slate-500 block">
-                Partenaire Institutionnel / Entreprise
-              </span>
-            </div>
-
-            <div className="p-4 rounded-xl border border-dashed border-slate-700 bg-slate-800/40 text-center space-y-1.5">
-              <span className="text-xs font-mono text-slate-300 block font-semibold">
-                [NOM DU PARTENAIRE — À CONFIRMER]
-              </span>
-              <span className="text-[10px] text-slate-500 block">
-                Fondation & Mécénat Éducatif
-              </span>
-            </div>
-
-            <div className="p-4 rounded-xl border border-dashed border-slate-700 bg-slate-800/40 text-center space-y-1.5">
-              <span className="text-xs font-mono text-slate-300 block font-semibold">
-                [NOM DU PARTENAIRE — À CONFIRMER]
-              </span>
-              <span className="text-[10px] text-slate-500 block">
-                Organisation Communautaire / Diaspora
-              </span>
-            </div>
-          </div>
-        </div>
-
       </section>
 
-      {/* 5. TÉMOIGNAGES & IMPACT DES PARTENARIATS */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-200 pb-5">
-          <div className="max-w-2xl space-y-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-blue-900 block">
-              Retours d'Expérience & Impact Pédagogique
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
-              Témoignages & Perspectives de Partenaires
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Découvrez la vision et l'impact attendu des partenariats engagés auprès de la communauté éducative du Collège Isaac Newton.
-            </p>
-          </div>
-          
-          <div className="shrink-0">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>Emplacements prévisionnels</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Note déontologique & transparence */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 text-xs text-slate-600 flex items-start gap-3">
-          <ShieldCheck className="w-4 h-4 text-blue-900 shrink-0 mt-0.5" />
-          <p className="leading-relaxed">
-            <strong className="text-slate-900 font-semibold">Note déontologique et conformité éditoriale :</strong> Les retours d'expérience ci-dessous sont présentés à titre d'exemples représentatifs de nos typologies de donateurs (entreprises, diaspora, fondations). Conformément à notre politique de rigueur et au respect du droit à l'image, les témoignages nominatifs et logos officiels seront intégrés au fur et à mesure de la signature des conventions et de l'obtention des autorisations écrites formelles de la direction.
-          </p>
-        </div>
-
-        {/* Grille des témoignages */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {placeholderTestimonials.map((t, idx) => (
-            <div 
-              key={idx}
-              className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-6 relative overflow-hidden"
-            >
-              {/* Top part with badge & quote */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={`text-[10px] font-mono font-semibold px-2.5 py-1 rounded-md border ${t.badgeColor}`}>
-                    {t.badge}
-                  </span>
-                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                    <Quote className="w-4 h-4 text-slate-500" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-                    {t.category}
-                  </span>
-                  <p className="text-xs sm:text-sm text-slate-700 font-serif italic leading-relaxed">
-                    {t.quote}
-                  </p>
-                </div>
-              </div>
-
-              {/* Author & Impact Footer */}
-              <div className="space-y-4 pt-4 border-t border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-900 text-amber-400 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
-                    {t.initials}
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-xs text-slate-900 truncate">
-                      {t.organization}
-                    </h3>
-                    <p className="text-[11px] text-slate-500 truncate">
-                      {t.role}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Impact tag */}
-                <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/70 flex items-center gap-2 text-[11px] text-slate-600">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span className="truncate">{t.impact}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* CTA incitatif */}
-        <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-900 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h3 className="font-bold text-sm sm:text-base text-white">
-              Vous soutenez déjà le Collège ou envisagez de nous rejoindre ?
-            </h3>
-            <p className="text-xs text-slate-300">
-              Partagez votre retour d'expérience ou discutez d'un nouveau projet avec notre équipe administrative.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={scrollToForm}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shrink-0 transition-all cursor-pointer"
-          >
-            <HeartHandshake className="w-4 h-4" />
-            <span>Partager un projet de soutien</span>
-          </button>
-        </div>
-      </section>
-
-      {/* 6. TRANSPARENCE ET CONFIANCE : GOUVERNANCE ADMINISTRATIVE */}
+      {/* 4. TRANSPARENCE ET CONFIANCE : GOUVERNANCE ADMINISTRATIVE */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 sm:p-10 space-y-6">
+        <div className="rounded-2xl sm:rounded-3xl border border-slate-200 bg-white p-5 sm:p-8 space-y-5">
           
-          <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-900 flex items-center justify-center font-bold shrink-0">
               <ShieldCheck className="w-5 h-5 text-blue-900" />
             </div>
@@ -1131,7 +915,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
               <form 
                 onSubmit={handleFormSubmit} 
                 noValidate 
-                className="space-y-5 text-xs"
+                className="space-y-3 sm:space-y-3.5 text-xs"
                 aria-label="Formulaire de demande de soutien scolaire et partenariat"
               >
                 {/* Global Error Banner if submission fails */}
@@ -1139,11 +923,11 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                   <div 
                     role="alert" 
                     aria-live="assertive"
-                    className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950 space-y-2 animate-in fade-in"
+                    className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-950 space-y-1.5 animate-in fade-in"
                   >
                     <div className="flex items-start gap-2.5">
-                      <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-                      <div className="space-y-1">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                      <div className="space-y-0.5">
                         <strong className="font-bold text-xs text-rose-900 block">
                           Attention : vérifiez vos informations
                         </strong>
@@ -1152,7 +936,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                         </p>
                       </div>
                     </div>
-                    <div className="pt-1 flex items-center gap-3 text-[11px]">
+                    <div className="pt-0.5 flex items-center gap-2 text-[11px]">
                       <span className="text-slate-600">Besoin d'aide immédiate ?</span>
                       <a href="tel:+50937211818" className="font-bold text-rose-900 underline">
                         Ligne directe : +509 3721-1818
@@ -1161,19 +945,20 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                   </div>
                 )}
 
-                {/* Nom et Prénom */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="support-fullName" className="font-bold text-slate-800 block text-xs">
-                      Votre nom complet <span className="text-rose-600" aria-hidden="true">*</span>
-                    </label>
-                    {touched.fullName && !errors.fullName && (
-                      <span className="text-[11px] text-emerald-700 font-medium inline-flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Valide
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
+                {/* Nom et Organisation en Grille 2 Colonnes */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Nom et Prénom */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label htmlFor="support-fullName" className="font-bold text-slate-800 block text-[11.5px]">
+                        Votre nom complet <span className="text-rose-600" aria-hidden="true">*</span>
+                      </label>
+                      {touched.fullName && !errors.fullName && (
+                        <span className="text-[10.5px] text-emerald-700 font-medium inline-flex items-center gap-0.5">
+                          <CheckCircle2 className="w-3 h-3" /> Valide
+                        </span>
+                      )}
+                    </div>
                     <input
                       id="support-fullName"
                       name="fullName"
@@ -1192,55 +977,53 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                       aria-required="true"
                       aria-invalid={touched.fullName && !!errors.fullName}
                       aria-describedby={touched.fullName && errors.fullName ? "fullName-error" : undefined}
-                      className={`w-full min-h-[48px] px-4 py-3 rounded-xl border text-sm text-slate-900 font-medium transition-all ${
+                      className={`w-full py-2 px-3 rounded-xl border text-xs sm:text-sm text-slate-900 font-medium transition-all ${
                         touched.fullName && errors.fullName
-                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20'
+                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-1 focus:ring-rose-500/20'
                           : touched.fullName && !errors.fullName
-                          ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20'
-                          : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15'
+                          ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-500/20'
+                          : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20'
                       } focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed`}
                     />
+                    {touched.fullName && errors.fullName && (
+                      <p id="fullName-error" role="alert" className="text-[10.5px] text-rose-600 font-medium flex items-center gap-1 pt-0.5">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
+                        <span>{errors.fullName}</span>
+                      </p>
+                    )}
                   </div>
-                  {touched.fullName && errors.fullName && (
-                    <p id="fullName-error" role="alert" className="text-[11px] text-rose-600 font-medium flex items-center gap-1.5 pt-0.5">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                      <span>{errors.fullName}</span>
-                    </p>
-                  )}
-                </div>
 
-                {/* Organisation / Entreprise */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="support-organization" className="font-bold text-slate-800 block text-xs">
-                      Organisation, Entreprise ou Association <span className="text-slate-400 font-normal">(facultatif)</span>
+                  {/* Organisation / Entreprise */}
+                  <div className="space-y-1">
+                    <label htmlFor="support-organization" className="font-bold text-slate-800 block text-[11.5px]">
+                      Organisation ou Entreprise <span className="text-slate-400 font-normal">(facultatif)</span>
                     </label>
+                    <input
+                      id="support-organization"
+                      name="organization"
+                      type="text"
+                      autoComplete="organization"
+                      disabled={isSubmitting}
+                      value={formData.organization}
+                      onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+                      placeholder="ex: Fondation Éducative / Entreprise S.A."
+                      className="w-full py-2 px-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-xs sm:text-sm text-slate-900 font-medium focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
                   </div>
-                  <input
-                    id="support-organization"
-                    name="organization"
-                    type="text"
-                    autoComplete="organization"
-                    disabled={isSubmitting}
-                    value={formData.organization}
-                    onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                    placeholder="ex: Fondation Éducative / Entreprise S.A. / Association d'Alumni"
-                    className="w-full min-h-[48px] px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-sm text-slate-900 font-medium focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
                 </div>
 
                 {/* Grille Email & Téléphone */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   
                   {/* Email */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <label htmlFor="support-email" className="font-bold text-slate-800 block text-xs">
+                      <label htmlFor="support-email" className="font-bold text-slate-800 block text-[11.5px]">
                         Adresse e-mail <span className="text-rose-600" aria-hidden="true">*</span>
                       </label>
                       {touched.email && !errors.email && (
-                        <span className="text-[11px] text-emerald-700 font-medium inline-flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Valide
+                        <span className="text-[10.5px] text-emerald-700 font-medium inline-flex items-center gap-0.5">
+                          <CheckCircle2 className="w-3 h-3" /> Valide
                         </span>
                       )}
                     </div>
@@ -1263,34 +1046,27 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                       placeholder="votre.email@domaine.com"
                       aria-required="true"
                       aria-invalid={touched.email && !!errors.email}
-                      aria-describedby={
-                        [
-                          touched.email && errors.email ? 'email-error' : null,
-                          emailValidation?.suggestion ? 'email-suggestion' : null,
-                        ].filter(Boolean).join(' ') || undefined
-                      }
-                      className={`w-full min-h-[48px] px-4 py-3 rounded-xl border text-sm text-slate-900 font-medium transition-all ${
+                      className={`w-full py-2 px-3 rounded-xl border text-xs sm:text-sm text-slate-900 font-medium transition-all ${
                         touched.email && errors.email
-                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20'
+                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-1 focus:ring-rose-500/20'
                           : touched.email && !errors.email
-                          ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20'
-                          : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15'
+                          ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-500/20'
+                          : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20'
                       } focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed`}
                     />
                     {touched.email && errors.email && (
-                      <p id="email-error" role="alert" className="text-[11px] text-rose-600 font-medium flex items-center gap-1.5 pt-0.5">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <p id="email-error" role="alert" className="text-[10.5px] text-rose-600 font-medium flex items-center gap-1 pt-0.5">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
                         <span>{errors.email}</span>
                       </p>
                     )}
-                    {/* Typo Suggestion pill */}
                     {emailValidation?.suggestion && (
-                      <div id="email-suggestion" className="p-2 rounded-lg bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-center justify-between gap-2 animate-in fade-in">
-                        <span>Vouliez-vous dire : <strong>{emailValidation.suggestion}</strong> ?</span>
+                      <div id="email-suggestion" className="p-1.5 rounded-lg bg-amber-50 border border-amber-200 text-[10.5px] text-amber-900 flex items-center justify-between gap-1.5 animate-in fade-in">
+                        <span>Suggestion : <strong>{emailValidation.suggestion}</strong></span>
                         <button
                           type="button"
                           onClick={() => applyEmailSuggestion(emailValidation.suggestion!)}
-                          className="px-2 py-0.5 rounded bg-amber-200 hover:bg-amber-300 font-bold text-amber-950 transition-colors cursor-pointer shrink-0"
+                          className="px-1.5 py-0.5 rounded bg-amber-200 hover:bg-amber-300 font-bold text-amber-950 transition-colors cursor-pointer shrink-0 text-[10px]"
                         >
                           Corriger
                         </button>
@@ -1299,13 +1075,13 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                   </div>
 
                   {/* Téléphone */}
-                  <div className="space-y-1.5">
+                  <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <label htmlFor="support-phone" className="font-bold text-slate-800 block text-xs">
+                      <label htmlFor="support-phone" className="font-bold text-slate-800 block text-[11.5px]">
                         Numéro de téléphone <span className="text-slate-400 font-normal">(recommandé)</span>
                       </label>
                       {phoneValidation?.carrier && (
-                        <span className="text-[10px] font-semibold text-blue-900 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200">
+                        <span className="text-[9.5px] font-semibold text-blue-900 px-1.5 py-0.2 rounded-full bg-blue-50 border border-blue-200">
                           {phoneValidation.carrier}
                         </span>
                       )}
@@ -1322,18 +1098,17 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                       onBlur={() => handleBlur('phone')}
                       placeholder="+509 .... ou 8 chiffres"
                       aria-invalid={touched.phone && !!errors.phone}
-                      aria-describedby={touched.phone && errors.phone ? 'phone-error' : undefined}
-                      className={`w-full min-h-[48px] px-4 py-3 rounded-xl border text-sm text-slate-900 font-medium transition-all ${
+                      className={`w-full py-2 px-3 rounded-xl border text-xs sm:text-sm text-slate-900 font-medium transition-all ${
                         touched.phone && errors.phone
-                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20'
+                          ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-1 focus:ring-rose-500/20'
                           : touched.phone && formData.phone && !errors.phone
-                          ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20'
-                          : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15'
+                          ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-500/20'
+                          : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20'
                       } focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed`}
                     />
                     {touched.phone && errors.phone && (
-                      <p id="phone-error" role="alert" className="text-[11px] text-rose-600 font-medium flex items-center gap-1.5 pt-0.5">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      <p id="phone-error" role="alert" className="text-[10.5px] text-rose-600 font-medium flex items-center gap-1 pt-0.5">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
                         <span>{errors.phone}</span>
                       </p>
                     )}
@@ -1342,8 +1117,8 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                 </div>
 
                 {/* Type de soutien */}
-                <div className="space-y-1.5">
-                  <label htmlFor="support-type" className="font-bold text-slate-800 block text-xs">
+                <div className="space-y-1">
+                  <label htmlFor="support-type" className="font-bold text-slate-800 block text-[11.5px]">
                     Type de soutien ou d’échange envisagé <span className="text-rose-600" aria-hidden="true">*</span>
                   </label>
                   <select
@@ -1355,7 +1130,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                       setFormData({ ...formData, supportType: e.target.value });
                       setSubmitError(null);
                     }}
-                    className="w-full min-h-[48px] px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-sm text-slate-900 font-semibold focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-full py-2 px-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white text-xs sm:text-sm text-slate-900 font-semibold focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20 focus:outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <option value="bourse">Parrainage / Bourse de scolarité pour un élève</option>
                     <option value="fournitures">Dotation en livres et fournitures scolaires</option>
@@ -1367,12 +1142,12 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                 </div>
 
                 {/* Message */}
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <label htmlFor="support-message" className="font-bold text-slate-800 block text-xs">
+                    <label htmlFor="support-message" className="font-bold text-slate-800 block text-[11.5px]">
                       Votre message ou proposition <span className="text-rose-600" aria-hidden="true">*</span>
                     </label>
-                    <span className={`text-[11px] font-mono ${
+                    <span className={`text-[10.5px] font-mono ${
                       formData.message.trim().length >= 15 ? 'text-emerald-700' : 'text-slate-400'
                     }`}>
                       {formData.message.trim().length} / min. 15 caract.
@@ -1382,7 +1157,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                     id="support-message"
                     name="message"
                     required
-                    rows={4}
+                    rows={3}
                     disabled={isSubmitting}
                     value={formData.message}
                     onChange={(e) => {
@@ -1393,30 +1168,29 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                     placeholder="Décrivez brièvement votre projet, vos questions ou votre disponibilité pour échanger avec la direction..."
                     aria-required="true"
                     aria-invalid={touched.message && !!errors.message}
-                    aria-describedby={touched.message && errors.message ? "message-error" : undefined}
-                    className={`w-full min-h-[110px] px-4 py-3 rounded-xl border text-sm text-slate-900 font-medium transition-all resize-y ${
+                    className={`w-full min-h-[75px] py-2 px-3 rounded-xl border text-xs sm:text-sm text-slate-900 font-medium transition-all resize-y ${
                       touched.message && errors.message
-                        ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-2 focus:ring-rose-500/20'
+                        ? 'border-rose-400 bg-rose-50/30 focus:border-rose-600 focus:ring-1 focus:ring-rose-500/20'
                         : touched.message && !errors.message
-                        ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20'
-                        : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-2 focus:ring-blue-900/15'
+                        ? 'border-emerald-300 bg-emerald-50/20 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-500/20'
+                        : 'border-slate-200 bg-slate-50/50 focus:bg-white focus:border-blue-900 focus:ring-1 focus:ring-blue-900/20'
                     } focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed`}
                   />
                   {touched.message && errors.message && (
-                    <p id="message-error" role="alert" className="text-[11px] text-rose-600 font-medium flex items-center gap-1.5 pt-0.5">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <p id="message-error" role="alert" className="text-[10.5px] text-rose-600 font-medium flex items-center gap-1 pt-0.5">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
                       <span>{errors.message}</span>
                     </p>
                   )}
                 </div>
 
                 {/* Consentement Mobile Friendly Touch Target */}
-                <div className={`p-4 rounded-2xl border transition-all ${
+                <div className={`p-3 rounded-xl border transition-all ${
                   touched.consent && errors.consent 
                     ? 'border-rose-300 bg-rose-50/40' 
                     : 'border-slate-200 bg-slate-50/70 hover:bg-slate-50'
                 }`}>
-                  <label htmlFor="consent-support" className="flex items-start gap-3 cursor-pointer min-h-[24px]">
+                  <label htmlFor="consent-support" className="flex items-start gap-2.5 cursor-pointer min-h-[22px]">
                     <input
                       type="checkbox"
                       id="consent-support"
@@ -1431,15 +1205,15 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                       onBlur={() => handleBlur('consent')}
                       aria-required="true"
                       aria-invalid={touched.consent && !!errors.consent}
-                      className="w-5 h-5 text-blue-900 rounded border-slate-300 focus:ring-2 focus:ring-blue-900/20 mt-0.5 cursor-pointer shrink-0 disabled:opacity-50"
+                      className="w-4 h-4 text-blue-900 rounded border-slate-300 focus:ring-1 focus:ring-blue-900/20 mt-0.5 cursor-pointer shrink-0 disabled:opacity-50"
                     />
-                    <span className="text-xs text-slate-700 leading-relaxed select-none">
-                      J’autorise expressément l’administration du <strong>Collège Isaac Newton</strong> à me contacter par e-mail ou téléphone pour donner suite à cette proposition. Mes coordonnées restent strictement confidentielles et ne feront l’objet d’aucun partage commercial.
+                    <span className="text-[11.5px] text-slate-700 leading-snug select-none">
+                      J’autorise expressément l’administration du <strong>Collège Isaac Newton</strong> à me contacter par e-mail ou téléphone pour donner suite à cette proposition. Mes coordonnées restent strictement confidentielles.
                     </span>
                   </label>
                   {touched.consent && errors.consent && (
-                    <p role="alert" className="text-[11px] text-rose-600 font-medium flex items-center gap-1.5 pt-2 pl-8">
-                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <p role="alert" className="text-[10.5px] text-rose-600 font-medium flex items-center gap-1 pt-1.5 pl-6">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
                       <span>{errors.consent}</span>
                     </p>
                   )}
@@ -1450,22 +1224,22 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate }) => {
                   type="submit"
                   disabled={isSubmitting}
                   aria-busy={isSubmitting}
-                  className="w-full min-h-[48px] py-3.5 px-6 rounded-xl bg-blue-900 hover:bg-blue-950 disabled:bg-blue-900/60 disabled:cursor-not-allowed text-white font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900"
+                  className="w-full py-2.5 px-5 rounded-xl bg-blue-900 hover:bg-blue-950 disabled:bg-blue-900/60 disabled:cursor-not-allowed text-white font-bold text-xs sm:text-sm shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-900"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="w-5 h-5 text-amber-400 animate-spin" />
+                      <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
                       <span>Transmission sécurisée en cours...</span>
                     </>
                   ) : (
                     <>
-                      <Send className="w-4 h-4 text-amber-400" />
+                      <Send className="w-3.5 h-3.5 text-amber-400" />
                       <span>Transmettre ma demande à la direction</span>
                     </>
                   )}
                 </button>
 
-                <p className="text-[11px] text-center text-slate-500 font-medium">
+                <p className="text-[10.5px] text-center text-slate-500 font-medium">
                   Réponse officielle garantie sous 48 heures ouvrées · Accompagnement direct par le secrétariat
                 </p>
 

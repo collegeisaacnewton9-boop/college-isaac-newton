@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronDown, 
+  ChevronRight,
   Menu, 
   X, 
   UserCircle, 
@@ -245,7 +246,7 @@ export const Header: React.FC<HeaderProps> = ({
                     */}
                     {isDropdownOpen && (
                       <div 
-                        className={`absolute top-full pt-1.5 z-50 min-w-[290px] w-72 sm:w-80 ${
+                        className={`absolute top-full pt-1.5 z-50 min-w-[250px] w-64 sm:w-72 ${
                           item.id === 'school-life' ? 'right-0' : 'left-0'
                         }`}
                         onMouseEnter={() => handleDropdownMouseEnter(item.id)}
@@ -255,12 +256,12 @@ export const Header: React.FC<HeaderProps> = ({
                         <div className="absolute -top-3 left-0 right-0 h-4 bg-transparent pointer-events-auto" />
 
                         <div 
-                          className="bg-white rounded-2xl shadow-xl border border-slate-200/90 p-2 overflow-hidden ring-1 ring-slate-900/5 animate-in fade-in slide-in-from-top-1 duration-150"
+                          className="bg-white rounded-2xl shadow-xl border border-slate-200/90 p-1.5 overflow-hidden ring-1 ring-slate-900/5 animate-in fade-in slide-in-from-top-1 duration-150"
                           role="menu"
                         >
                           {/* Section Header / Overview Quick Link */}
-                          <div className="px-3 py-2 mb-1 border-b border-slate-100 flex items-center justify-between">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          <div className="px-3 py-1.5 mb-1 border-b border-slate-100 flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
                               Rubrique {item.label}
                             </span>
                             <button
@@ -273,7 +274,7 @@ export const Header: React.FC<HeaderProps> = ({
                             </button>
                           </div>
 
-                          {/* Subitems List with comfortable click areas & icons */}
+                          {/* Subitems List - Streamlined, Compact & Modern (Without Walls of Text) */}
                           <div className="space-y-0.5">
                             {visibleChildren.map((subItem, idx) => {
                               const Icon = getSubItemIcon(subItem);
@@ -282,22 +283,18 @@ export const Header: React.FC<HeaderProps> = ({
                                   key={idx}
                                   type="button"
                                   onClick={() => handleNavClick(subItem.id, subItem.subSection)}
-                                  className="w-full text-left p-2 sm:p-2.5 rounded-xl text-slate-700 hover:text-blue-900 hover:bg-blue-50/80 transition-all flex items-start gap-3 cursor-pointer group"
+                                  className="w-full text-left px-2.5 py-1.5 sm:py-2 rounded-xl text-slate-700 hover:text-blue-950 hover:bg-blue-50/80 transition-all flex items-center justify-between gap-2.5 cursor-pointer group"
                                   role="menuitem"
                                 >
-                                  <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-white text-slate-500 group-hover:text-blue-900 flex items-center justify-center shrink-0 border border-slate-200/60 group-hover:border-blue-200 transition-colors mt-0.5">
-                                    <Icon className="w-4 h-4" />
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <span className="text-xs sm:text-sm font-semibold block leading-tight text-slate-900 group-hover:text-blue-900">
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-blue-900 text-slate-500 group-hover:text-amber-400 flex items-center justify-center shrink-0 border border-slate-200/60 group-hover:border-blue-900 transition-colors">
+                                      <Icon className="w-3.5 h-3.5" />
+                                    </div>
+                                    <span className="text-xs sm:text-[13px] font-semibold text-slate-800 group-hover:text-blue-950 truncate">
                                       {subItem.label}
                                     </span>
-                                    {subItem.description && (
-                                      <span className="text-[11px] text-slate-500 line-clamp-1 block leading-normal font-light mt-0.5">
-                                        {subItem.description}
-                                      </span>
-                                    )}
                                   </div>
+                                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-900 group-hover:translate-x-0.5 transition-all shrink-0 opacity-0 group-hover:opacity-100" />
                                 </button>
                               );
                             })}

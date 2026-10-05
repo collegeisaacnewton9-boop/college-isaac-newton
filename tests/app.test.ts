@@ -1,5 +1,6 @@
 import test, { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { Role } from '../src/types/index.ts';
 import { ROLE_PERMISSIONS } from '../src/data/rolePermissions.ts';
 import { DEFAULT_EDUCATIONAL_CYCLES } from '../src/data/cyclesData.ts';
 import { DEFAULT_NAVIGATION_MENU } from '../src/data/navigationData.ts';
@@ -156,7 +157,7 @@ describe('Collège Isaac Newton - Unit Tests', () => {
 
   describe('Sécurisation du Login & Profils RBAC Équipe (Image 2)', () => {
     it('should provide authentic credentials and roles for all 6 team profiles matching RBAC management', () => {
-      const expectedTeam = [
+      const expectedTeam: { email: string; role: Role }[] = [
         { email: 'admin@collegeisaacnewton.com', role: 'ADMIN' },
         { email: 'redaction@collegeisaacnewton.com', role: 'EDITOR' },
         { email: 'prof.sciences@collegeisaacnewton.com', role: 'TEACHER' },
@@ -167,7 +168,7 @@ describe('Collège Isaac Newton - Unit Tests', () => {
 
       for (const member of expectedTeam) {
         assert.ok(member.email.includes('@collegeisaacnewton.com'), `Email ${member.email} must have institutional domain`);
-        assert.ok(ROLE_PERMISSIONS[member.role as any], `Role ${member.role} must exist in ROLE_PERMISSIONS matrix`);
+        assert.ok(ROLE_PERMISSIONS[member.role], `Role ${member.role} must exist in ROLE_PERMISSIONS matrix`);
       }
     });
   });
