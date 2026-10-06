@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, 
   ChevronLeft, 
@@ -267,32 +268,43 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
         </div>
       )}
 
-      {/* CAROUSEL PRESENTATION CONTAINER */}
-      <div className="relative bg-slate-950 rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-800 shadow-xl">
+      {/* CAROUSEL PRESENTATION CONTAINER - STRICT UNIFORM LOCKED HEIGHT ACROSS ALL SLIDES */}
+      <div className="relative bg-slate-950 rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-800 shadow-xl h-[560px] sm:h-[580px] lg:h-[480px] xl:h-[500px] max-h-[560px] sm:max-h-[580px] lg:max-h-[480px] xl:max-h-[500px]">
         {currentItem ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[380px] sm:min-h-[440px] items-stretch">
+          <div className="flex flex-col lg:grid lg:grid-cols-12 h-full items-stretch overflow-hidden">
             
-            {/* MAIN IMAGE DISPLAY (7 Cols on desktop) */}
+            {/* MAIN IMAGE DISPLAY (Strict uniform locked height on all viewports, zero layout shift) */}
             <div 
-              className="lg:col-span-8 relative overflow-hidden bg-slate-900 cursor-pointer group min-h-[260px] sm:min-h-[360px]"
+              className="lg:col-span-7 xl:col-span-7 h-[260px] sm:h-[300px] lg:h-full w-full relative overflow-hidden bg-slate-900 cursor-pointer group shrink-0"
               onClick={() => setLightboxItem(currentItem)}
             >
-              <img
-                src={currentItem.imageUrl}
-                alt={currentItem.altText || currentItem.title}
-                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  if (!target.dataset.triedFallback) {
-                    target.dataset.triedFallback = '1';
-                    target.src = '/images/campus_courtyard_building_1790531780046.jpg';
-                  }
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent lg:hidden" />
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={currentItem.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4, ease: 'easeInOut' }}
+                  className="absolute inset-0 w-full h-full"
+                >
+                  <img
+                    src={currentItem.imageUrl}
+                    alt={currentItem.altText || currentItem.title}
+                    className="w-full h-full object-cover select-none transition-transform duration-700 ease-out group-hover:scale-105"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.dataset.triedFallback) {
+                        target.dataset.triedFallback = '1';
+                        target.src = '/images/campus_courtyard_building_1790531780046.jpg';
+                      }
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent lg:hidden" />
+                </motion.div>
+              </AnimatePresence>
               
               {/* Zoom pill badge */}
-              <div className="absolute top-3 left-3 bg-slate-950/70 backdrop-blur-md text-white text-[11px] font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity border border-white/10">
+              <div className="absolute top-3 left-3 bg-slate-950/70 backdrop-blur-md text-white text-[11px] font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity border border-white/10 z-10 pointer-events-none">
                 <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
                 <span>Cliquer pour agrandir</span>
               </div>
@@ -320,83 +332,94 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
               )}
 
               {/* Mobile overlay caption */}
-              <div className="absolute bottom-0 inset-x-0 p-4 text-white lg:hidden">
+              <div className="absolute bottom-0 inset-x-0 p-3 sm:p-4 text-white lg:hidden z-10 pointer-events-none">
                 <span className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">
                   {currentItem.category || 'Infrastructure'}
                 </span>
-                <h3 className="font-serif text-lg font-bold text-white leading-tight">
+                <h3 className="font-serif text-base sm:text-lg font-bold text-white leading-tight truncate">
                   {currentItem.title}
                 </h3>
               </div>
             </div>
 
-            {/* DETAILS PANEL (4 Cols on desktop) */}
-            <div className="lg:col-span-4 bg-slate-900/95 p-5 sm:p-6 lg:p-7 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 text-white">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2.5 py-1 rounded-md border border-amber-400/20">
-                    <Sparkles className="w-3 h-3" />
-                    <span>{currentItem.category || 'Infrastructure CIN'}</span>
-                  </span>
-                  <span className="text-xs font-mono text-slate-400">
-                    {currentIndex + 1} / {total}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <h3 className="font-serif text-xl sm:text-2xl font-bold text-white leading-snug">
-                    {currentItem.title}
-                  </h3>
-                  {canManage && (
-                    <button
-                      type="button"
-                      onClick={(e) => handleOpenEdit(currentItem, e)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-all shadow-xs cursor-pointer shrink-0"
-                      title="Modifier les textes, les atouts et la photo"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>Modifier</span>
-                    </button>
-                  )}
-                </div>
-
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light mb-4">
-                  {currentItem.caption || 'Infrastructure moderne conforme aux normes du Ministère de l’Éducation Nationale pour offrir aux élèves un environnement sain et sécurisé.'}
-                </p>
-
-                {/* Key Infrastructure Highlights (Dynamiques & Éditables) */}
-                <div className="space-y-2 py-3 border-t border-slate-800/80 my-2 text-xs text-slate-300">
-                  {((currentItem.highlights && currentItem.highlights.length > 0)
-                    ? currentItem.highlights
-                    : [
-                        'Sécurité permanente & surveillance continue à Delmas 50',
-                        'Énergie solaire & onduleurs pour continuité pédagogique',
-                        'Accessibilité rapide depuis l\'axe principal de Delmas'
-                      ]
-                  ).map((hl, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      {i === 0 ? (
-                        <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                      ) : i === 1 ? (
-                        <Cpu className="w-4 h-4 text-cyan-400 shrink-0" />
-                      ) : (
-                        <CheckCircle2 className="w-4 h-4 text-amber-400 shrink-0" />
-                      )}
-                      <span>{hl}</span>
+            {/* DETAILS PANEL (Uniform locked height - fills remaining height with clean internal scroll) */}
+            <div className="lg:col-span-5 xl:col-span-5 flex-1 min-h-0 bg-slate-900/95 p-4 sm:p-5 lg:p-6 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 text-white h-full overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={currentItem.id}
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    className="space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-md border border-amber-400/20">
+                        <Sparkles className="w-3 h-3" />
+                        <span>{currentItem.category || 'Infrastructure CIN'}</span>
+                      </span>
+                      <span className="text-xs font-mono text-slate-400">
+                        {currentIndex + 1} / {total}
+                      </span>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-serif text-lg sm:text-xl lg:text-2xl font-bold text-white leading-snug">
+                        {currentItem.title}
+                      </h3>
+                      {canManage && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleOpenEdit(currentItem, e)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-all shadow-xs cursor-pointer shrink-0"
+                          title="Modifier les textes, les atouts et la photo"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Modifier</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-xs sm:text-[13px] text-slate-300 leading-relaxed font-light">
+                      {currentItem.caption || 'Infrastructure moderne conforme aux normes du Ministère de l’Éducation Nationale pour offrir aux élèves un environnement sain et sécurisé.'}
+                    </p>
+
+                    {/* Key Infrastructure Highlights (Dynamiques & Éditables) */}
+                    <div className="space-y-1.5 py-2 border-t border-slate-800/80 text-xs text-slate-300">
+                      {((currentItem.highlights && currentItem.highlights.length > 0)
+                        ? currentItem.highlights
+                        : [
+                            'Sécurité permanente & surveillance continue à Delmas 50',
+                            'Énergie solaire & onduleurs pour continuité pédagogique',
+                            'Accessibilité rapide depuis l\'axe principal de Delmas'
+                          ]
+                      ).map((hl, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          {i === 0 ? (
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          ) : i === 1 ? (
+                            <Cpu className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          ) : (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          )}
+                          <span className="leading-snug">{hl}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
 
-              {/* Bottom Carousel Navigation & CTA */}
-              <div className="pt-4 border-t border-slate-800">
+              {/* Bottom Carousel Navigation & CTA (Permanently anchored at bottom) */}
+              <div className="pt-2.5 sm:pt-3 border-t border-slate-800 shrink-0 mt-auto">
                 {/* Thumbnails preview strip */}
-                <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 scrollbar-none">
+                <div className="flex items-center gap-1.5 mb-2.5 sm:mb-3 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                   {filteredItems.map((item, idx) => (
                     <button
                       key={item.id}
                       onClick={() => setCurrentIndex(idx)}
-                      className={`relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                      className={`relative w-9 h-9 sm:w-10 sm:h-10 rounded-lg overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
                         currentIndex === idx 
                           ? 'border-amber-400 scale-105 shadow-md shadow-amber-400/20' 
                           : 'border-transparent opacity-60 hover:opacity-100'
@@ -415,12 +438,12 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-2.5">
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={handlePrev}
-                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-colors cursor-pointer"
+                      className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-colors cursor-pointer"
                       aria-label="Photo précédente"
                     >
                       <ChevronLeft className="w-4 h-4" />
@@ -428,7 +451,7 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
                     <button
                       type="button"
                       onClick={handleNext}
-                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-colors cursor-pointer"
+                      className="p-1.5 sm:p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-colors cursor-pointer"
                       aria-label="Photo suivante"
                     >
                       <ChevronRight className="w-4 h-4" />
@@ -438,7 +461,7 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
                   <button
                     type="button"
                     onClick={() => onNavigate('contact')}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold transition-all shadow-sm cursor-pointer"
                   >
                     <span>Planifier une Visite</span>
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -450,7 +473,7 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
 
           </div>
         ) : (
-          <div className="p-8 text-center text-slate-400">
+          <div className="p-8 text-center text-slate-400 h-full flex items-center justify-center">
             Aucun espace configuré dans cette catégorie.
           </div>
         )}

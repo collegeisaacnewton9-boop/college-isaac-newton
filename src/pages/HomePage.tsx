@@ -557,7 +557,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
               </div>
 
               {/* Visual Banner Column */}
-              <div className="lg:col-span-5 relative min-h-[220px] sm:min-h-[260px] lg:min-h-full bg-slate-950 group overflow-hidden">
+              <div className="lg:col-span-5 relative h-[240px] sm:h-[280px] lg:h-auto min-h-[240px] sm:min-h-[280px] lg:min-h-full bg-slate-950 group overflow-hidden shrink-0">
                 <img
                   src={selectedCycle.image}
                   alt={selectedCycle.title}
