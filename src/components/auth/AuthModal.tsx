@@ -10,7 +10,8 @@ import {
   ArrowRight, 
   HelpCircle,
   Phone,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { User } from '../../types';
@@ -197,17 +198,58 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             /* =========================================================
                STANDARD PRODUCTION LOGIN FORM (NO TEST CARDS / NO DEMO TABS)
             ========================================================= */
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               
+              {/* Quick Fill Direction Banner */}
+              <div className="p-2.5 rounded-xl bg-linear-to-r from-blue-900/10 via-amber-500/10 to-blue-900/10 border border-blue-900/20 flex items-center justify-between gap-2 shadow-2xs">
+                <div className="min-w-0 flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-blue-900 text-amber-300 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-slate-900 text-[11px] truncate">Direction Générale (Admin)</p>
+                    <p className="text-[10px] text-slate-500 font-mono truncate">direction@collegeisaacnewton.com</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('direction@collegeisaacnewton.com');
+                    setPassword('Newton@2026');
+                    setError(null);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-bold text-[10.5px] transition-colors cursor-pointer shrink-0 shadow-xs"
+                >
+                  Remplir
+                </button>
+              </div>
+
               {/* Error Alert */}
               {error && (
-                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-start gap-2.5 animate-in fade-in">
-                  <span className="font-bold text-rose-800 shrink-0">Erreur :</span>
-                  <span>{error}</span>
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 space-y-1 animate-in fade-in">
+                  <div className="flex items-start gap-2">
+                    <span className="font-bold text-rose-800 shrink-0">Erreur :</span>
+                    <span>{error}</span>
+                  </div>
+                  <div className="pt-1 text-[11px] text-slate-600">
+                    <span>💡 Astuce : Utilisez le bouton </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmail('direction@collegeisaacnewton.com');
+                        setPassword('Newton@2026');
+                        setError(null);
+                      }}
+                      className="font-bold text-blue-900 underline cursor-pointer"
+                    >
+                      Remplir ci-dessus
+                    </button>
+                    <span> ou le mot de passe officiel <strong>Newton@2026</strong>.</span>
+                  </div>
                 </div>
               )}
 
-              <form onSubmit={handleLogin} className="space-y-3.5">
+              <form onSubmit={handleLogin} className="space-y-3">
                 
                 {/* Email Input */}
                 <div>

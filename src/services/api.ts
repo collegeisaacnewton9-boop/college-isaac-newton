@@ -970,13 +970,16 @@ export const apiService = {
     const aliasMap: Record<string, string> = {
       'admin@collegeisaacnewton.com': 'admin@collegeisaacnewton.com',
       'direction@collegeisaacnewton.com': 'direction@collegeisaacnewton.com',
+      'collegeisaacnewton731@gmail.com': 'direction@collegeisaacnewton.com',
+      'collegeisaacnewton9@gmail.com': 'direction@collegeisaacnewton.com',
+      'orphejeanmarie@gmail.com': 'direction@collegeisaacnewton.com',
       'redaction@collegeisaacnewton.com': 'redaction@collegeisaacnewton.com',
       'prof.sciences@collegeisaacnewton.com': 'prof.sciences@collegeisaacnewton.com',
       'mod.vie.scolaire@collegeisaacnewton.com': 'mod.vie.scolaire@collegeisaacnewton.com',
       'moderation@collegeisaacnewton.com': 'mod.vie.scolaire@collegeisaacnewton.com',
       'parent.demo@collegeisaacnewton.com': 'parent.demo@collegeisaacnewton.com',
-      'eleve.ns4@collegeisaacnewton.com': 'eleve.ns4@collegeisaacnewton.com',
-      'eleve.demo@collegeisaacnewton.com': 'eleve.ns4@collegeisaacnewton.com',
+      'eleve.ns4@collegeisaacnewton.com': 'eleve.demo@collegeisaacnewton.com',
+      'eleve.demo@collegeisaacnewton.com': 'eleve.demo@collegeisaacnewton.com',
     };
 
     const targetEmail = aliasMap[cleanEmail] || cleanEmail;
