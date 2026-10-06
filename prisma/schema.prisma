@@ -1,0 +1,209 @@
+// This is your Prisma schema file for Collège Isaac Newton
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EDITOR
+  PARENT
+  STUDENT
+}
+
+enum AdmissionStatus {
+  PENDING
+  UNDER_REVIEW
+  INTERVIEW_SCHEDULED
+  ACCEPTED
+  WAITLISTED
+  REJECTED
+}
+
+enum AcademicCycle {
+  PRESCOLAIRE
+  FONDAMENTAL_CYCLE_1
+  FONDAMENTAL_CYCLE_2
+  FONDAMENTAL_CYCLE_3
+  SECONDAIRE
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  passwordHash String
+  fullName     String
+  role         Role        @default(PARENT)
+  phone        String?
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  // Relations
+  articles     NewsArticle[]
+  auditLogs    AuditLog[]
+
+  @@map("users")
+}
+
+model AdmissionApplication {
+  id                String          @id @default(uuid())
+  applicationNumber String          @unique // e.g. CIN-2026-0142
+  schoolYear        String          @default("2026-2027")
+  targetLevel       String          // e.g. "7ème Année Fondamentale", "Secondaire 1"
+  cycle             AcademicCycle
+  status            AdmissionStatus @default(PENDING)
+  
+  // Student Info
+  studentLastName   String
+  studentFirstName  String
+  studentBirthDate  DateTime
+  studentGender     String          // "M" or "F"
+  previousSchool    String?
+  
+  // Parent/Guardian Info
+  parentFullName    String
+  parentRelationship String         // "Père", "Mère", "Tuteur légal"
+  parentPhone       String
+  parentEmail       String
+  parentAddress     String
+  parentOccupation  String?
+  
+  // Required Documents Checklist & Upload Records
+  hasBirthCert      Boolean         @default(false)
+  hasReportCards    Boolean         @default(false)
+  hasPassCert       Boolean         @default(false)
+  hasIdPhotos       Boolean         @default(false)
+  documentUrls      String[]        // URLs to Cloudinary / Firebase Storage
+  specialNotes      String?
+  
+  // Consent & Timestamps
+  consentGiven      Boolean         @default(true)
+  reviewedBy        String?
+  reviewNotes       String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([status])
+  @@index([schoolYear])
+  @@map("admission_applications")
+}
+
+model NewsArticle {
+  id          String        @id @default(uuid())
+  slug        String        @unique
+  title       String
+  excerpt     String
+  content     String        @db.Text
+  coverImage  String
+  category    String        // "Académique", "Numérique", "Événements", "Vie scolaire"
+  status      ContentStatus @default(PUBLISHED)
+  featured    Boolean       @default(false)
+  publishedAt DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  authorId    String?
+  author      User?         @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([category])
+  @@index([status])
+  @@map("news_articles")
+}
+
+model SchoolEvent {
+  id          String    @id @default(uuid())
+  title       String
+  description String    @db.Text
+  startDate   DateTime
+  endDate     DateTime?
+  location    String    @default("Campus Collège Isaac Newton")
+  category    String    // "Pédagogique", "Culturel", "Sportif", "Réunion"
+  audience    String    @default("ALL") // "ALL", "PARENTS", "STUDENTS"
+  isPublic    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([startDate])
+  @@map("school_events")
+}
+
+model GalleryItem {
+  id          String   @id @default(uuid())
+  title       String
+  category    String   // "campus", "laboratoire", "vie-scolaire", "ceremonies"
+  imageUrl    String
+  altText     String
+  caption     String?
+  displayOrder Int     @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([category])
+  @@map("gallery_items")
+}
+
+model DocumentFile {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  category    String   // "reglement", "calendrier", "fournitures", "formulaires"
+  fileUrl     String
+  fileSize    String
+  fileType    String   @default("PDF")
+  targetCycle String?
+  schoolYear  String   @default("2026-2027")
+  downloadCount Int    @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([category])
+  @@map("document_files")
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  fullName  String
+  email     String
+  phone     String?
+  subject   String
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  status    String   @default("NEW") // "NEW", "TREATED", "ARCHIVED"
+  createdAt DateTime @default(now())
+
+  @@index([isRead])
+  @@map("contact_messages")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   // "ADMISSION_STATUS_CHANGED", "ARTICLE_PUBLISHED", etc.
+  details   String?  @db.Text
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model SiteSetting {
+  id        String   @id @default("global_settings")
+  data      Json
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
