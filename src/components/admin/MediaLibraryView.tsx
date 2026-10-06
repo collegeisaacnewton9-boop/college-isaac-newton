@@ -569,11 +569,13 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                 className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden group hover:border-slate-300 transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden">
+                  <div className="relative aspect-video bg-slate-950 overflow-hidden">
                     <img 
                       src={item.imageUrl} 
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent opacity-80" />
                     <div className="absolute bottom-2.5 left-2.5 right-2.5 text-white">
@@ -677,11 +679,13 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                 className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden group hover:border-slate-300 transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden">
+                  <div className="relative aspect-video bg-slate-950 overflow-hidden">
                     <img 
                       src={media.url} 
                       alt={media.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <div className="absolute top-2 left-2">
                       <span className="bg-slate-950/80 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border border-white/20 backdrop-blur-xs">

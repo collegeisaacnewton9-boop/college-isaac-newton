@@ -24,6 +24,7 @@ import { GalleryItem, User } from '../../types';
 import { apiService } from '../../services/api';
 import { INITIAL_GALLERY } from '../../data/mockData';
 import { GalleryItemModal } from '../gallery/GalleryItemModal';
+import { ImageLightboxModal } from '../common/ImageLightboxModal';
 
 interface InfrastructureCarouselProps {
   onNavigate: (page: string, subSection?: string) => void;
@@ -113,8 +114,8 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
     setIsModalOpen(true);
   };
 
-  const handleOpenEdit = (item: GalleryItem, e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleOpenEdit = (item: GalleryItem, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     setEditingItem(item);
     setIsModalOpen(true);
   };
@@ -291,6 +292,8 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
                     src={currentItem.imageUrl}
                     alt={currentItem.altText || currentItem.title}
                     className="w-full h-full object-cover select-none transition-transform duration-700 ease-out group-hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       const target = e.currentTarget;
                       if (!target.dataset.triedFallback) {
@@ -479,79 +482,19 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
         )}
       </div>
 
-      {/* FULLSCREEN LIGHTBOX MODAL */}
-      {lightboxItem && (
-        <div 
-          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
-          onClick={() => setLightboxItem(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div 
-            className="relative max-w-4xl w-full bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 bg-slate-950/80 border-b border-slate-800 text-white">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">
-                  {lightboxItem.category || 'Infrastructure'}
-                </span>
-                <h4 className="font-serif font-bold text-base sm:text-lg text-white">
-                  {lightboxItem.title}
-                </h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => setLightboxItem(null)}
-                className="p-2 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                aria-label="Fermer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Image with fixed aspect-video */}
-            <div className="relative aspect-video w-full bg-slate-950 flex items-center justify-center overflow-hidden">
-              <img
-                src={lightboxItem.imageUrl}
-                alt={lightboxItem.altText || lightboxItem.title}
-                className="w-full h-full object-contain"
-              />
-            </div>
-
-            {/* Caption & Navigation Footer */}
-            <div className="p-4 bg-slate-950/90 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-white">
-              <p className="text-xs sm:text-sm text-slate-300">
-                {lightboxItem.caption || 'Vue officielle du campus du Collège Isaac Newton.'}
-              </p>
-              
-              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const idx = filteredItems.findIndex(i => i.id === lightboxItem.id);
-                    if (idx !== -1) setLightboxItem(filteredItems[(idx - 1 + filteredItems.length) % filteredItems.length]);
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-white transition-colors"
-                >
-                  Précédent
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const idx = filteredItems.findIndex(i => i.id === lightboxItem.id);
-                    if (idx !== -1) setLightboxItem(filteredItems[(idx + 1) % filteredItems.length]);
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-white transition-colors"
-                >
-                  Suivant
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* FULL-SCREEN ZOOMABLE LIGHTBOX MODAL */}
+      <ImageLightboxModal
+        isOpen={Boolean(lightboxItem)}
+        onClose={() => setLightboxItem(null)}
+        items={filteredItems}
+        currentIndex={lightboxItem ? filteredItems.findIndex(i => i.id === lightboxItem.id) : 0}
+        onIndexChange={(idx) => setLightboxItem(filteredItems[idx])}
+        onEditItem={(item) => {
+          setLightboxItem(null);
+          handleOpenEdit(item);
+        }}
+        canEdit={canManage}
+      />
 
       {/* SECTION HEADER EDIT MODAL */}
       {isEditingHeader && (

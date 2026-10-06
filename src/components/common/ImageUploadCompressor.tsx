@@ -35,12 +35,13 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
   currentImageUrl,
   onImageReady,
   label = 'Image de Couverture (Optimisation & Compression Automatique)',
-  recommendedAspect = 'Format recommandé : 16:9 ou 16:10 (Max 1280px)',
+  recommendedAspect = 'Format recommandé : 16:9 ou 16:10 (Max 1600px)',
   compact = false,
 }) => {
   const [previewUrl, setPreviewUrl] = useState<string>(currentImageUrl || '');
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [showPresets, setShowPresets] = useState<boolean>(!currentImageUrl);
+  const [selectedPreset, setSelectedPreset] = useState<'ultra' | 'balanced' | 'speed'>('balanced');
   const [compressionStats, setCompressionStats] = useState<{
     originalSize: number;
     compressedSize: number;
@@ -64,11 +65,9 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
 
     setIsCompressing(true);
     try {
-      // Compress client-side
+      // Compress client-side with chosen preset to guarantee sharp quality and lightweight payload
       const result = await compressImage(file, {
-        maxWidth: 1280,
-        maxHeight: 850,
-        quality: 0.82,
+        preset: selectedPreset,
         mimeType: 'image/webp',
       });
 
@@ -86,8 +85,8 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
         reduction: result.reductionPercent,
       });
 
-      toast.success('Image compressée avec succès !', {
-        description: `${formatBytes(result.originalSize)} ➔ ${formatBytes(result.compressedSize)} (-${result.reductionPercent}%)`,
+      toast.success('Image optimisée & compressée en WebP !', {
+        description: `${formatBytes(result.originalSize)} ➔ ${formatBytes(result.compressedSize)} (-${result.reductionPercent}%) · Vitesse PageSpeed garantie`,
       });
     } catch (err: any) {
       toast.error('Erreur de compression', {
@@ -114,13 +113,52 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
 
   return (
     <div className="space-y-2 text-xs">
-      {/* Label and Hint */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+      {/* Label, Hint and PageSpeed Preset Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
         <label className="font-bold text-slate-800 text-[11px] uppercase tracking-wide flex items-center gap-1.5">
           <Zap className="w-3.5 h-3.5 text-amber-500" />
           <span>{label}</span>
         </label>
-        <span className="text-[10px] text-slate-400 font-mono">{recommendedAspect}</span>
+
+        {/* Compression Profile Selector */}
+        <div className="inline-flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+          <button
+            type="button"
+            onClick={() => setSelectedPreset('balanced')}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+              selectedPreset === 'balanced'
+                ? 'bg-blue-900 text-white shadow-2xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Optimisé pour PageSpeed (WebP 82% - Qualité haute & vitesse max)"
+          >
+            ⚡ Équilibré
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedPreset('ultra')}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+              selectedPreset === 'ultra'
+                ? 'bg-blue-900 text-white shadow-2xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Ultra HD (WebP 88% - Netteté maximale Retina)"
+          >
+            💎 Ultra HD
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelectedPreset('speed')}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+              selectedPreset === 'speed'
+                ? 'bg-blue-900 text-white shadow-2xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+            title="Ultra léger (WebP 75% - Chargement ultra rapide)"
+          >
+            🚀 Vitesse Max
+          </button>
+        </div>
       </div>
 
       {/* Main Dropzone / Preview Area */}

@@ -142,6 +142,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                     alt={featuredArticle.title}
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
                   <div className="absolute top-2.5 left-2.5 bg-blue-900/90 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-blue-400/30 shadow-xs">
@@ -197,12 +199,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                   onClick={() => onSelectArticle(art.id)}
                   className="bg-white rounded-2xl p-3.5 border border-slate-200/80 shadow-xs hover:shadow-md transition-all cursor-pointer flex gap-3 group hover:border-blue-900/30 flex-1 items-center"
                 >
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-slate-950 shrink-0 relative">
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-slate-950 shrink-0 relative aspect-square">
                     <img
                       src={art.coverImage}
                       alt={art.title}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
                       {art.category}
@@ -270,8 +274,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                     >
                       {/* Compact Date Badge or Image */}
                       {evt.image ? (
-                        <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 relative border border-slate-200 shadow-2xs">
-                          <img src={evt.image} alt={evt.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 relative border border-slate-200 shadow-2xs aspect-square">
+                          <img 
+                            src={evt.image} 
+                            alt={evt.title} 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
+                            loading="lazy"
+                            decoding="async"
+                          />
                           <span className="absolute bottom-0 inset-x-0 bg-blue-950/80 text-amber-300 text-[8px] font-bold text-center py-0.5 leading-none font-mono">
                             {day} {month}
                           </span>
@@ -557,12 +567,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
               </div>
 
               {/* Visual Banner Column */}
-              <div className="lg:col-span-5 relative h-[240px] sm:h-[280px] lg:h-auto min-h-[240px] sm:min-h-[280px] lg:min-h-full bg-slate-950 group overflow-hidden shrink-0">
+              <div className="lg:col-span-5 relative h-[240px] sm:h-[280px] lg:h-auto min-h-[240px] sm:min-h-[280px] lg:min-h-full bg-slate-950 group overflow-hidden shrink-0 aspect-video lg:aspect-auto">
                 <img
                   src={selectedCycle.image}
                   alt={selectedCycle.title}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-700 ease-out"
+                  loading="lazy"
+                  decoding="async"
                   onError={(e) => {
                     const target = e.currentTarget;
                     if (!target.dataset.triedFallback) {

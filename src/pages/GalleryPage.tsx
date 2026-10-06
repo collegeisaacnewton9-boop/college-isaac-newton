@@ -15,6 +15,7 @@ import { apiService } from '../services/api';
 import { INITIAL_GALLERY } from '../data/mockData';
 import { GalleryItem, User } from '../types';
 import { GalleryItemModal } from '../components/gallery/GalleryItemModal';
+import { ImageLightboxModal } from '../components/common/ImageLightboxModal';
 
 interface GalleryPageProps {
   currentUser?: User | null;
@@ -188,121 +189,19 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ currentUser }) => {
         ))}
       </div>
 
-      {/* Lightbox Modal with Full Controls */}
-      {activeItem && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/90 backdrop-blur-md animate-in fade-in duration-150"
-          onClick={() => setActiveItem(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div 
-            className="relative max-w-4xl w-full bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-800 flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Top Bar with actions */}
-            <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
-              {canManageGallery && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const target = activeItem;
-                      setActiveItem(null);
-                      handleOpenEdit(target);
-                    }}
-                    className="p-2 rounded-full bg-slate-950/80 hover:bg-blue-900 text-white transition-colors cursor-pointer shadow-md"
-                    title="Modifier"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const id = activeItem.id;
-                      handleDeleteItem(id);
-                    }}
-                    className="p-2 rounded-full bg-slate-950/80 hover:bg-rose-600 text-white transition-colors cursor-pointer shadow-md"
-                    title="Supprimer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-
-              <button
-                onClick={() => setActiveItem(null)}
-                className="p-2 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white transition-colors cursor-pointer shadow-md"
-                aria-label="Fermer la vue agrandie"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Left & Right navigation arrows */}
-            {galleryItems.length > 1 && (
-              <>
-                <button
-                  type="button"
-                  onClick={handlePrev}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-slate-950/70 hover:bg-slate-950 text-white transition-colors cursor-pointer shadow-md"
-                  aria-label="Photo précédente"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 p-2.5 rounded-full bg-slate-950/70 hover:bg-slate-950 text-white transition-colors cursor-pointer shadow-md"
-                  aria-label="Photo suivante"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </>
-            )}
-
-            {/* Full Image */}
-            <div className="max-h-[70vh] bg-black flex items-center justify-center">
-              <img
-                src={activeItem.imageUrl}
-                alt={activeItem.altText || activeItem.title}
-                referrerPolicy="no-referrer"
-                className="max-h-[70vh] w-auto object-contain mx-auto"
-              />
-            </div>
-
-            {/* Bottom Bar: Title, Caption, Edit Button */}
-            <div className="p-4 sm:p-5 bg-slate-900 text-white border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h2 className="font-serif font-bold text-base sm:text-lg text-white">
-                  {activeItem.title}
-                </h2>
-                {activeItem.caption && (
-                  <p className="text-xs text-slate-300 mt-0.5">{activeItem.caption}</p>
-                )}
-              </div>
-
-              {canManageGallery && (
-                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const target = activeItem;
-                      setActiveItem(null);
-                      handleOpenEdit(target);
-                    }}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
-                  >
-                    <Edit2 className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Modifier</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Full-Screen Zoomable Lightbox Modal */}
+      <ImageLightboxModal
+        isOpen={Boolean(activeItem)}
+        onClose={() => setActiveItem(null)}
+        items={galleryItems}
+        currentIndex={activeIndex >= 0 ? activeIndex : 0}
+        onIndexChange={(idx) => setActiveItem(galleryItems[idx])}
+        onEditItem={(item) => {
+          setActiveItem(null);
+          handleOpenEdit(item);
+        }}
+        canEdit={canManageGallery}
+      />
 
       {/* FORM MODAL FOR ADDING & EDITING GALLERY ITEMS (STAFF ONLY) */}
       {canManageGallery && (

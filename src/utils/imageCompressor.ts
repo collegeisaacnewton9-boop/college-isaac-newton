@@ -7,8 +7,9 @@
 export interface CompressionOptions {
   maxWidth?: number;
   maxHeight?: number;
-  quality?: number; // 0.1 to 1.0
+  quality?: number; // 0.1 to 1.0 (recommended 0.82 for PageSpeed optimization)
   mimeType?: 'image/webp' | 'image/jpeg';
+  preset?: 'ultra' | 'balanced' | 'speed';
 }
 
 export interface CompressedImageResult {
@@ -39,12 +40,23 @@ export async function compressImage(
   file: File,
   options: CompressionOptions = {}
 ): Promise<CompressedImageResult> {
-  const {
-    maxWidth = 1280,
-    maxHeight = 850,
+  let {
+    maxWidth = 1600,
+    maxHeight = 1000,
     quality = 0.82,
     mimeType = 'image/webp',
+    preset = 'balanced',
   } = options;
+
+  if (preset === 'ultra') {
+    maxWidth = 1920;
+    maxHeight = 1200;
+    quality = 0.88;
+  } else if (preset === 'speed') {
+    maxWidth = 1280;
+    maxHeight = 800;
+    quality = 0.75;
+  }
 
   return new Promise((resolve, reject) => {
     const originalSize = file.size;

@@ -14,6 +14,7 @@ import { apiService } from '../../services/api';
 import { GalleryItem, User } from '../../types';
 import { INITIAL_GALLERY } from '../../data/mockData';
 import { GalleryItemModal } from '../gallery/GalleryItemModal';
+import { ImageLightboxModal } from '../common/ImageLightboxModal';
 
 interface ActivityGallerySectionProps {
   onNavigate: (page: string, subSection?: string) => void;
@@ -131,6 +132,7 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
               referrerPolicy="no-referrer"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-106 transition-transform duration-500 ease-out"
               loading="lazy"
+              decoding="async"
               onError={(e) => {
                 const target = e.currentTarget;
                 if (!target.dataset.triedFallback) {
@@ -191,121 +193,19 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
         ))}
       </div>
 
-      {/* PHOTO LIGHTBOX MODAL */}
-      {activePhoto && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-150"
-          onClick={() => setActivePhoto(null)}
-          role="dialog"
-          aria-modal="true"
-        >
-          <div
-            className="bg-slate-900 rounded-2xl sm:rounded-3xl overflow-hidden max-w-3xl w-full border border-slate-700 shadow-2xl animate-in zoom-in-95 duration-150 flex flex-col relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Top Bar with actions */}
-            <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
-              {canManageGallery && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const target = activePhoto;
-                      setActivePhoto(null);
-                      handleOpenEdit(target);
-                    }}
-                    className="p-2 rounded-full bg-slate-950/80 hover:bg-blue-900 text-white transition-colors cursor-pointer shadow-md"
-                    title="Modifier"
-                  >
-                    <Edit2 className="w-4 h-4" />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const id = activePhoto.id;
-                      handleDeleteItem(id);
-                    }}
-                    className="p-2 rounded-full bg-slate-950/80 hover:bg-rose-600 text-white transition-colors cursor-pointer shadow-md"
-                    title="Supprimer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-
-              <button
-                onClick={() => setActivePhoto(null)}
-                className="p-2 rounded-full bg-slate-950/80 hover:bg-slate-950 text-white transition-colors cursor-pointer shadow-md"
-                aria-label="Fermer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Full Image */}
-            <div className="relative max-h-[65vh] bg-black flex items-center justify-center">
-              <img
-                src={activePhoto.imageUrl}
-                alt={activePhoto.title}
-                referrerPolicy="no-referrer"
-                className="max-h-[65vh] w-full object-contain mx-auto"
-                onError={(e) => {
-                  const target = e.currentTarget;
-                  if (!target.dataset.triedFallback) {
-                    target.dataset.triedFallback = '1';
-                    if (target.src.includes('/src/assets/images/')) {
-                      target.src = target.src.replace('/src/assets/images/', '/images/');
-                    } else {
-                      target.src = '/images/campus_courtyard_building_1790531780046.jpg';
-                    }
-                  }
-                }}
-              />
-            </div>
-
-            {/* Clean Title & Caption Bar */}
-            <div className="p-4 sm:p-5 text-white bg-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-800">
-              <div>
-                <h3 className="font-serif font-bold text-base sm:text-lg text-white">
-                  {activePhoto.title}
-                </h3>
-                {activePhoto.caption && (
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {activePhoto.caption}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const target = activePhoto;
-                    setActivePhoto(null);
-                    handleOpenEdit(target);
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
-                >
-                  <Edit2 className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Modifier</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActivePhoto(null);
-                    onNavigate('gallery');
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-semibold transition-colors cursor-pointer"
-                >
-                  <span>Photothèque complète</span>
-                  <ArrowRight className="w-3 h-3 text-amber-400" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* FULL-SCREEN ZOOMABLE LIGHTBOX MODAL */}
+      <ImageLightboxModal
+        isOpen={Boolean(activePhoto)}
+        onClose={() => setActivePhoto(null)}
+        items={galleryItems}
+        currentIndex={activePhoto ? galleryItems.findIndex((i) => i.id === activePhoto.id) : 0}
+        onIndexChange={(idx) => setActivePhoto(galleryItems[idx])}
+        onEditItem={(item) => {
+          setActivePhoto(null);
+          handleOpenEdit(item);
+        }}
+        canEdit={canManageGallery}
+      />
 
       {/* FORM MODAL FOR ADDING & EDITING GALLERY ITEMS (STAFF ONLY) */}
       {canManageGallery && (

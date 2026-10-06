@@ -60,6 +60,8 @@ export const NewsPage: React.FC<NewsPageProps> = ({
               alt={selectedArticle.title}
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
             <div className="absolute bottom-5 left-5 right-5 text-white space-y-1.5">
@@ -165,6 +167,8 @@ export const NewsPage: React.FC<NewsPageProps> = ({
                 alt={art.title}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover group-hover:scale-105 duration-300"
+                loading="lazy"
+                decoding="async"
               />
               <div className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-mono px-2.5 py-1 rounded">
                 {art.category}

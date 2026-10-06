@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { SCHOOL_IMAGES } from '../../assets/images';
 import { SCHOOL_INFO } from '../../data/mockData';
+import { ImageLightboxModal } from '../common/ImageLightboxModal';
+import { GalleryItem } from '../../types';
 
 interface HeroSlideshowProps {
   onNavigate: (page: string, subSection?: string) => void;
@@ -177,6 +179,9 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
                 src={s.image}
                 alt={s.title}
                 referrerPolicy="no-referrer"
+                loading={idx === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                fetchPriority={idx === 0 ? 'high' : 'auto'}
                 style={{ objectPosition: s.objectPosition }}
                 className={`w-full h-full object-cover transition-transform duration-[7000ms] ease-out ${
                   isActive ? 'scale-103' : 'scale-100'
@@ -361,69 +366,20 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
       </div>
 
       {/* FULLSCREEN LIGHTBOX MODAL FOR HIGH-RES VIEW OF BUILDING / CEREMONY */}
-      {isZoomOpen && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 animate-in fade-in duration-200"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="relative max-w-5xl w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex flex-col max-h-[90vh]">
-            
-            {/* Modal Header */}
-            <div className="p-3 sm:p-4 bg-slate-900 flex items-center justify-between border-b border-slate-800 text-white">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400">
-                  Vue Haute Définition · Collège Isaac Newton
-                </span>
-                <h3 className="font-serif font-bold text-sm sm:text-base text-white">
-                  {active.title}
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsZoomOpen(false)}
-                className="p-1.5 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                aria-label="Fermer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Modal Image Area */}
-            <div className="relative flex-1 overflow-auto bg-black flex items-center justify-center p-2 min-h-[300px] sm:min-h-[460px]">
-              <img
-                src={active.image}
-                alt={active.title}
-                referrerPolicy="no-referrer"
-                className="max-h-[75vh] w-auto max-w-full object-contain rounded-lg shadow-lg"
-              />
-            </div>
-
-            {/* Modal Footer Caption */}
-            <div className="p-3 sm:p-4 bg-slate-900 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-slate-300">
-              <p className="max-w-2xl text-[11px] sm:text-xs leading-relaxed">
-                {active.fullCaption}
-              </p>
-              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                <button
-                  onClick={prevSlide}
-                  className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors cursor-pointer flex items-center gap-1"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                  <span>Précédente</span>
-                </button>
-                <button
-                  onClick={nextSlide}
-                  className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors cursor-pointer flex items-center gap-1"
-                >
-                  <span>Suivante</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
+      <ImageLightboxModal
+        isOpen={isZoomOpen}
+        onClose={() => setIsZoomOpen(false)}
+        items={slides.map((s) => ({
+          id: s.id,
+          title: s.title,
+          caption: s.fullCaption || s.description,
+          category: s.tag ? s.tag.split('·')[0].trim() : 'Campus Principal',
+          imageUrl: s.image,
+          altText: s.title,
+        }))}
+        currentIndex={currentSlide}
+        onIndexChange={(idx) => setCurrentSlide(idx)}
+      />
 
     </div>
   );
