@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- 1. Page d'Accueil Principale -->
+  <url>
+    <loc>https://collegeisaacnewton.com/</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://collegeisaacnewton.com/og-image.jpg</image:loc>
+      <image:title>Collège Isaac Newton - Excellence académique et rigueur scientifique à Delmas 50</image:title>
+      <image:caption>Campus principal du Collège Isaac Newton, Port-au-Prince, Haïti</image:caption>
+    </image:image>
+  </url>
+
+  <!-- 2. Formulaire de Préinscription en Ligne -->
+  <url>
+    <loc>https://collegeisaacnewton.com/pre-registration</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- 3. Procédure et Conditions d'Admissions -->
+  <url>
+    <loc>https://collegeisaacnewton.com/admissions</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- 4. Nos Programmes Académiques & Cycles d'Enseignement -->
+  <url>
+    <loc>https://collegeisaacnewton.com/programs</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- 5. Le Collège - Histoire, Mission & Équipe de Direction -->
+  <url>
+    <loc>https://collegeisaacnewton.com/about</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 6. Vie Scolaire, Clubs & Activités Scientifiques -->
+  <url>
+    <loc>https://collegeisaacnewton.com/school-life</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 7. Événements Officiels & Calendrier Scolaire -->
+  <url>
+    <loc>https://collegeisaacnewton.com/events</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 8. Actualités & Communiqués de la Direction -->
+  <url>
+    <loc>https://collegeisaacnewton.com/news</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- 9. Galerie Photos & Infrastructures Campus -->
+  <url>
+    <loc>https://collegeisaacnewton.com/gallery</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+
+  <!-- 10. Contact, Plan d'Accès Google Maps & Horaires Delmas 50 -->
+  <url>
+    <loc>https://collegeisaacnewton.com/contact</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- 11. Ressources Pédagogiques -->
+  <url>
+    <loc>https://collegeisaacnewton.com/resources</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.70</priority>
+  </url>
+
+  <!-- 12. Mentions Légales -->
+  <url>
+    <loc>https://collegeisaacnewton.com/legal</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.30</priority>
+  </url>
+
+  <!-- 13. Politique de Confidentialité -->
+  <url>
+    <loc>https://collegeisaacnewton.com/privacy</loc>
+    <lastmod>2026-10-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.30</priority>
+  </url>
+
+</urlset>
