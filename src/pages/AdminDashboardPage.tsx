@@ -717,50 +717,51 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       {/* TOP EXECUTIVE COMMAND BAR */}
       <header className="bg-slate-950/95 backdrop-blur-md text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
         <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-between py-2 sm:py-2.5 gap-2.5">
+          {/* TOP EXECUTIVE COMMAND BAR - RESPONSIVE ON MOBILE, TABLET & DESKTOP */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between py-2 sm:py-2.5 gap-2.5 border-b border-slate-800/80">
             
-            {/* School Title & System Identity */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-600 flex items-center justify-center text-amber-300 font-sans font-black text-base shadow-xs border border-blue-400/30 shrink-0 tracking-tight">
+            {/* School Title & Academic Identity */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-600 via-blue-700 to-slate-950 flex items-center justify-center text-amber-300 font-sans font-black text-base shadow-sm border border-blue-400/30 shrink-0 tracking-tight ring-1 ring-white/10">
                 IN
               </div>
-              <div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className="font-sans font-bold text-sm sm:text-base text-white tracking-tight">Collège Isaac Newton</span>
-                  <span className="px-1.5 py-0.2 rounded-full bg-blue-900/80 border border-blue-400/30 text-[9px] text-blue-200 font-semibold uppercase tracking-wider">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="font-sans font-bold text-sm sm:text-base text-white tracking-tight truncate">
+                    Collège Isaac Newton
+                  </h1>
+                  <span className="px-1.5 py-0.5 rounded-md bg-blue-900/70 border border-blue-400/30 text-[9.5px] text-blue-200 font-bold uppercase tracking-wider">
                     Direction
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-400 flex-wrap">
-                  <span className="flex items-center gap-1 text-slate-300">
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap mt-0.5">
+                  <span className="flex items-center gap-1.5 text-slate-300">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Session Académique 2026-2027</span>
+                    <span>Session 2026–2027</span>
                   </span>
-                  <span>·</span>
-                  <span className="inline-flex items-center gap-1 text-emerald-300 font-medium text-[10.5px] bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-700/50">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <span>Système Sécurisé En Ligne</span>
+                  <span className="text-slate-600">·</span>
+                  <span className="text-emerald-300 font-medium text-[10.5px]">
+                    Système Sécurisé En Ligne
                   </span>
-                  <span>·</span>
-                  <span className="hidden sm:inline">Delmas 50, rue Dominique #2 bis · collegeisaacnewton.com</span>
+                  <span className="text-slate-600 hidden md:inline">·</span>
+                  <span className="text-slate-400 hidden md:inline truncate">Delmas 50 · collegeisaacnewton.com</span>
                 </div>
               </div>
             </div>
 
-            {/* Quick Actions & User Profile */}
-            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+            {/* Consolidated Executive Toolbar (Single Cohesive Row on Desktop/Tablet) */}
+            <div className="flex items-center gap-1.5 sm:gap-2 self-start lg:self-auto shrink-0 flex-wrap sm:flex-nowrap">
               
               {/* Back to Public Site */}
               {onNavigate && (
                 <button
                   type="button"
                   onClick={() => onNavigate('home')}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-medium transition-colors border border-slate-700 cursor-pointer"
-                  title="Voir le site en mode visiteur"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-semibold transition-all border border-slate-700/80 shadow-xs cursor-pointer group"
+                  title="Consulter le site public en mode visiteur"
                 >
-                  <Globe className="w-3.5 h-3.5 text-amber-400" />
+                  <Globe className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
                   <span className="hidden sm:inline">Site Public</span>
-                  <span className="sm:hidden">Site</span>
                 </button>
               )}
 
@@ -769,11 +770,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 onClick={loadData}
                 disabled={isLoading}
-                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-medium transition-colors border border-slate-700 cursor-pointer"
-                title="Actualiser les données"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-semibold transition-all border border-slate-700/80 shadow-xs cursor-pointer"
+                title="Actualiser les données du tableau de bord"
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-amber-400' : 'text-slate-300'}`} />
-                <span className="hidden sm:inline">Actualiser</span>
+                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-amber-400' : 'text-slate-400'}`} />
+                <span className="hidden md:inline">Actualiser</span>
               </button>
 
               {/* GitHub Synchronizer Button for Super Admin */}
@@ -781,20 +782,27 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowGitHubModal(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 hover:text-white text-xs font-bold transition-all border border-emerald-700/60 cursor-pointer shadow-xs"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 text-emerald-300 hover:text-white text-xs font-bold transition-all border border-emerald-700/60 cursor-pointer shadow-xs"
                   title="Exporter et synchroniser les sources vers GitHub"
                 >
                   <GitBranch className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="hidden md:inline">Synchroniser GitHub</span>
+                  <span className="hidden sm:inline">GitHub</span>
                 </button>
               )}
 
-              {/* Profile Card */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-950/70 border border-blue-800/60 text-xs">
-                <Shield className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <div className="text-left">
-                  <span className="font-semibold text-white block leading-tight text-xs">{currentUser.fullName}</span>
-                  <span className="text-[9.5px] text-amber-300 font-semibold leading-none block">
+              {/* Vertical divider */}
+              <div className="h-6 w-px bg-slate-800 mx-0.5 hidden sm:block" />
+
+              {/* User Profile Card */}
+              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs shadow-xs">
+                <div className="w-6 h-6 rounded-lg bg-blue-900/60 border border-blue-500/30 flex items-center justify-center shrink-0">
+                  <Shield className="w-3.5 h-3.5 text-amber-400" />
+                </div>
+                <div className="text-left leading-tight">
+                  <span className="font-semibold text-white block text-xs truncate max-w-[130px] sm:max-w-[160px]">
+                    {currentUser.fullName}
+                  </span>
+                  <span className="text-[9.5px] text-amber-300 font-semibold block">
                     {ROLE_PERMISSIONS[currentUser.role]?.badgeLabel || currentUser.role}
                   </span>
                 </div>
@@ -804,38 +812,36 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <button
                 type="button"
                 onClick={onLogout}
-                className="p-1.5 rounded-lg bg-rose-950/50 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-xs transition-colors cursor-pointer"
-                title="Déconnexion"
+                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-rose-200 border border-rose-800/40 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1"
+                title="Déconnexion sécurisée"
               >
                 <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden xl:inline text-[11px]">Quitter</span>
               </button>
+
             </div>
+
           </div>
 
-          {/* NAVIGATION TABS WITH LIVE BADGES - MODERN FLUID CONTROLS & ZERO NATIVE SCROLLBAR */}
-          <div className="relative flex items-center border-t border-slate-800/90 pt-1 pb-1">
+          {/* NAVIGATION TABS - INLINE RESPONSIVE LAYOUT WITHOUT OVERLAPPING BUTTONS */}
+          <div className="flex items-center gap-1 sm:gap-1.5 py-1.5 border-t border-slate-800/80">
             
-            {/* Left Chevron Scroll Button */}
+            {/* Left Chevron Scroll Button (Inline, only visible when scrollable) */}
             {canScrollLeft && (
               <button
                 type="button"
                 onClick={() => scrollTabs('left')}
                 aria-label="Faire défiler les onglets vers la gauche"
-                className="absolute left-0 z-20 h-7 w-7 rounded-lg bg-slate-900/95 hover:bg-slate-800 text-amber-300 border border-slate-700/80 shadow-lg flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
+                className="shrink-0 h-7 w-7 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
             )}
 
-            {/* Left Gradient Mask */}
-            {canScrollLeft && (
-              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-900 to-transparent pointer-events-none z-10" />
-            )}
-
-            {/* Main Tabs Container without native scrollbars */}
+            {/* Main Tabs Container - Takes all flexible width between controls */}
             <div 
               ref={navScrollContainerRef}
-              className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden scroll-smooth w-full py-0.5 px-0.5"
+              className="flex-1 flex items-center gap-1 sm:gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden scroll-smooth py-0.5 px-0.5 min-w-0"
             >
               
               {/* Tab 1: Overview */}
@@ -843,7 +849,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 data-tab-id="overview"
                 onClick={() => setActiveTab('overview')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'overview'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -858,7 +864,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 data-tab-id="slideshow"
                 onClick={() => setActiveTab('slideshow')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'slideshow'
                     ? 'bg-amber-400 text-slate-950 font-bold shadow-xs ring-1 ring-amber-300/50'
                     : 'text-amber-300 hover:text-white hover:bg-slate-800/70 border border-amber-400/40 bg-amber-950/20'
@@ -873,7 +879,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 data-tab-id="menus"
                 onClick={() => setActiveTab('menus')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'menus'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-amber-400/50'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -888,7 +894,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 data-tab-id="admissions"
                 onClick={() => setActiveTab('admissions')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'admissions'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -908,7 +914,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 data-tab-id="news"
                 onClick={() => setActiveTab('news')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'news'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -926,7 +932,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 data-tab-id="events"
                 onClick={() => setActiveTab('events')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'events'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -944,7 +950,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 data-tab-id="media"
                 onClick={() => setActiveTab('media')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'media'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -959,7 +965,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 data-tab-id="messages"
                 onClick={() => setActiveTab('messages')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'messages'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -979,7 +985,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 data-tab-id="cms"
                 onClick={() => setActiveTab('cms')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'cms'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -1003,7 +1009,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 data-tab-id="users"
                 onClick={() => setActiveTab('users')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'users'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -1015,25 +1021,23 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
             </div>
 
-            {/* Right Gradient Mask */}
-            {canScrollRight && (
-              <div className="absolute right-28 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-900 to-transparent pointer-events-none z-10 hidden sm:block" />
-            )}
-
-            {/* Right Chevron Scroll Button */}
+            {/* Right Chevron Scroll Button (Inline, positioned AFTER tabs track, NEVER overlapping!) */}
             {canScrollRight && (
               <button
                 type="button"
                 onClick={() => scrollTabs('right')}
                 aria-label="Faire défiler les onglets vers la droite"
-                className="absolute right-28 z-20 h-7 w-7 rounded-lg bg-slate-900/95 hover:bg-slate-800 text-amber-300 border border-slate-700/80 shadow-lg flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs hidden sm:flex"
+                className="shrink-0 h-7 w-7 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
             )}
 
+            {/* Clean Vertical Separator */}
+            <div className="h-6 w-px bg-slate-800 shrink-0 mx-0.5" />
+
             {/* QUICK MODULE SELECTOR DROPDOWN (10 MODULES) */}
-            <div className="relative shrink-0 ml-1.5 pl-1.5 border-l border-slate-800" ref={modulesMenuRef}>
+            <div className="relative shrink-0" ref={modulesMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsModulesMenuOpen(!isModulesMenuOpen)}
