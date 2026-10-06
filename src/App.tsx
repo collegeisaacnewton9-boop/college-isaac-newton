@@ -30,9 +30,10 @@ import { LegalPage } from './pages/LegalPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
-import { User, Language } from './types';
+import { User, Language, SchoolEvent } from './types';
 import { apiService } from './services/api';
 import { eventNotificationService } from './services/eventNotificationService';
+import { EventLastMinuteModal } from './components/events/EventLastMinuteModal';
 import { Toaster } from 'sonner';
 import { ContentBlockProvider } from './context/ContentBlockContext';
 import { FloatingEditorToolbar } from './components/common/FloatingEditorToolbar';
@@ -46,28 +47,82 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [langNotice, setLangNotice] = useState<string | null>(null);
 
+  // Global Event Last-Minute Update & Reminder Modal state
+  const [lastMinuteModalEvent, setLastMinuteModalEvent] = useState<SchoolEvent | null>(null);
+  const [isLastMinuteModalOpen, setIsLastMinuteModalOpen] = useState<boolean>(false);
+  const [lastMinuteModalTab, setLastMinuteModalTab] = useState<'reminder' | 'edit'>('reminder');
+
   useEffect(() => {
     // Restore user session if present
     const user = apiService.getCurrentUser();
     if (user) setCurrentUser(user);
   }, []);
 
-  // Automated notification system for events within 48h
+  // Automated notification system for events within 48h of expiration / start
   useEffect(() => {
-    apiService.getEvents().then((evts) => {
-      if (!evts || evts.length === 0) return;
-      const isAdmin = currentUser?.role === 'ADMIN' || (currentUser?.role as string) === 'SUPER_ADMIN';
-      eventNotificationService.checkAndNotifyImminentEvents(evts, {
-        isAdmin,
-        onQuickUpdate: (evt) => {
-          if (isAdmin) {
-            handleNavigate('admin');
-          } else {
-            handleNavigate('events');
-          }
-        },
-      });
-    }).catch(() => {});
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const runAutomatedNotificationCheck = async (force = false) => {
+      try {
+        const evts = await apiService.getEvents();
+        if (!evts || evts.length === 0) return;
+        const isAdmin = currentUser?.role === 'ADMIN' || (currentUser?.role as string) === 'SUPER_ADMIN';
+
+        eventNotificationService.checkAndNotifyImminentEvents(evts, {
+          isAdmin,
+          force,
+          onQuickUpdate: (evt) => {
+            setLastMinuteModalEvent(evt);
+            setLastMinuteModalTab(isAdmin ? 'edit' : 'reminder');
+            setIsLastMinuteModalOpen(true);
+          },
+          onSendReminder: (evt) => {
+            setLastMinuteModalEvent(evt);
+            setLastMinuteModalTab('reminder');
+            setIsLastMinuteModalOpen(true);
+          },
+        });
+      } catch {
+        // Non-blocking in case of offline/network hiccup
+      }
+    };
+
+    // Initial check on mount or when user role changes
+    runAutomatedNotificationCheck();
+
+    // Recurring automated check every 5 minutes in background
+    intervalId = setInterval(() => {
+      runAutomatedNotificationCheck(false);
+    }, 5 * 60 * 1000);
+
+    // Re-check when user focuses window
+    const handleFocus = () => {
+      runAutomatedNotificationCheck(false);
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // Re-check when events are modified/added
+    const handleEventsUpdated = () => {
+      runAutomatedNotificationCheck(false);
+    };
+    window.addEventListener('cin:events-updated', handleEventsUpdated);
+
+    // Listener for explicit requests to open the last-minute modal
+    const handleOpenLastMinute = (e: any) => {
+      if (e.detail?.event) {
+        setLastMinuteModalEvent(e.detail.event);
+        setLastMinuteModalTab(e.detail.tab || (currentUser?.role === 'ADMIN' ? 'edit' : 'reminder'));
+        setIsLastMinuteModalOpen(true);
+      }
+    };
+    window.addEventListener('cin:open-event-last-minute', handleOpenLastMinute);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('cin:events-updated', handleEventsUpdated);
+      window.removeEventListener('cin:open-event-last-minute', handleOpenLastMinute);
+    };
   }, [currentUser]);
 
   const handleNavigate = (page: string, subSection?: string) => {
@@ -271,6 +326,18 @@ export default function App() {
 
       {/* Floating Formatting Toolbar & Admin Inline Editor Toggle (Visible only to authorized admins) */}
       <FloatingEditorToolbar currentUser={currentUser} />
+
+      {/* Global Event Last-Minute Update & Reminder Modal */}
+      <EventLastMinuteModal
+        isOpen={isLastMinuteModalOpen}
+        onClose={() => setIsLastMinuteModalOpen(false)}
+        event={lastMinuteModalEvent}
+        isAdmin={currentUser?.role === 'ADMIN' || (currentUser?.role as string) === 'SUPER_ADMIN'}
+        defaultTab={lastMinuteModalTab}
+        onEventUpdated={(updated) => {
+          setLastMinuteModalEvent(updated);
+        }}
+      />
 
       {/* Global Toast Notifications Provider (Sonner) */}
       <Toaster richColors position="top-right" closeButton />

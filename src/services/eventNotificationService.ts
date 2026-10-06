@@ -10,6 +10,7 @@ export interface ImminentEventAlert {
 }
 
 const STORAGE_KEY_DISMISSED = 'cin_imminent_event_dismissed';
+const inMemoryDismissed = new Set<string>();
 
 export const eventNotificationService = {
   /**
@@ -79,16 +80,19 @@ export const eventNotificationService = {
    * Vérifie si l'alerte a déjà été fermée ou notifiée durant la session courante.
    */
   isAlertDismissed(eventId: string): boolean {
-    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return false;
+    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') {
+      return inMemoryDismissed.has(eventId);
+    }
     try {
       const raw = sessionStorage.getItem(`${STORAGE_KEY_DISMISSED}_${eventId}`);
-      return Boolean(raw);
+      return Boolean(raw) || inMemoryDismissed.has(eventId);
     } catch {
-      return false;
+      return inMemoryDismissed.has(eventId);
     }
   },
 
   dismissAlert(eventId: string): void {
+    inMemoryDismissed.add(eventId);
     if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return;
     try {
       sessionStorage.setItem(`${STORAGE_KEY_DISMISSED}_${eventId}`, Date.now().toString());
@@ -96,6 +100,7 @@ export const eventNotificationService = {
   },
 
   clearDismissedAlerts(): void {
+    inMemoryDismissed.clear();
     if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return;
     try {
       Object.keys(sessionStorage).forEach((key) => {
@@ -104,6 +109,17 @@ export const eventNotificationService = {
         }
       });
     } catch {}
+  },
+
+  /**
+   * Ouvre la modale de dernière minute / rappel depuis n'importe quel point de l'application.
+   */
+  openLastMinuteModal(event: SchoolEvent, tab: 'reminder' | 'edit' = 'reminder'): void {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:open-event-last-minute', {
+        detail: { event, tab }
+      }));
+    }
   },
 
   /**
@@ -135,17 +151,33 @@ export const eventNotificationService = {
         toast.warning(`⚡ Événement imminent (< 48h) : ${event.title}`, {
           description: `${isOngoing ? 'L’événement est actuellement en cours sur le campus' : `Échéance : ${timeRemainingFormatted} (${hoursRemaining}h)`}. Cliquez ci-dessous pour une mise à jour rapide ou envoyer un rappel.`,
           duration: 14000,
-          action: options?.onQuickUpdate
-            ? {
-                label: 'Modifier (Admin)',
-                onClick: () => options.onQuickUpdate!(event),
+          action: {
+            label: 'Mise à jour rapide',
+            onClick: () => {
+              if (options?.onQuickUpdate) {
+                options.onQuickUpdate(event);
+              } else {
+                this.openLastMinuteModal(event, 'edit');
               }
-            : undefined,
+            },
+          },
         });
       } else {
         toast.info(`⏰ Événement à venir : ${event.title}`, {
-          description: `${isOngoing ? 'En cours aujourd’hui sur le campus' : `Début prévu : ${timeRemainingFormatted}`}. Retrouvez tous les détails dans l’agenda officiel.`,
-          duration: 8000,
+          description: `${isOngoing ? 'En cours aujourd’hui sur le campus' : `Début prévu : ${timeRemainingFormatted}`}. Retrouvez tous les détails et consignes.`,
+          duration: 10000,
+          action: {
+            label: 'Consulter l’événement',
+            onClick: () => {
+              if (options?.onSendReminder) {
+                options.onSendReminder(event);
+              } else if (options?.onQuickUpdate) {
+                options.onQuickUpdate(event);
+              } else {
+                this.openLastMinuteModal(event, 'reminder');
+              }
+            },
+          },
         });
       }
     });

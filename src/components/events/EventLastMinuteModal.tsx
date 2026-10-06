@@ -230,14 +230,15 @@ export const EventLastMinuteModal: React.FC<EventLastMinuteModalProps> = ({
 
               {/* ACTION BUTTONS */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={handleShareWhatsApp}
-                  className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(reminderMessage)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm text-center"
                 >
-                  <MessageSquare className="w-4 h-4" />
+                  <MessageSquare className="w-4 h-4 shrink-0" />
                   <span>Diffuser sur WhatsApp</span>
-                </button>
+                </a>
 
                 <button
                   type="button"

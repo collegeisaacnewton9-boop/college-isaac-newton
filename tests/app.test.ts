@@ -397,9 +397,33 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.strictEqual(typeof eventNotificationService.isAlertDismissed, 'function');
       assert.strictEqual(typeof eventNotificationService.dismissAlert, 'function');
       assert.strictEqual(typeof eventNotificationService.checkAndNotifyImminentEvents, 'function');
+      assert.strictEqual(typeof eventNotificationService.openLastMinuteModal, 'function');
 
       const results = eventNotificationService.checkAndNotifyImminentEvents([], { isAdmin: true });
       assert.deepStrictEqual(results, []);
+    });
+
+    it('should support notification dismissal and force overrides', async () => {
+      const { eventNotificationService } = await import('../src/services/eventNotificationService.ts');
+      const testEvent: SchoolEvent = {
+        id: 'evt-test-dismiss',
+        title: 'Session Test',
+        description: 'Test description',
+        startDate: new Date(Date.now() + 6 * 3600 * 1000).toISOString(),
+        location: 'Campus',
+        category: 'Pédagogique',
+        audience: 'ALL',
+        isPublic: true,
+      };
+
+      // Initially not dismissed
+      assert.strictEqual(eventNotificationService.isAlertDismissed(testEvent.id), false);
+      eventNotificationService.dismissAlert(testEvent.id);
+      assert.strictEqual(eventNotificationService.isAlertDismissed(testEvent.id), true);
+
+      // Clean up dismissed state
+      eventNotificationService.clearDismissedAlerts();
+      assert.strictEqual(eventNotificationService.isAlertDismissed(testEvent.id), false);
     });
   });
 });
