@@ -107,7 +107,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-6 sm:gap-7 lg:gap-8">
           
           {/* Col 1 : Identité de l'établissement (3 colonnes en desktop) */}
-          <div className="sm:col-span-2 lg:col-span-3 space-y-3.5">
+          <div className="sm:col-span-1 lg:col-span-3 space-y-3.5">
             <SchoolLogo variant="light" />
             
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm">
@@ -164,8 +164,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
             </div>
           </div>
 
-          {/* Col 2 : Programmes d'enseignement (4 colonnes en desktop - sur une seule ligne) */}
-          <div className="sm:col-span-1 lg:col-span-4 space-y-2.5">
+          {/* Col 2 : Programmes d'enseignement (3 colonnes en desktop - sur une seule ligne) */}
+          <div className="sm:col-span-1 lg:col-span-3 space-y-2.5">
             <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 pb-1 border-b border-slate-900">
               Cycles d'Enseignement
             </h3>
@@ -218,8 +218,8 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
             </ul>
           </div>
 
-          {/* Col 3 : Admissions & Vie scolaire (2 colonnes) */}
-          <div className="lg:col-span-2 space-y-2.5">
+          {/* Col 3 : Admissions & Vie scolaire (3 colonnes en desktop - sur une seule ligne) */}
+          <div className="sm:col-span-1 lg:col-span-3 space-y-2.5">
             <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 pb-1 border-b border-slate-900">
               Admissions
             </h3>
@@ -227,62 +227,62 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
               <li>
                 <button 
                   onClick={() => onNavigate('pre-registration')} 
-                  className="text-amber-300 hover:text-white font-medium transition-colors flex items-center gap-1.5 hover:translate-x-0.5 duration-150 cursor-pointer"
+                  className="text-amber-300 hover:text-white font-medium transition-colors flex items-center gap-1.5 hover:translate-x-0.5 duration-150 cursor-pointer whitespace-nowrap"
                 >
                   <ArrowRight className="w-3 h-3 text-amber-500 shrink-0" />
-                  <span>Formulaire en ligne</span>
+                  <span className="whitespace-nowrap">Formulaire en ligne</span>
                 </button>
               </li>
               <li>
                 <button 
                   onClick={() => onNavigate('admissions', 'conditions')} 
-                  className="hover:text-white transition-colors flex items-center gap-1.5 text-slate-400 hover:translate-x-0.5 duration-150 cursor-pointer"
+                  className="hover:text-white transition-colors flex items-center gap-1.5 text-slate-400 hover:translate-x-0.5 duration-150 cursor-pointer whitespace-nowrap"
                 >
                   <ArrowRight className="w-3 h-3 text-slate-600 shrink-0" />
-                  <span>Critères d'admission</span>
+                  <span className="whitespace-nowrap">Critères d'admission</span>
                 </button>
               </li>
               <li>
                 <button 
                   onClick={() => onNavigate('events')} 
-                  className="hover:text-white transition-colors flex items-center gap-1.5 text-slate-400 hover:translate-x-0.5 duration-150 cursor-pointer"
+                  className="hover:text-white transition-colors flex items-center gap-1.5 text-slate-400 hover:translate-x-0.5 duration-150 cursor-pointer whitespace-nowrap"
                 >
                   <ArrowRight className="w-3 h-3 text-slate-600 shrink-0" />
-                  <span>Agenda & Calendrier</span>
+                  <span className="whitespace-nowrap">Agenda & Calendrier</span>
                 </button>
               </li>
               <li>
                 <button 
                   onClick={() => onNavigate('news')} 
-                  className="hover:text-white transition-colors flex items-center gap-1.5 text-slate-400 hover:translate-x-0.5 duration-150 cursor-pointer"
+                  className="hover:text-white transition-colors flex items-center gap-1.5 text-slate-400 hover:translate-x-0.5 duration-150 cursor-pointer whitespace-nowrap"
                 >
                   <ArrowRight className="w-3 h-3 text-slate-600 shrink-0" />
-                  <span>Actualités du collège</span>
+                  <span className="whitespace-nowrap">Actualités du collège</span>
                 </button>
               </li>
               <li>
                 <button 
                   onClick={() => onNavigate('gallery')} 
-                  className="hover:text-white transition-colors flex items-center gap-1.5 text-slate-400 hover:translate-x-0.5 duration-150 cursor-pointer"
+                  className="hover:text-white transition-colors flex items-center gap-1.5 text-slate-400 hover:translate-x-0.5 duration-150 cursor-pointer whitespace-nowrap"
                 >
                   <ArrowRight className="w-3 h-3 text-slate-600 shrink-0" />
-                  <span>Galerie photos campus</span>
+                  <span className="whitespace-nowrap">Galerie photos campus</span>
                 </button>
               </li>
               <li>
                 <button 
                   onClick={() => onNavigate('support')} 
-                  className="hover:text-amber-300 transition-colors flex items-center gap-1.5 text-slate-300 font-medium hover:translate-x-0.5 duration-150 cursor-pointer"
+                  className="hover:text-amber-300 transition-colors flex items-center gap-1.5 text-slate-300 font-medium hover:translate-x-0.5 duration-150 cursor-pointer whitespace-nowrap"
                 >
                   <ArrowRight className="w-3 h-3 text-amber-500 shrink-0" />
-                  <span>Soutenir le Collège & Partenariats</span>
+                  <span className="whitespace-nowrap">Soutenir le Collège & Partenariats</span>
                 </button>
               </li>
             </ul>
           </div>
 
           {/* Col 4 : Contact Officiel & Secrétariat (3 colonnes) */}
-          <div className="lg:col-span-3 space-y-2.5">
+          <div className="sm:col-span-1 lg:col-span-3 space-y-2.5">
             <h3 className="text-xs font-bold uppercase tracking-wider text-amber-400 pb-1 border-b border-slate-900">
               Secrétariat & Contact
             </h3>
