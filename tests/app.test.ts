@@ -1,6 +1,6 @@
 import test, { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { Role } from '../src/types/index.ts';
+import { Role, SchoolEvent } from '../src/types/index.ts';
 import { ROLE_PERMISSIONS } from '../src/data/rolePermissions.ts';
 import { DEFAULT_EDUCATIONAL_CYCLES } from '../src/data/cyclesData.ts';
 import { DEFAULT_NAVIGATION_MENU } from '../src/data/navigationData.ts';
@@ -308,7 +308,7 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       const { eventNotificationService } = await import('../src/services/eventNotificationService.ts');
       
       const fixedNow = new Date('2026-10-15T10:00:00Z');
-      const testEvents = [
+      const testEvents: SchoolEvent[] = [
         {
           id: 'evt-10h',
           title: 'Rencontre Parents-Profs Imminente',
@@ -327,7 +327,7 @@ describe('Collège Isaac Newton - Unit Tests', () => {
           startDate: '2026-10-16T22:00:00Z', // In 36 hours
           endDate: '2026-10-17T02:00:00Z',
           location: 'Salles 1 à 4',
-          category: 'Académique',
+          category: 'Examen',
           audience: 'STUDENTS' as const,
           isPublic: true,
         },
@@ -338,7 +338,7 @@ describe('Collège Isaac Newton - Unit Tests', () => {
           startDate: '2026-10-15T08:00:00Z', // Started 2 hours ago
           endDate: '2026-10-15T12:00:00Z',   // Finishes in 2 hours
           location: 'Labo Info',
-          category: 'Sciences',
+          category: 'Pédagogique',
           audience: 'ALL' as const,
           isPublic: true,
         },
@@ -360,7 +360,7 @@ describe('Collège Isaac Newton - Unit Tests', () => {
           startDate: '2026-10-14T08:00:00Z', // Yesterday
           endDate: '2026-10-14T12:00:00Z',
           location: 'Campus',
-          category: 'Vie scolaire',
+          category: 'Culturel',
           audience: 'ALL' as const,
           isPublic: true,
         },

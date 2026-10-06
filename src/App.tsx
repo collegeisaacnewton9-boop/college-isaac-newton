@@ -56,7 +56,7 @@ export default function App() {
   useEffect(() => {
     apiService.getEvents().then((evts) => {
       if (!evts || evts.length === 0) return;
-      const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
+      const isAdmin = currentUser?.role === 'ADMIN' || (currentUser?.role as string) === 'SUPER_ADMIN';
       eventNotificationService.checkAndNotifyImminentEvents(evts, {
         isAdmin,
         onQuickUpdate: (evt) => {
