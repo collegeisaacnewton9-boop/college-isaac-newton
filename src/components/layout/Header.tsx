@@ -173,8 +173,8 @@ export const Header: React.FC<HeaderProps> = ({
     <>
       <header 
         ref={navRef}
-        className={`sticky top-0 z-40 bg-white/95 backdrop-blur-md transition-all duration-200 border-b ${
-          isScrolled ? 'border-slate-200/90 shadow-sm py-2' : 'border-slate-100 py-2.5 sm:py-3'
+        className={`sticky top-0 z-50 bg-white/95 backdrop-blur-sm transition-all duration-200 border-b ${
+          isScrolled ? 'border-slate-200/90 shadow-md py-2' : 'border-slate-100 py-2.5 sm:py-3'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
