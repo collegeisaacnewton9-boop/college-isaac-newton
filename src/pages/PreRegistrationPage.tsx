@@ -211,16 +211,16 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     const stepTouched: Record<string, boolean> = {};
 
     if (step === 1) {
-      // Step 1: Responsable Légal
-      const fields: (keyof AdmissionFormData)[] = ['parentFullName', 'parentPhone', 'parentEmail', 'parentAddress'];
+      // Step 1: Informations de l'Élève Candidat
+      const fields: (keyof AdmissionFormData)[] = ['studentLastName', 'studentFirstName', 'studentBirthDate'];
       fields.forEach(f => {
         stepTouched[f] = true;
         const err = validateSingleField(f, formData[f]);
         if (err) stepErrors[f] = err;
       });
     } else if (step === 2) {
-      // Step 2: Informations de l'Élève
-      const fields: (keyof AdmissionFormData)[] = ['studentLastName', 'studentFirstName', 'studentBirthDate'];
+      // Step 2: Responsable Légal (Parent / Tuteur)
+      const fields: (keyof AdmissionFormData)[] = ['parentFullName', 'parentPhone', 'parentEmail', 'parentAddress'];
       fields.forEach(f => {
         stepTouched[f] = true;
         const err = validateSingleField(f, formData[f]);
@@ -258,7 +258,15 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateStep(4)) return;
+    const isStep1Valid = validateStep(1);
+    const isStep2Valid = validateStep(2);
+    const isStep3Valid = validateStep(3);
+    const isStep4Valid = validateStep(4);
+
+    if (!isStep1Valid) { setCurrentStep(1); window.scrollTo({ top: 60, behavior: 'smooth' }); return; }
+    if (!isStep2Valid) { setCurrentStep(2); window.scrollTo({ top: 60, behavior: 'smooth' }); return; }
+    if (!isStep3Valid) { setCurrentStep(3); window.scrollTo({ top: 60, behavior: 'smooth' }); return; }
+    if (!isStep4Valid) { setCurrentStep(4); window.scrollTo({ top: 60, behavior: 'smooth' }); return; }
 
     setSubmitting(true);
     try {
@@ -391,60 +399,278 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
         </p>
       </div>
 
-      {/* Stepper Progress Bar - Responsable Légal EN PREMIER, puis Élève */}
-      <div className="bg-white rounded-xl p-1.5 sm:p-2.5 shadow-2xs border border-slate-200/90">
-        <div className="grid grid-cols-4 gap-1 text-center text-xs">
-          {[
-            { step: 1, label: '1. Responsable Légal', shortLabel: 'Parent', icon: User },
-            { step: 2, label: '2. Élève Candidat', shortLabel: 'Élève', icon: GraduationCap },
-            { step: 3, label: '3. Niveau & Classe', shortLabel: 'Classe', icon: FileText },
-            { step: 4, label: '4. Pièces & Accord', shortLabel: 'Accord', icon: ShieldCheck },
-          ].map((item) => {
-            const isCompleted = currentStep > item.step;
-            const isCurrent = currentStep === item.step;
-            const Icon = item.icon;
+      {/* International-Standard Modern Stepper Progress Bar */}
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-4 shadow-2xs border border-slate-200/90 space-y-2.5">
+        {/* Top Header: Step Counter & Progress Percentage Badge */}
+        <div className="flex items-center justify-between gap-2 px-0.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-blue-900 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+              Étape {currentStep} sur 4
+            </span>
+            <span className="text-xs sm:text-sm font-bold text-slate-900 hidden xs:inline">
+              {currentStep === 1 && '1. Identité de l’Élève Candidat'}
+              {currentStep === 2 && '2. Responsable Légal (Parent / Tuteur)'}
+              {currentStep === 3 && '3. Niveau Scolaire & Classe Souhaitée'}
+              {currentStep === 4 && '4. Pièces Justificatives & Accord'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] sm:text-xs font-mono font-bold text-blue-900">
+              {currentStep === 1 && '25%'}
+              {currentStep === 2 && '50%'}
+              {currentStep === 3 && '75%'}
+              {currentStep === 4 && '100%'}
+            </span>
+            <div className="w-16 sm:w-28 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-900 via-indigo-800 to-blue-700 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${(currentStep / 4) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
 
-            return (
-              <div key={item.step} className="flex flex-col items-center py-0.5">
-                <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-bold transition-all ${
-                  isCompleted 
-                    ? 'bg-emerald-600 text-white' 
-                    : isCurrent 
-                    ? 'bg-blue-900 text-white ring-2 ring-blue-100' 
-                    : 'bg-slate-100 text-slate-400'
-                }`}>
-                  {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Icon className="w-3 h-3" />}
-                </div>
-                <span className={`mt-0.5 text-[9px] sm:text-[10.5px] font-semibold truncate max-w-full px-0.5 ${
-                  isCurrent ? 'text-blue-900 font-bold' : 'text-slate-500'
-                }`}>
-                  <span className="hidden sm:inline">{item.label}</span>
-                  <span className="sm:hidden">{item.shortLabel}</span>
-                </span>
-              </div>
-            );
-          })}
+        {/* Stepper Node Track with Interconnecting Line */}
+        <div className="relative pt-1">
+          {/* Continuous connecting track */}
+          <div className="absolute top-4 sm:top-5 left-7 right-7 h-0.5 bg-slate-200 -z-0 hidden sm:block" />
+          
+          <div className="grid grid-cols-4 gap-1 sm:gap-2 relative z-10">
+            {[
+              { step: 1, label: 'Élève Candidat', sublabel: 'Identité & état civil', icon: GraduationCap },
+              { step: 2, label: 'Responsable Légal', sublabel: 'Parent ou tuteur', icon: User },
+              { step: 3, label: 'Niveau & Classe', sublabel: 'Cycle académique', icon: FileText },
+              { step: 4, label: 'Pièces & Accord', sublabel: 'Validation finale', icon: ShieldCheck },
+            ].map((item) => {
+              const isCompleted = currentStep > item.step;
+              const isCurrent = currentStep === item.step;
+              const Icon = item.icon;
+
+              return (
+                <button
+                  key={item.step}
+                  type="button"
+                  disabled={!isCompleted && !isCurrent}
+                  onClick={() => {
+                    if (isCompleted) {
+                      setCurrentStep(item.step);
+                    }
+                  }}
+                  className={`flex flex-col items-center text-center p-1 sm:p-1.5 rounded-xl transition-all ${
+                    isCompleted ? 'hover:bg-slate-50 cursor-pointer' : isCurrent ? 'cursor-default' : 'cursor-not-allowed opacity-60'
+                  }`}
+                >
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                    isCompleted
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : isCurrent
+                      ? 'bg-blue-900 text-white ring-4 ring-blue-100 shadow-sm scale-105'
+                      : 'bg-slate-100 text-slate-400 border border-slate-200'
+                  }`}>
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                    ) : (
+                      <Icon className="w-3.5 h-3.5" />
+                    )}
+                  </div>
+                  <span className={`mt-1 text-[10px] sm:text-xs font-bold truncate max-w-full ${
+                    isCurrent ? 'text-blue-900' : isCompleted ? 'text-slate-700' : 'text-slate-400'
+                  }`}>
+                    {item.step}. {item.label}
+                  </span>
+                  <span className="hidden md:block text-[9.5px] text-slate-400 truncate max-w-full">
+                    {item.sublabel}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       {/* Form Card - Dense, Ergonomic Spacing */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-3 sm:p-4.5 shadow-2xs border border-slate-200/90">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-6 shadow-2xs border border-slate-200/90">
         
         {/* =========================================================================
-            SECTION 1 : INFORMATIONS DU RESPONSABLE LÉGAL (PARENT / TUTEUR)
+            SECTION 1 : INFORMATIONS DE L'ÉLÈVE CANDIDAT (EN PREMIER)
         ========================================================================= */}
         {currentStep === 1 && (
-          <div className="space-y-2.5 sm:space-y-3 animate-fade-in">
-            <div className="border-b border-slate-100 pb-2">
-              <div className="flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-900 text-[11px] font-bold flex items-center justify-center">1</span>
-                <h2 className="font-serif text-sm sm:text-base font-bold text-slate-900">
-                  Responsable Légal (Parent / Tuteur)
-                </h2>
+          <div className="space-y-2.5 sm:space-y-3.5 animate-fade-in">
+            <div className="border-b border-slate-100 pb-2 flex items-start justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-900 text-[11px] font-bold flex items-center justify-center">1</span>
+                  <h2 className="font-serif text-sm sm:text-base font-bold text-slate-900">
+                    Informations de l’Élève Candidat
+                  </h2>
+                </div>
+                <p className="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5">
+                  Identité officielle et état civil de l'enfant à inscrire au Collège Isaac Newton.
+                </p>
               </div>
-              <p className="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5">
-                Coordonnées du souscripteur légal qui recevra la convocation et les notifications.
-              </p>
+              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-900 text-[10.5px] font-bold border border-blue-200">
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Candidat Principal</span>
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
+              
+              {/* Nom de famille */}
+              <div>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700">
+                    Nom de famille *
+                  </label>
+                  {touched.studentLastName && !errors.studentLastName && formData.studentLastName && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={formData.studentLastName}
+                  onChange={(e) => handleFieldChange('studentLastName', e.target.value)}
+                  onBlur={() => handleFieldBlur('studentLastName')}
+                  placeholder="Ex : Baptiste"
+                  className={getInputClasses('studentLastName')}
+                />
+                {touched.studentLastName && errors.studentLastName && (
+                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.studentLastName}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Prénom(s) */}
+              <div>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700">
+                    Prénom(s) *
+                  </label>
+                  {touched.studentFirstName && !errors.studentFirstName && formData.studentFirstName && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={formData.studentFirstName}
+                  onChange={(e) => handleFieldChange('studentFirstName', e.target.value)}
+                  onBlur={() => handleFieldBlur('studentFirstName')}
+                  placeholder="Ex : Alexandre"
+                  className={getInputClasses('studentFirstName')}
+                />
+                {touched.studentFirstName && errors.studentFirstName && (
+                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.studentFirstName}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Sexe */}
+              <div>
+                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-0.5">
+                  Sexe *
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 mt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => handleFieldChange('studentGender', 'M')}
+                    className={`py-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer text-center ${
+                      formData.studentGender === 'M' 
+                        ? 'border-blue-900 bg-blue-900 text-white shadow-2xs' 
+                        : 'border-slate-200 text-slate-700 hover:bg-slate-50 bg-white'
+                    }`}
+                  >
+                    Masculin (Garçon)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleFieldChange('studentGender', 'F')}
+                    className={`py-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer text-center ${
+                      formData.studentGender === 'F' 
+                        ? 'border-blue-900 bg-blue-900 text-white shadow-2xs' 
+                        : 'border-slate-200 text-slate-700 hover:bg-slate-50 bg-white'
+                    }`}
+                  >
+                    Féminin (Fille)
+                  </button>
+                </div>
+              </div>
+
+              {/* Date de naissance */}
+              <div>
+                <div className="flex items-center justify-between mb-0.5">
+                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 flex items-center gap-1">
+                    <Calendar className="w-3 h-3 text-blue-900" />
+                    <span>Date de naissance *</span>
+                  </label>
+                  {touched.studentBirthDate && !errors.studentBirthDate && formData.studentBirthDate && (
+                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> Validé
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="date"
+                  value={formData.studentBirthDate}
+                  onChange={(e) => handleFieldChange('studentBirthDate', e.target.value)}
+                  onBlur={() => handleFieldBlur('studentBirthDate')}
+                  className={getInputClasses('studentBirthDate')}
+                />
+                {touched.studentBirthDate && errors.studentBirthDate && (
+                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{errors.studentBirthDate}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Établissement précédent */}
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-0.5 flex items-center gap-1">
+                  <BookOpen className="w-3 h-3 text-slate-400" />
+                  <span>Établissement scolaire précédent (si applicable)</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.previousSchool}
+                  onChange={(e) => handleFieldChange('previousSchool', e.target.value)}
+                  placeholder="Nom de l'école précédente (ex : Institution Saint-Louis, ou Première scolarisation...)"
+                  className="w-full px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-slate-300 bg-slate-50/60 text-xs sm:text-sm focus:bg-white focus:border-blue-900 outline-none"
+                />
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================================
+            SECTION 2 : INFORMATIONS DU RESPONSABLE LÉGAL (PARENT / TUTEUR)
+        ========================================================================= */}
+        {currentStep === 2 && (
+          <div className="space-y-2.5 sm:space-y-3.5 animate-fade-in">
+            <div className="border-b border-slate-100 pb-2 flex items-start justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-900 text-[11px] font-bold flex items-center justify-center">2</span>
+                  <h2 className="font-serif text-sm sm:text-base font-bold text-slate-900">
+                    Responsable Légal (Parent / Tuteur)
+                  </h2>
+                </div>
+                <p className="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5">
+                  Coordonnées du souscripteur légal qui recevra la convocation et le suivi d'admission.
+                </p>
+              </div>
+              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10.5px] font-bold border border-slate-200">
+                <User className="w-3.5 h-3.5 text-blue-900" />
+                <span>Souscripteur</span>
+              </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
@@ -519,26 +745,24 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                   />
                 </div>
 
-                {/* Quick Prefix buttons if empty */}
-                {!formData.parentPhone && (
-                  <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-500">
-                    <span className="text-[9.5px]">Préfixes :</span>
-                    <button
-                      type="button"
-                      onClick={() => applyPhonePrefix('+509 ')}
-                      className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-mono text-slate-700 cursor-pointer"
-                    >
-                      +509 (Haïti)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => applyPhonePrefix('+1 ')}
-                      className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-mono text-slate-700 cursor-pointer"
-                    >
-                      +1 (Diaspora)
-                    </button>
-                  </div>
-                )}
+                {/* Quick Prefix buttons */}
+                <div className="flex items-center gap-1 mt-1 text-[10px] text-slate-500">
+                  <span className="text-[9.5px]">Préfixes :</span>
+                  <button
+                    type="button"
+                    onClick={() => applyPhonePrefix('+509 ')}
+                    className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-mono text-slate-700 cursor-pointer"
+                  >
+                    +509 (Haïti)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => applyPhonePrefix('+1 ')}
+                    className="px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 font-mono text-slate-700 cursor-pointer"
+                  >
+                    +1 (Diaspora)
+                  </button>
+                </div>
 
                 {touched.parentPhone && errors.parentPhone && (
                   <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
@@ -642,159 +866,6 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                     <span>{errors.parentAddress}</span>
                   </p>
                 )}
-              </div>
-
-            </div>
-          </div>
-        )}
-
-        {/* =========================================================================
-            SECTION 2 : INFORMATIONS DE L'ÉLÈVE CANDIDAT
-        ========================================================================= */}
-        {currentStep === 2 && (
-          <div className="space-y-2.5 sm:space-y-3 animate-fade-in">
-            <div className="border-b border-slate-100 pb-2">
-              <div className="flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-900 text-[11px] font-bold flex items-center justify-center">2</span>
-                <h2 className="font-serif text-sm sm:text-base font-bold text-slate-900">
-                  Informations de l’Élève Candidat
-                </h2>
-              </div>
-              <p className="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5">
-                Identité officielle et état civil de l'enfant à inscrire.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
-              
-              {/* Nom de famille */}
-              <div>
-                <div className="flex items-center justify-between mb-0.5">
-                  <label className="text-[11px] sm:text-xs font-bold text-slate-700">
-                    Nom de famille *
-                  </label>
-                  {touched.studentLastName && !errors.studentLastName && formData.studentLastName && (
-                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
-                      <CheckCircle2 className="w-3 h-3" /> Validé
-                    </span>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  value={formData.studentLastName}
-                  onChange={(e) => handleFieldChange('studentLastName', e.target.value)}
-                  onBlur={() => handleFieldBlur('studentLastName')}
-                  placeholder="Ex : Baptiste"
-                  className={getInputClasses('studentLastName')}
-                />
-                {touched.studentLastName && errors.studentLastName && (
-                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3 h-3 shrink-0" />
-                    <span>{errors.studentLastName}</span>
-                  </p>
-                )}
-              </div>
-
-              {/* Prénom(s) */}
-              <div>
-                <div className="flex items-center justify-between mb-0.5">
-                  <label className="text-[11px] sm:text-xs font-bold text-slate-700">
-                    Prénom(s) *
-                  </label>
-                  {touched.studentFirstName && !errors.studentFirstName && formData.studentFirstName && (
-                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
-                      <CheckCircle2 className="w-3 h-3" /> Validé
-                    </span>
-                  )}
-                </div>
-                <input
-                  type="text"
-                  value={formData.studentFirstName}
-                  onChange={(e) => handleFieldChange('studentFirstName', e.target.value)}
-                  onBlur={() => handleFieldBlur('studentFirstName')}
-                  placeholder="Ex : Alexandre"
-                  className={getInputClasses('studentFirstName')}
-                />
-                {touched.studentFirstName && errors.studentFirstName && (
-                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3 h-3 shrink-0" />
-                    <span>{errors.studentFirstName}</span>
-                  </p>
-                )}
-              </div>
-
-              {/* Date de naissance */}
-              <div>
-                <div className="flex items-center justify-between mb-0.5">
-                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-blue-900" />
-                    <span>Date de naissance *</span>
-                  </label>
-                  {touched.studentBirthDate && !errors.studentBirthDate && formData.studentBirthDate && (
-                    <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
-                      <CheckCircle2 className="w-3 h-3" /> Validé
-                    </span>
-                  )}
-                </div>
-                <input
-                  type="date"
-                  value={formData.studentBirthDate}
-                  onChange={(e) => handleFieldChange('studentBirthDate', e.target.value)}
-                  onBlur={() => handleFieldBlur('studentBirthDate')}
-                  className={getInputClasses('studentBirthDate')}
-                />
-                {touched.studentBirthDate && errors.studentBirthDate && (
-                  <p className="text-[10.5px] text-rose-600 mt-1 flex items-center gap-1 font-medium">
-                    <AlertCircle className="w-3 h-3 shrink-0" />
-                    <span>{errors.studentBirthDate}</span>
-                  </p>
-                )}
-              </div>
-
-              {/* Sexe */}
-              <div>
-                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-0.5">
-                  Sexe *
-                </label>
-                <div className="grid grid-cols-2 gap-1.5 mt-0.5">
-                  <button
-                    type="button"
-                    onClick={() => handleFieldChange('studentGender', 'M')}
-                    className={`py-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                      formData.studentGender === 'M' 
-                        ? 'border-blue-900 bg-blue-900 text-white shadow-2xs' 
-                        : 'border-slate-200 text-slate-700 hover:bg-slate-50 bg-white'
-                    }`}
-                  >
-                    Masculin (Garçon)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleFieldChange('studentGender', 'F')}
-                    className={`py-1.5 px-2.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-                      formData.studentGender === 'F' 
-                        ? 'border-blue-900 bg-blue-900 text-white shadow-2xs' 
-                        : 'border-slate-200 text-slate-700 hover:bg-slate-50 bg-white'
-                    }`}
-                  >
-                    Féminin (Fille)
-                  </button>
-                </div>
-              </div>
-
-              {/* Établissement précédent */}
-              <div className="sm:col-span-2">
-                <label className="block text-[11px] sm:text-xs font-bold text-slate-700 mb-0.5 flex items-center gap-1">
-                  <BookOpen className="w-3 h-3 text-slate-400" />
-                  <span>Établissement scolaire précédent (si applicable)</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.previousSchool}
-                  onChange={(e) => handleFieldChange('previousSchool', e.target.value)}
-                  placeholder="Nom de l'école précédente (ex : Institution Saint-Louis...)"
-                  className="w-full px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-slate-300 bg-slate-50/60 text-xs sm:text-sm focus:bg-white focus:border-blue-900 outline-none"
-                />
               </div>
 
             </div>
