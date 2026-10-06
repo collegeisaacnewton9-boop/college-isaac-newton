@@ -141,6 +141,16 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
     setCurrentSlide(idx);
   };
 
+  // Preload all slide images for instant, zero-shift rotation (LiteSpeed optimization)
+  useEffect(() => {
+    slides.forEach((s) => {
+      if (s.image) {
+        const preloadImg = new Image();
+        preloadImg.src = s.image;
+      }
+    });
+  }, [slides]);
+
   // Auto-play interval
   useEffect(() => {
     if (isPlaying && !isHovered && !isZoomOpen) {
@@ -162,8 +172,8 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Visual Container with tailored height */}
-      <div className="relative min-h-[520px] sm:min-h-[580px] lg:min-h-[620px] w-full flex items-center">
+      {/* Strict uniform locked height across all slides (zero layout shift, zero footer jump) */}
+      <div className="relative h-[520px] sm:h-[580px] lg:h-[620px] max-h-[520px] sm:max-h-[580px] lg:max-h-[620px] w-full flex items-center overflow-hidden">
         
         {/* Background Images Cross-Fade */}
         {slides.map((s, idx) => {

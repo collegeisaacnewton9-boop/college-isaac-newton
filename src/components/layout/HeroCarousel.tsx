@@ -122,6 +122,16 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
     setCurrentIndex(index);
   };
 
+  // Preload all slide images for instant, zero-shift rotation (LiteSpeed optimization)
+  useEffect(() => {
+    slides.forEach((s) => {
+      if (s.image) {
+        const preloadImg = new Image();
+        preloadImg.src = s.image;
+      }
+    });
+  }, [slides]);
+
   // Autoplay handler: smooth automatic transition
   useEffect(() => {
     if (!isHovered && totalSlides > 1) {
@@ -190,46 +200,50 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
       onMouseLeave={() => setIsHovered(false)}
       aria-label="Diaporama officiel du campus et des laboratoires du Collège Isaac Newton"
     >
-      {/* Full-width responsive hero height tailored for mobile, tablets, PC 14" & desktop */}
-      <div className="relative h-[420px] sm:h-[480px] md:h-[520px] lg:h-[560px] xl:h-[620px] w-full overflow-hidden">
+      {/* Strict uniform locked height across all viewports (zero layout shift, zero footer jump) */}
+      <div className="relative h-[440px] sm:h-[480px] md:h-[520px] lg:h-[560px] xl:h-[600px] max-h-[440px] sm:max-h-[480px] md:max-h-[520px] lg:max-h-[560px] xl:max-h-[600px] w-full overflow-hidden">
         
-        {/* Framer-motion image slides */}
-        <AnimatePresence initial={false} custom={direction} mode="wait">
-          <motion.div
-            key={activeSlide.id}
-            custom={direction}
-            variants={slideVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            className="absolute inset-0 w-full h-full"
-          >
-            <img
-              src={activeSlide.image}
-              alt={activeSlide.title}
-              style={{ objectPosition: activeSlide.objectPosition || 'center 35%' }}
-              className="w-full h-full object-cover select-none"
-              loading="eager"
-              onError={(e) => {
-                const target = e.currentTarget;
-                if (!target.dataset.triedFallback) {
-                  target.dataset.triedFallback = '1';
-                  if (target.src.includes('/src/assets/images/')) {
-                    target.src = target.src.replace('/src/assets/images/', '/images/');
-                  } else {
-                    target.src = SCHOOL_IMAGES.entranceFacade;
+        {/* Uniform image slides with continuous crossfade (never unmounts during transition) */}
+        {slides.map((s, idx) => {
+          const isActive = idx === currentIndex;
+          return (
+            <div
+              key={s.id}
+              className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
+                isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+              }`}
+            >
+              <img
+                src={s.image}
+                alt={s.title}
+                loading={idx === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+                fetchPriority={idx === 0 ? 'high' : 'auto'}
+                style={{ objectPosition: s.objectPosition || 'center 35%' }}
+                className={`w-full h-full object-cover select-none transition-transform duration-[6000ms] ease-out ${
+                  isActive ? 'scale-103' : 'scale-100'
+                }`}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  if (!target.dataset.triedFallback) {
+                    target.dataset.triedFallback = '1';
+                    if (target.src.includes('/src/assets/images/')) {
+                      target.src = target.src.replace('/src/assets/images/', '/images/');
+                    } else {
+                      target.src = SCHOOL_IMAGES.entranceFacade;
+                    }
                   }
-                }
-              }}
-            />
+                }}
+              />
 
-            {/* Subtle top vignette for contrast without darkening the campus architecture */}
-            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/45 to-transparent pointer-events-none" />
+              {/* Subtle top vignette for contrast without darkening the campus architecture */}
+              <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/45 to-transparent pointer-events-none" />
 
-            {/* Balanced gradient: clear, bright visibility of the real photos while ensuring high text contrast */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/25 to-transparent sm:bg-gradient-to-r sm:from-slate-950/80 sm:via-slate-950/20 sm:to-transparent pointer-events-none" />
-          </motion.div>
-        </AnimatePresence>
+              {/* Balanced gradient: clear, bright visibility of the real photos while ensuring high text contrast */}
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent sm:bg-gradient-to-r sm:from-slate-950/85 sm:via-slate-950/25 sm:to-transparent pointer-events-none" />
+            </div>
+          );
+        })}
 
         {/* Content Overlay: Aligned to container, full bleed backdrop */}
         <div className="absolute inset-x-0 bottom-0 z-20 pointer-events-none">
@@ -248,12 +262,12 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
               </div>
 
               {/* Slide Title */}
-              <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-md leading-tight">
+              <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-md leading-tight line-clamp-2">
                 {activeSlide.title}
               </h1>
 
-              {/* Short, clear subtitle */}
-              <p className="mt-2 sm:mt-3 text-xs sm:text-sm md:text-base lg:text-lg text-slate-200 line-clamp-2 max-w-xl font-sans drop-shadow leading-relaxed">
+              {/* Short, clear subtitle with stabilized min-height */}
+              <p className="mt-2 sm:mt-3 text-xs sm:text-sm md:text-base lg:text-lg text-slate-200 line-clamp-2 max-w-xl font-sans drop-shadow leading-relaxed min-h-[2.5rem] sm:min-h-[3.25rem]">
                 {activeSlide.subtitle}
               </p>
 
