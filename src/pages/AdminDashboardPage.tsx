@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Users, 
   FileCheck, 
@@ -19,6 +19,10 @@ import {
   Download,
   LogOut,
   ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  LayoutGrid,
+  Layers,
   BookOpen,
   Mail,
   Phone,
@@ -86,6 +90,70 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'slideshow' | 'menus' | 'admissions' | 'news' | 'events' | 'media' | 'messages' | 'cms' | 'users'>('overview');
   
+  // Dashboard Navigation State & Refs
+  const navScrollContainerRef = useRef<HTMLDivElement>(null);
+  const modulesMenuRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isModulesMenuOpen, setIsModulesMenuOpen] = useState(false);
+
+  // Smooth scroll handler for tabs
+  const scrollTabs = useCallback((direction: 'left' | 'right') => {
+    if (!navScrollContainerRef.current) return;
+    const scrollAmount = 260;
+    navScrollContainerRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
+  }, []);
+
+  const updateScrollState = useCallback(() => {
+    const el = navScrollContainerRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 6);
+  }, []);
+
+  useEffect(() => {
+    const el = navScrollContainerRef.current;
+    if (!el) return;
+    updateScrollState();
+    el.addEventListener('scroll', updateScrollState);
+    window.addEventListener('resize', updateScrollState);
+    return () => {
+      el.removeEventListener('scroll', updateScrollState);
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, [updateScrollState]);
+
+  // Smoothly center the active tab whenever activeTab changes
+  useEffect(() => {
+    const container = navScrollContainerRef.current;
+    if (!container) return;
+    const activeEl = container.querySelector(`[data-tab-id="${activeTab}"]`) as HTMLElement | null;
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+    const timer = setTimeout(updateScrollState, 200);
+    return () => clearTimeout(timer);
+  }, [activeTab, updateScrollState]);
+
+  // Close modules menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modulesMenuRef.current && !modulesMenuRef.current.contains(event.target as Node)) {
+        setIsModulesMenuOpen(false);
+      }
+    };
+    if (isModulesMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isModulesMenuOpen]);
+
   // Data states
   const [admissions, setAdmissions] = useState<AdmissionApplication[]>([]);
   const [news, setNews] = useState<NewsArticle[]>([]);
@@ -664,17 +732,17 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5 text-[11px] text-slate-400 flex-wrap">
-                  <span className="flex items-center gap-1">
+                  <span className="flex items-center gap-1 text-slate-300">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Session 2026-2027</span>
+                    <span>Session Académique 2026-2027</span>
                   </span>
                   <span>·</span>
-                  <span className="inline-flex items-center gap-1 text-emerald-400 font-mono text-[10px] bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/50">
+                  <span className="inline-flex items-center gap-1 text-emerald-300 font-medium text-[10.5px] bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-700/50">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    <span>PostgreSQL 18</span>
+                    <span>Système Sécurisé En Ligne</span>
                   </span>
                   <span>·</span>
-                  <span>Delmas 50, rue Dominique #2 bis · collegeisaacnewton.com</span>
+                  <span className="hidden sm:inline">Delmas 50, rue Dominique #2 bis · collegeisaacnewton.com</span>
                 </div>
               </div>
             </div>
@@ -744,155 +812,450 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             </div>
           </div>
 
-          {/* NAVIGATION TABS WITH LIVE BADGES - MODERN FLUID SCROLL */}
-          <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar border-t border-slate-800/90 pt-1.5 pb-1.5">
+          {/* NAVIGATION TABS WITH LIVE BADGES - MODERN FLUID CONTROLS & ZERO NATIVE SCROLLBAR */}
+          <div className="relative flex items-center border-t border-slate-800/90 pt-1 pb-1">
             
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'overview'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
-            >
-              <Award className="w-3.5 h-3.5" />
-              <span>Tableau de Bord</span>
-            </button>
+            {/* Left Chevron Scroll Button */}
+            {canScrollLeft && (
+              <button
+                type="button"
+                onClick={() => scrollTabs('left')}
+                aria-label="Faire défiler les onglets vers la gauche"
+                className="absolute left-0 z-20 h-7 w-7 rounded-lg bg-slate-900/95 hover:bg-slate-800 text-amber-300 border border-slate-700/80 shadow-lg flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
 
-            {/* DEDICATED SLIDESHOW EDITOR TAB (ACCESSIBLE TO ADMIN & EDITOR) */}
-            <button
-              onClick={() => setActiveTab('slideshow')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'slideshow'
-                  ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                  : 'text-amber-300 hover:text-white hover:bg-slate-800/70 border border-amber-400/40 bg-amber-950/20'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Éditeur Diaporama (Hero)</span>
-            </button>
+            {/* Left Gradient Mask */}
+            {canScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-slate-900 to-transparent pointer-events-none z-10" />
+            )}
 
-            {/* DEDICATED MENU & SUB-MENU EDITOR TAB */}
-            <button
-              onClick={() => setActiveTab('menus')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'menus'
-                  ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-amber-400/50'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
+            {/* Main Tabs Container without native scrollbars */}
+            <div 
+              ref={navScrollContainerRef}
+              className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden scroll-smooth w-full py-0.5 px-0.5"
             >
-              <MenuIcon className="w-3.5 h-3.5 text-amber-400" />
-              <span>Sous-Menus & Navigation</span>
-            </button>
+              
+              {/* Tab 1: Overview */}
+              <button
+                type="button"
+                data-tab-id="overview"
+                onClick={() => setActiveTab('overview')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'overview'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                }`}
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>Tableau de Bord</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('admissions')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'admissions'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
-            >
-              <FileCheck className="w-3.5 h-3.5" />
-              <span>Admissions</span>
-              {pendingCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 text-[9.5px] font-bold">
-                  {pendingCount}
+              {/* Tab 2: Slideshow Hero */}
+              <button
+                type="button"
+                data-tab-id="slideshow"
+                onClick={() => setActiveTab('slideshow')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'slideshow'
+                    ? 'bg-amber-400 text-slate-950 font-bold shadow-xs ring-1 ring-amber-300/50'
+                    : 'text-amber-300 hover:text-white hover:bg-slate-800/70 border border-amber-400/40 bg-amber-950/20'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Éditeur Diaporama (Hero)</span>
+              </button>
+
+              {/* Tab 3: Menus & Navigation */}
+              <button
+                type="button"
+                data-tab-id="menus"
+                onClick={() => setActiveTab('menus')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'menus'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-amber-400/50'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                }`}
+              >
+                <MenuIcon className="w-3.5 h-3.5 text-amber-400" />
+                <span>Sous-Menus & Navigation</span>
+              </button>
+
+              {/* Tab 4: Admissions */}
+              <button
+                type="button"
+                data-tab-id="admissions"
+                onClick={() => setActiveTab('admissions')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'admissions'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                }`}
+              >
+                <FileCheck className="w-3.5 h-3.5" />
+                <span>Admissions</span>
+                {pendingCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 text-[9.5px] font-bold">
+                    {pendingCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Tab 5: News */}
+              <button
+                type="button"
+                data-tab-id="news"
+                onClick={() => setActiveTab('news')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'news'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                }`}
+              >
+                <Newspaper className="w-3.5 h-3.5" />
+                <span>Actualités</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 text-[9.5px] font-bold">
+                  {news.length}
                 </span>
-              )}
-            </button>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('news')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'news'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
-            >
-              <Newspaper className="w-3.5 h-3.5" />
-              <span>Actualités</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 text-[9.5px] font-bold">
-                {news.length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('events')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'events'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              <span>Agenda</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 text-[9.5px] font-bold">
-                {events.length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('media')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'media'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
-            >
-              <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
-              <span>Médiathèque & Diaporama</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('messages')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'messages'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
-            >
-              <Mail className="w-3.5 h-3.5" />
-              <span>Messages</span>
-              {unreadMessagesCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9.5px] font-bold animate-pulse">
-                  {unreadMessagesCount}
+              {/* Tab 6: Agenda */}
+              <button
+                type="button"
+                data-tab-id="events"
+                onClick={() => setActiveTab('events')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'events'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Agenda</span>
+                <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 text-[9.5px] font-bold">
+                  {events.length}
                 </span>
-              )}
-            </button>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('cms')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'cms'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
-            >
-              {import.meta.env.DEV ? (
-                <>
-                  <Github className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Paramètres & GitHub</span>
-                </>
-              ) : (
-                <>
-                  <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Configuration Système</span>
-                </>
-              )}
-            </button>
+              {/* Tab 7: Media */}
+              <button
+                type="button"
+                data-tab-id="media"
+                onClick={() => setActiveTab('media')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'media'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                }`}
+              >
+                <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
+                <span>Médiathèque</span>
+              </button>
 
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
-                activeTab === 'users'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
-              }`}
-            >
-              <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-              <span>Contrôle d'Accès & Équipe</span>
-            </button>
+              {/* Tab 8: Messages */}
+              <button
+                type="button"
+                data-tab-id="messages"
+                onClick={() => setActiveTab('messages')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'messages'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                }`}
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Messages</span>
+                {unreadMessagesCount > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9.5px] font-bold animate-pulse">
+                    {unreadMessagesCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Tab 9: System Settings */}
+              <button
+                type="button"
+                data-tab-id="cms"
+                onClick={() => setActiveTab('cms')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'cms'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                }`}
+              >
+                {import.meta.env.DEV ? (
+                  <>
+                    <Github className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Paramètres & GitHub</span>
+                  </>
+                ) : (
+                  <>
+                    <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Configuration Système</span>
+                  </>
+                )}
+              </button>
+
+              {/* Tab 10: Access Control */}
+              <button
+                type="button"
+                data-tab-id="users"
+                onClick={() => setActiveTab('users')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'users'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                }`}
+              >
+                <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                <span>Contrôle d'Accès & Équipe</span>
+              </button>
+
+            </div>
+
+            {/* Right Gradient Mask */}
+            {canScrollRight && (
+              <div className="absolute right-28 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-900 to-transparent pointer-events-none z-10 hidden sm:block" />
+            )}
+
+            {/* Right Chevron Scroll Button */}
+            {canScrollRight && (
+              <button
+                type="button"
+                onClick={() => scrollTabs('right')}
+                aria-label="Faire défiler les onglets vers la droite"
+                className="absolute right-28 z-20 h-7 w-7 rounded-lg bg-slate-900/95 hover:bg-slate-800 text-amber-300 border border-slate-700/80 shadow-lg flex items-center justify-center transition-all cursor-pointer backdrop-blur-xs hidden sm:flex"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* QUICK MODULE SELECTOR DROPDOWN (10 MODULES) */}
+            <div className="relative shrink-0 ml-1.5 pl-1.5 border-l border-slate-800" ref={modulesMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsModulesMenuOpen(!isModulesMenuOpen)}
+                aria-expanded={isModulesMenuOpen}
+                aria-label="Ouvrir le menu d'accès rapide aux modules"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-xs font-semibold text-slate-200 hover:text-white border border-slate-700/60 shadow-xs transition-all cursor-pointer whitespace-nowrap"
+              >
+                <LayoutGrid className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Modules</span>
+                <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isModulesMenuOpen ? 'rotate-180 text-amber-300' : ''}`} />
+              </button>
+
+              {/* Categorized Dropdown Menu */}
+              {isModulesMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-76 sm:w-80 bg-slate-900/95 backdrop-blur-xl border border-slate-700/90 rounded-2xl shadow-2xl p-2.5 z-50 text-slate-100 space-y-2 animate-fade-in">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-white/10 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <span className="flex items-center gap-1.5 text-amber-300">
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                      <span>Accès Rapide aux Modules</span>
+                    </span>
+                    <span className="text-slate-400 font-mono text-[10px]">10 Modules</span>
+                  </div>
+
+                  <div className="max-h-72 overflow-y-auto space-y-2.5 pr-0.5">
+                    {/* Category 1: Direction & Pilotage */}
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block px-1 mb-1">
+                        1. Direction & Pilotage
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => { setActiveTab('overview'); setIsModulesMenuOpen(false); }}
+                        className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                          activeTab === 'overview' ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Award className="w-3.5 h-3.5 text-amber-400" />
+                          <span>Tableau de Bord Exécutif</span>
+                        </div>
+                        {activeTab === 'overview' && <Check className="w-3.5 h-3.5 text-white" />}
+                      </button>
+                    </div>
+
+                    {/* Category 2: Gestion du Contenu (CMS) */}
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block px-1 mb-1">
+                        2. Édition de Contenu Web (CMS)
+                      </span>
+                      <div className="space-y-0.5">
+                        <button
+                          type="button"
+                          onClick={() => { setActiveTab('slideshow'); setIsModulesMenuOpen(false); }}
+                          className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                            activeTab === 'slideshow' ? 'bg-amber-400 text-slate-950 font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Éditeur Diaporama (Hero)</span>
+                          </div>
+                          {activeTab === 'slideshow' && <Check className="w-3.5 h-3.5 text-slate-950" />}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { setActiveTab('menus'); setIsModulesMenuOpen(false); }}
+                          className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                            activeTab === 'menus' ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <MenuIcon className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Sous-Menus & Navigation</span>
+                          </div>
+                          {activeTab === 'menus' && <Check className="w-3.5 h-3.5 text-white" />}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { setActiveTab('media'); setIsModulesMenuOpen(false); }}
+                          className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                            activeTab === 'media' ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Médiathèque & Diaporama</span>
+                          </div>
+                          {activeTab === 'media' && <Check className="w-3.5 h-3.5 text-white" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Category 3: Scolarité & Agenda */}
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block px-1 mb-1">
+                        3. Vie Scolaire & Pédagogie
+                      </span>
+                      <div className="space-y-0.5">
+                        <button
+                          type="button"
+                          onClick={() => { setActiveTab('admissions'); setIsModulesMenuOpen(false); }}
+                          className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                            activeTab === 'admissions' ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <FileCheck className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Dossiers d'Admission</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {pendingCount > 0 && (
+                              <span className="px-1.5 py-0.2 rounded-full bg-amber-400 text-slate-950 text-[9px] font-bold">
+                                {pendingCount}
+                              </span>
+                            )}
+                            {activeTab === 'admissions' && <Check className="w-3.5 h-3.5 text-white" />}
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { setActiveTab('news'); setIsModulesMenuOpen(false); }}
+                          className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                            activeTab === 'news' ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Newspaper className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Articles & Actualités</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 text-[9px] font-bold">
+                              {news.length}
+                            </span>
+                            {activeTab === 'news' && <Check className="w-3.5 h-3.5 text-white" />}
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { setActiveTab('events'); setIsModulesMenuOpen(false); }}
+                          className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                            activeTab === 'events' ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Agenda Officiel</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300 text-[9px] font-bold">
+                              {events.length}
+                            </span>
+                            {activeTab === 'events' && <Check className="w-3.5 h-3.5 text-white" />}
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Category 4: Administration & Secrétariat */}
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block px-1 mb-1">
+                        4. Secrétariat & Sécurité
+                      </span>
+                      <div className="space-y-0.5">
+                        <button
+                          type="button"
+                          onClick={() => { setActiveTab('messages'); setIsModulesMenuOpen(false); }}
+                          className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                            activeTab === 'messages' ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Messages du Secrétariat</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {unreadMessagesCount > 0 && (
+                              <span className="px-1.5 py-0.2 rounded-full bg-rose-500 text-white text-[9px] font-bold">
+                                {unreadMessagesCount}
+                              </span>
+                            )}
+                            {activeTab === 'messages' && <Check className="w-3.5 h-3.5 text-white" />}
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { setActiveTab('cms'); setIsModulesMenuOpen(false); }}
+                          className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                            activeTab === 'cms' ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            {import.meta.env.DEV ? <Github className="w-3.5 h-3.5 text-amber-400" /> : <Sliders className="w-3.5 h-3.5 text-amber-400" />}
+                            <span>Paramètres & Synchronisation</span>
+                          </div>
+                          {activeTab === 'cms' && <Check className="w-3.5 h-3.5 text-white" />}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { setActiveTab('users'); setIsModulesMenuOpen(false); }}
+                          className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                            activeTab === 'users' ? 'bg-blue-600 text-white font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Contrôle d'Accès & Équipe</span>
+                          </div>
+                          {activeTab === 'users' && <Check className="w-3.5 h-3.5 text-white" />}
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+            </div>
 
           </div>
         </div>

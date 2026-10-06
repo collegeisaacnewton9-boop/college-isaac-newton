@@ -12,8 +12,8 @@ export default defineConfig(() => {
       },
     },
     build: {
-      target: 'es2020',
-      minify: 'esbuild' as const,
+      target: 'es2022',
+      minify: 'oxc' as const,
       cssMinify: true,
       sourcemap: false,
       chunkSizeWarningLimit: 1000,

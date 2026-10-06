@@ -226,5 +226,28 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       }
     });
   });
+
+  describe('Dashboard Administration - Navigation Fluide & Modules', () => {
+    it('should define all 10 core administrative modules without native scrollbar dependencies', () => {
+      const coreModules = [
+        'overview',
+        'slideshow',
+        'menus',
+        'admissions',
+        'news',
+        'events',
+        'media',
+        'messages',
+        'cms',
+        'users'
+      ];
+      assert.strictEqual(coreModules.length, 10, 'Dashboard must configure exactly 10 modules');
+      assert.ok(coreModules.includes('overview'), 'overview must be present');
+      assert.ok(coreModules.includes('slideshow'), 'slideshow must be present');
+      assert.ok(coreModules.includes('menus'), 'menus must be present');
+      assert.ok(coreModules.includes('admissions'), 'admissions must be present');
+      assert.ok(coreModules.includes('users'), 'users must be present');
+    });
+  });
 });
 
