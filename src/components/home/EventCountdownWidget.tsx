@@ -102,8 +102,9 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
     const valid = events
       .filter((e) => {
         if (!e.startDate) return false;
-        const eventDate = new Date(e.startDate).getTime();
-        return eventDate > now.getTime() - 2 * 60 * 60 * 1000;
+        const startTime = new Date(e.startDate).getTime();
+        const endTime = e.endDate ? new Date(e.endDate).getTime() : startTime + 4 * 60 * 60 * 1000;
+        return endTime > now.getTime();
       })
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
     return valid.length > 0 ? valid : events.slice(0, 4);
@@ -569,11 +570,12 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
                           ? 'Pour Élèves & Candidats' 
                           : 'Tous publics'}
                     </span>
-                    {timeRemaining.days === 0 && !timeRemaining.isPast && (
+                    {timeRemaining.days <= 1 && !timeRemaining.isPast && (
                       <>
                         <span className="text-white/30" aria-hidden="true">·</span>
-                        <span className="text-[10.5px] font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30 animate-pulse">
-                          Aujourd’hui
+                        <span className="text-[10.5px] font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30 flex items-center gap-1 animate-pulse">
+                          <span>⚡</span>
+                          <span>{timeRemaining.days === 0 ? 'Aujourd’hui (< 24h)' : 'Échéance Imminente (< 48h)'}</span>
                         </span>
                       </>
                     )}
@@ -615,7 +617,10 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
                   {timeRemaining.isPast ? (
                     <div className="bg-emerald-500/20 border border-emerald-400/40 rounded-xl p-3.5 text-center w-full max-w-sm">
                       <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
-                      <h4 className="font-bold text-sm text-white">Événement en cours</h4>
+                      <h4 className="font-bold text-sm text-white flex items-center justify-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span>Événement en cours</span>
+                      </h4>
                       <p className="text-[11px] text-emerald-200 mt-0.5">
                         Bienvenue aux participants sur le campus de Delmas 50 !
                       </p>

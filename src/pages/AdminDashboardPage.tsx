@@ -70,6 +70,8 @@ import { MediaLibraryView } from '../components/admin/MediaLibraryView';
 import { SlideshowEditorView } from '../components/admin/SlideshowEditorView';
 import { MenuEditorView } from '../components/admin/MenuEditorView';
 import { GitHubSyncModal } from '../components/admin/GitHubSyncModal';
+import { EventLastMinuteModal } from '../components/events/EventLastMinuteModal';
+import { eventNotificationService, ImminentEventAlert } from '../services/eventNotificationService';
 import { ROLE_PERMISSIONS } from '../data/rolePermissions';
 import { appFetch } from '../services/loadingService';
 import { ImageUploadCompressor } from '../components/common/ImageUploadCompressor';
@@ -216,6 +218,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [cmsSettings, setCmsSettings] = useState<SiteSettings | null>(null);
   const [showGitHubModal, setShowGitHubModal] = useState(false);
 
+  // Imminent Events (< 48h) Alerts & Last-Minute Modal State
+  const [selectedImminentEvent, setSelectedImminentEvent] = useState<SchoolEvent | null>(null);
+  const [isLastMinuteModalOpen, setIsLastMinuteModalOpen] = useState(false);
+  const [lastMinuteModalTab, setLastMinuteModalTab] = useState<'reminder' | 'edit'>('reminder');
+  const [imminentAlerts, setImminentAlerts] = useState<ImminentEventAlert[]>([]);
+
   // Selected Contact Message for Reading
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
 
@@ -260,6 +268,36 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Automated notification system for events within 48h
+  useEffect(() => {
+    if (events.length === 0) {
+      setImminentAlerts([]);
+      return;
+    }
+    const alerts = eventNotificationService.getImminentEvents(events);
+    setImminentAlerts(alerts);
+
+    // Trigger automated Sonner toast notification for admin (once per session per event)
+    eventNotificationService.checkAndNotifyImminentEvents(events, {
+      isAdmin: true,
+      onQuickUpdate: (evt) => {
+        setSelectedImminentEvent(evt);
+        setLastMinuteModalTab('edit');
+        setIsLastMinuteModalOpen(true);
+      },
+    });
+  }, [events]);
+
+  useEffect(() => {
+    const handleEventsUpdate = () => {
+      apiService.getEvents().then((evts) => {
+        setEvents(evts);
+      }).catch(() => {});
+    };
+    window.addEventListener('cin:events-updated', handleEventsUpdate);
+    return () => window.removeEventListener('cin:events-updated', handleEventsUpdate);
   }, []);
 
   // Inactivity timeout watcher driven by database settings (securityConfig)
@@ -805,6 +843,24 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 >
                   <FileJson className="w-3.5 h-3.5 text-amber-400" />
                   <span className="hidden sm:inline">Sauvegarde JSON</span>
+                </button>
+              )}
+
+              {/* Automated Alert Button for Events < 48h */}
+              {imminentAlerts.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedImminentEvent(imminentAlerts[0].event);
+                    setLastMinuteModalTab('reminder');
+                    setIsLastMinuteModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-white text-xs font-bold transition-all border border-amber-400/40 cursor-pointer shadow-xs animate-pulse"
+                  title={`${imminentAlerts.length} événement(s) dans moins de 48 heures - Cliquez pour diffuser un rappel ou un ajustement rapide`}
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Alerte &lt; 48h ({imminentAlerts.length})</span>
+                  <span className="sm:hidden">{imminentAlerts.length}</span>
                 </button>
               )}
 
@@ -2057,8 +2113,118 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             TAB 4: CALENDRIER & AGENDA SCOLAIRE
         ========================================================================= */}
         {activeTab === 'events' && (
-          <div className="space-y-2 sm:space-y-2.5">
+          <div className="space-y-3 sm:space-y-3.5">
             
+            {/* IMMINENT EVENTS ALERT BANNER (< 48H) */}
+            {imminentAlerts.length > 0 && (
+              <div className="bg-gradient-to-r from-amber-950/90 via-slate-900 to-amber-950/90 border border-amber-400/40 rounded-2xl p-3.5 sm:p-4 text-white shadow-md">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="p-2 rounded-xl bg-amber-500/20 border border-amber-400/40 text-amber-300 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse" />
+                    </span>
+                    <div>
+                      <h3 className="font-bold text-xs sm:text-sm text-amber-200 flex items-center gap-2">
+                        <span>Événements Imminents (&lt; 48 heures)</span>
+                        <span className="px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-mono border border-amber-400/30">
+                          {imminentAlerts.length} en alerte
+                        </span>
+                      </h3>
+                      <p className="text-[11px] text-slate-300">
+                        Ces événements surviennent ou expirent très prochainement. Diffusez un rappel aux familles ou appliquez une consigne de dernière minute.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      eventNotificationService.checkAndNotifyImminentEvents(events, {
+                        isAdmin: true,
+                        force: true,
+                        onQuickUpdate: (evt) => {
+                          setSelectedImminentEvent(evt);
+                          setLastMinuteModalTab('edit');
+                          setIsLastMinuteModalOpen(true);
+                        },
+                      });
+                    }}
+                    className="px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer shadow-xs"
+                    title="Simuler ou réémettre la notification toast"
+                  >
+                    <Bell className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Tester Toast Sonner</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                  {imminentAlerts.map(({ event, hoursRemaining, timeRemainingFormatted, urgency, isOngoing }) => (
+                    <div 
+                      key={event.id}
+                      className="bg-slate-900/90 border border-amber-500/30 rounded-xl p-3 flex flex-col justify-between gap-2.5 hover:border-amber-400/60 transition-all"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-bold font-mono tracking-wider uppercase border ${
+                            urgency === 'CRITICAL'
+                              ? 'bg-rose-500/20 text-rose-300 border-rose-400/40 animate-pulse'
+                              : urgency === 'HIGH'
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
+                              : 'bg-blue-500/20 text-blue-300 border-blue-400/40'
+                          }`}>
+                            {isOngoing ? 'En cours' : timeRemainingFormatted}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {hoursRemaining > 0 ? `${hoursRemaining}h restantes` : 'Aujourd’hui'}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-xs sm:text-sm text-white line-clamp-1">
+                          {event.title}
+                        </h4>
+                        <p className="text-[10.5px] text-slate-300 flex items-center gap-1.5">
+                          <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+                          <span>
+                            {event.startDate ? new Date(event.startDate).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Date'}
+                            {event.startDate && event.startDate.includes('T') ? ` à ${event.startDate.slice(11, 16)}` : ''}
+                          </span>
+                          <span>·</span>
+                          <span className="truncate">{event.location || 'Campus Delmas 50'}</span>
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1 border-t border-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedImminentEvent(event);
+                            setLastMinuteModalTab('reminder');
+                            setIsLastMinuteModalOpen(true);
+                          }}
+                          className="flex-1 py-1.5 px-2.5 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Send className="w-3 h-3 text-emerald-400" />
+                          <span>Rappel WhatsApp</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedImminentEvent(event);
+                            setLastMinuteModalTab('edit');
+                            setIsLastMinuteModalOpen(true);
+                          }}
+                          className="flex-1 py-1.5 px-2.5 rounded-lg bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 border border-blue-500/40 text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Edit3 className="w-3 h-3 text-blue-400" />
+                          <span>Ajustement Rapide</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white rounded-xl p-2.5 sm:px-3 sm:py-2 border border-slate-200/90 shadow-2xs">
               <div>
                 <h2 className="font-serif font-bold text-slate-900 text-xs sm:text-sm">
@@ -2654,6 +2820,19 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       <GitHubSyncModal
         isOpen={showGitHubModal}
         onClose={() => setShowGitHubModal(false)}
+      />
+
+      {/* MODAL AJUSTEMENT DERNIÈRE MINUTE & RAPPEL AUTOMATISÉ (< 48H) */}
+      <EventLastMinuteModal
+        isOpen={isLastMinuteModalOpen}
+        onClose={() => setIsLastMinuteModalOpen(false)}
+        event={selectedImminentEvent}
+        isAdmin={true}
+        defaultTab={lastMinuteModalTab}
+        onEventUpdated={(updated) => {
+          setEvents(prev => prev.map(e => e.id === updated.id ? updated : e));
+          showToast(`Mise à jour enregistrée : « ${updated.title} »`);
+        }}
       />
 
     </div>

@@ -21,6 +21,8 @@ import { SchoolEvent } from '../types';
 import { apiService } from '../services/api';
 import { SCHOOL_INFO } from '../data/mockData';
 import { InteractiveCalendar } from '../components/events/InteractiveCalendar';
+import { EventLastMinuteModal } from '../components/events/EventLastMinuteModal';
+import { eventNotificationService, ImminentEventAlert } from '../services/eventNotificationService';
 
 interface EventsPageProps {
   onNavigate?: (page: string, subSection?: string) => void;
@@ -29,6 +31,8 @@ interface EventsPageProps {
 export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate }) => {
   const [events, setEvents] = useState<SchoolEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedEventForReminder, setSelectedEventForReminder] = useState<SchoolEvent | null>(null);
+  const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -37,6 +41,8 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate }) => {
       setLoading(false);
     });
   }, []);
+
+  const imminentEvents = eventNotificationService.getImminentEvents(events);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
@@ -83,6 +89,68 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate }) => {
           <CalendarIcon className="w-72 h-72 sm:w-96 sm:h-96" />
         </div>
       </div>
+
+      {/* Imminent Events Alert Ribbon (< 48h) */}
+      {imminentEvents.length > 0 && (
+        <div className="bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-orange-500/15 border border-amber-300 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 rounded-xl bg-amber-500 text-slate-950 font-bold shadow-xs flex items-center justify-center shrink-0">
+                <AlertCircle className="w-5 h-5 animate-pulse" />
+              </span>
+              <div>
+                <h2 className="font-serif font-bold text-slate-950 text-sm sm:text-base flex items-center gap-2">
+                  <span>Événements Imminents dans les Prochaines 48 Heures</span>
+                  <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-mono text-[10px] font-bold">
+                    {imminentEvents.length} en alerte
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-700">
+                  Rappels et consignes d'accès pour les événements se déroulant aujourd'hui ou dans moins de 48 heures sur le campus.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {imminentEvents.map(({ event, hoursRemaining, timeRemainingFormatted, isOngoing, urgency }) => (
+              <div key={event.id} className="bg-white rounded-xl p-3.5 border border-amber-200/90 shadow-xs flex flex-col justify-between gap-2.5">
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase ${
+                      urgency === 'CRITICAL' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                    }`}>
+                      {isOngoing ? 'En cours aujourd’hui' : timeRemainingFormatted}
+                    </span>
+                    <span className="text-[11px] font-mono text-slate-500">
+                      {hoursRemaining > 0 ? `${hoursRemaining}h restantes` : 'Campus ouvert'}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-slate-900 text-sm">{event.title}</h3>
+                  <p className="text-xs text-slate-600 line-clamp-2 mt-0.5">{event.description}</p>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+                  <span className="flex items-center gap-1 truncate max-w-[200px]">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span className="truncate">{event.location || 'Campus Delmas 50'}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedEventForReminder(event);
+                      setIsReminderModalOpen(true);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 font-semibold transition-colors cursor-pointer text-[11px] shrink-0"
+                  >
+                    Rappel & Consignes
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 2. Key Academic Milestone Cards (Examens, Jours Fériés, Réunions Parents-Profs) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -210,6 +278,15 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate }) => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Rappel & Consignes de Dernière Minute pour les Visiteurs */}
+      <EventLastMinuteModal
+        isOpen={isReminderModalOpen}
+        onClose={() => setIsReminderModalOpen(false)}
+        event={selectedEventForReminder}
+        isAdmin={false}
+        defaultTab="reminder"
+      />
 
     </div>
   );

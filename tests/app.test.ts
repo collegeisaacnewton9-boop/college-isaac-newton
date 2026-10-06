@@ -302,5 +302,105 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       }
     });
   });
+
+  describe('Système de Notification Automatisé des Événements (< 48h)', () => {
+    it('should accurately detect events occurring or expiring within 48 hours', async () => {
+      const { eventNotificationService } = await import('../src/services/eventNotificationService.ts');
+      
+      const fixedNow = new Date('2026-10-15T10:00:00Z');
+      const testEvents = [
+        {
+          id: 'evt-10h',
+          title: 'Rencontre Parents-Profs Imminente',
+          description: 'Ordre du jour préparé',
+          startDate: '2026-10-15T20:00:00Z', // In 10 hours
+          endDate: '2026-10-15T22:00:00Z',
+          location: 'Auditorium',
+          category: 'Pédagogique',
+          audience: 'PARENTS' as const,
+          isPublic: true,
+        },
+        {
+          id: 'evt-36h',
+          title: 'Examen Blanc 9e AF',
+          description: 'Épreuve surveillée',
+          startDate: '2026-10-16T22:00:00Z', // In 36 hours
+          endDate: '2026-10-17T02:00:00Z',
+          location: 'Salles 1 à 4',
+          category: 'Académique',
+          audience: 'STUDENTS' as const,
+          isPublic: true,
+        },
+        {
+          id: 'evt-ongoing',
+          title: 'Atelier Robotique en cours',
+          description: 'Séance de démonstration',
+          startDate: '2026-10-15T08:00:00Z', // Started 2 hours ago
+          endDate: '2026-10-15T12:00:00Z',   // Finishes in 2 hours
+          location: 'Labo Info',
+          category: 'Sciences',
+          audience: 'ALL' as const,
+          isPublic: true,
+        },
+        {
+          id: 'evt-future-72h',
+          title: 'Célébration Nationale',
+          description: 'Plus tard dans la semaine',
+          startDate: '2026-10-18T10:00:00Z', // In 72 hours (more than 48h)
+          endDate: '2026-10-18T14:00:00Z',
+          location: 'Cour principale',
+          category: 'Culturel',
+          audience: 'ALL' as const,
+          isPublic: true,
+        },
+        {
+          id: 'evt-past',
+          title: 'Événement passé hier',
+          description: 'Déjà terminé',
+          startDate: '2026-10-14T08:00:00Z', // Yesterday
+          endDate: '2026-10-14T12:00:00Z',
+          location: 'Campus',
+          category: 'Vie scolaire',
+          audience: 'ALL' as const,
+          isPublic: true,
+        },
+      ];
+
+      const alerts = eventNotificationService.getImminentEvents(testEvents, fixedNow);
+      
+      // Must include 10h, 36h, and ongoing event (total 3), and exclude future-72h and past
+      assert.strictEqual(alerts.length, 3, 'Exactly 3 events must be flagged as imminent within 48h or ongoing');
+      
+      const ids = alerts.map(a => a.event.id);
+      assert.ok(ids.includes('evt-10h'), 'Must include 10h event');
+      assert.ok(ids.includes('evt-36h'), 'Must include 36h event');
+      assert.ok(ids.includes('evt-ongoing'), 'Must include ongoing event');
+      assert.ok(!ids.includes('evt-future-72h'), 'Must exclude event in 72 hours');
+      assert.ok(!ids.includes('evt-past'), 'Must exclude finished event from yesterday');
+
+      // Check urgency mapping
+      const alert10h = alerts.find(a => a.event.id === 'evt-10h')!;
+      assert.strictEqual(alert10h.urgency, 'CRITICAL', 'Event within 10h must be CRITICAL urgency');
+      assert.strictEqual(alert10h.hoursRemaining, 10, 'Remaining hours must be 10');
+
+      const alert36h = alerts.find(a => a.event.id === 'evt-36h')!;
+      assert.strictEqual(alert36h.urgency, 'MODERATE', 'Event within 36h must be MODERATE urgency');
+
+      const alertOngoing = alerts.find(a => a.event.id === 'evt-ongoing')!;
+      assert.strictEqual(alertOngoing.isOngoing, true, 'Ongoing event must have isOngoing = true');
+      assert.strictEqual(alertOngoing.urgency, 'CRITICAL', 'Ongoing event must have CRITICAL urgency');
+    });
+
+    it('should provide notification service without throwing in headless environment', async () => {
+      const { eventNotificationService } = await import('../src/services/eventNotificationService.ts');
+      assert.strictEqual(typeof eventNotificationService.getImminentEvents, 'function');
+      assert.strictEqual(typeof eventNotificationService.isAlertDismissed, 'function');
+      assert.strictEqual(typeof eventNotificationService.dismissAlert, 'function');
+      assert.strictEqual(typeof eventNotificationService.checkAndNotifyImminentEvents, 'function');
+
+      const results = eventNotificationService.checkAndNotifyImminentEvents([], { isAdmin: true });
+      assert.deepStrictEqual(results, []);
+    });
+  });
 });
 

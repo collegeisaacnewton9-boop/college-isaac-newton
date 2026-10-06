@@ -32,6 +32,7 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 import { User, Language } from './types';
 import { apiService } from './services/api';
+import { eventNotificationService } from './services/eventNotificationService';
 import { Toaster } from 'sonner';
 import { ContentBlockProvider } from './context/ContentBlockContext';
 import { FloatingEditorToolbar } from './components/common/FloatingEditorToolbar';
@@ -50,6 +51,24 @@ export default function App() {
     const user = apiService.getCurrentUser();
     if (user) setCurrentUser(user);
   }, []);
+
+  // Automated notification system for events within 48h
+  useEffect(() => {
+    apiService.getEvents().then((evts) => {
+      if (!evts || evts.length === 0) return;
+      const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'SUPER_ADMIN';
+      eventNotificationService.checkAndNotifyImminentEvents(evts, {
+        isAdmin,
+        onQuickUpdate: (evt) => {
+          if (isAdmin) {
+            handleNavigate('admin');
+          } else {
+            handleNavigate('events');
+          }
+        },
+      });
+    }).catch(() => {});
+  }, [currentUser]);
 
   const handleNavigate = (page: string, subSection?: string) => {
     loadingService.triggerPageTransition();
