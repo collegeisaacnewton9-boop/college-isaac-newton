@@ -290,6 +290,17 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.ok(result.success, 'Import should report success');
       assert.ok(result.message, 'Import should include confirmation message');
     });
+
+    it('should verify that only ADMIN role is permitted for full database JSON backup management', async () => {
+      const { ROLE_PERMISSIONS } = await import('../src/data/rolePermissions.ts');
+      assert.ok(ROLE_PERMISSIONS.ADMIN, 'ADMIN role must exist');
+      assert.strictEqual(ROLE_PERMISSIONS.ADMIN.accessLevel, 'SUPER_ADMIN', 'ADMIN role must have SUPER_ADMIN level');
+      // Verify other roles do not have super admin level
+      const nonSuperAdminRoles = ['EDITOR', 'TEACHER', 'MODERATOR', 'PARENT', 'STUDENT'] as const;
+      for (const r of nonSuperAdminRoles) {
+        assert.notStrictEqual(ROLE_PERMISSIONS[r].accessLevel, 'SUPER_ADMIN', `Role ${r} must not have SUPER_ADMIN level`);
+      }
+    });
   });
 });
 

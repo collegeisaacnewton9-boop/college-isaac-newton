@@ -69,8 +69,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   currentUser,
   initialTab,
 }) => {
+  const isSuperAdmin = currentUser?.role === 'ADMIN';
+
   // Navigation State
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab || 'profile');
+
+  useEffect(() => {
+    if (!isSuperAdmin && activeTab === 'backup') {
+      setActiveTab('profile');
+    }
+  }, [isSuperAdmin, activeTab]);
 
   // CMS Settings State
   const [cmsSettings, setCmsSettings] = useState<SiteSettings | null>(initialSettings || null);
@@ -731,20 +739,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Option B : Sauvegarde JSON direct button */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('backup')}
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer shadow-xs ${
-              activeTab === 'backup'
-                ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300'
-                : 'bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900'
-            }`}
-            title="Accéder à l'Option B : Export / Import de sauvegarde JSON"
-          >
-            <FileJson className="w-3.5 h-3.5 text-amber-700" />
-            <span>Sauvegarde JSON (Option B)</span>
-          </button>
+          {/* Option B : Sauvegarde JSON direct button (Super Admin Only) */}
+          {isSuperAdmin && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('backup')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                activeTab === 'backup'
+                  ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300'
+                  : 'bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900'
+              }`}
+              title="Accéder à la Sauvegarde JSON (Super Admin)"
+            >
+              <FileJson className="w-3.5 h-3.5 text-amber-700" />
+              <span>Sauvegarde JSON</span>
+            </button>
+          )}
 
           {/* Synchro Cloud Automatique badge */}
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
@@ -912,55 +922,59 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <span>Sécurité</span>
             </button>
 
-            {/* Sauvegarde & Export JSON (OPTION B) */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('backup')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
-                activeTab === 'backup'
-                  ? 'bg-amber-500 text-slate-950 font-black shadow-md ring-1 ring-amber-300'
-                  : 'text-amber-900 bg-amber-50/70 hover:bg-amber-100 border border-amber-200/80'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <FileJson className={`w-4 h-4 ${activeTab === 'backup' ? 'text-slate-950' : 'text-amber-600'}`} />
-                <span>Sauvegarde JSON (Option B)</span>
-              </div>
-              <span className={`px-1.5 py-0.5 rounded text-[9.5px] font-mono font-black ${
-                activeTab === 'backup' ? 'bg-slate-950 text-amber-400' : 'bg-amber-200 text-amber-900'
-              }`}>
-                ACTIF
-              </span>
-            </button>
+            {/* Sauvegarde & Export JSON (Super Admin Only) */}
+            {isSuperAdmin && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('backup')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
+                  activeTab === 'backup'
+                    ? 'bg-amber-500 text-slate-950 font-black shadow-md ring-1 ring-amber-300'
+                    : 'text-amber-900 bg-amber-50/70 hover:bg-amber-100 border border-amber-200/80'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <FileJson className={`w-4 h-4 ${activeTab === 'backup' ? 'text-slate-950' : 'text-amber-600'}`} />
+                  <span>Sauvegarde JSON</span>
+                </div>
+                <span className={`px-1.5 py-0.5 rounded text-[9.5px] font-mono font-black ${
+                  activeTab === 'backup' ? 'bg-slate-950 text-amber-400' : 'bg-amber-200 text-amber-900'
+                }`}>
+                  ADMIN
+                </span>
+              </button>
+            )}
 
           </div>
 
-          {/* SAUVEGARDE JSON MINI CARD (VISIBLE DANS TOUS LES MODES : PROD ET DEV) */}
-          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white rounded-2xl p-3 border border-amber-500/30 shadow-md space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center">
-                  <Database className="w-4 h-4" />
+          {/* SAUVEGARDE JSON MINI CARD (Super Admin Only) */}
+          {isSuperAdmin && (
+            <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white rounded-2xl p-3 border border-amber-500/30 shadow-md space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-amber-400/20 text-amber-400 flex items-center justify-center">
+                    <Database className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-white">Sauvegarde Système</h4>
+                    <p className="text-[10px] text-amber-300/80 font-medium">Export / Import JSON</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-bold text-xs text-white">Sauvegarde Complète</h4>
-                  <p className="text-[10px] text-amber-300/80 font-medium">Option B · Export / Import</p>
-                </div>
+                <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[9px] font-mono font-bold">
+                  ADMIN
+                </span>
               </div>
-              <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[9px] font-mono font-bold">
-                PROD & DEV
-              </span>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('backup')}
+                className="w-full py-1.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              >
+                <Download className="w-3.5 h-3.5 text-slate-950" />
+                <span>Télécharger le JSON</span>
+              </button>
             </div>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab('backup')}
-              className="w-full py-1.5 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-            >
-              <Download className="w-3.5 h-3.5 text-slate-950" />
-              <span>Télécharger le JSON</span>
-            </button>
-          </div>
+          )}
 
           {/* DÉPÔT GITHUB MINI CARD (BOTTOM OF SIDEBAR - DEV ONLY) */}
           {import.meta.env.DEV && (
@@ -2576,277 +2590,192 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
 
           {/* =========================================================================
-              PANEL 9 : SAUVEGARDE & MIGRATION JSON (OPTION B)
+              PANEL 9 : SAUVEGARDE & RESTAURATION JSON (SUPER ADMIN UNIQUEMENT)
           ========================================================================= */}
-          {activeTab === 'backup' && (
+          {activeTab === 'backup' && isSuperAdmin && (
             <div className="space-y-4">
               
-              {/* HERO CARD: OPTION B EXPLAINER */}
-              <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 text-white p-4 sm:p-5 rounded-2xl border border-amber-500/30 shadow-sm relative overflow-hidden">
-                <div className="absolute right-0 top-0 translate-x-8 -translate-y-8 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                  <div className="space-y-1.5 max-w-2xl">
-                    <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[11px] font-bold">
-                      <Sparkles className="w-3 h-3 text-amber-400" />
-                      <span>Option B : Export / Import de Sauvegarde JSON du Site</span>
-                    </div>
-                    <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
-                      Synchronisation Complète entre Production & Développement
-                    </h2>
-                    <p className="text-xs text-slate-300 leading-relaxed">
-                      Exportez l’intégralité de la base de données et des paramétrages du site en un clic sous la forme d’un fichier JSON universel. Téléchargez-le depuis la production pour le réinjecter directement sur votre poste de développement ou inversement.
-                    </p>
+              {/* COMPACT EXECUTIVE HEADER */}
+              <div className="bg-slate-950 text-white p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/30 text-amber-400 flex items-center justify-center shrink-0">
+                    <FileJson className="w-5 h-5" />
                   </div>
-
-                  <div className="flex flex-row md:flex-col gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={handleDownloadBackup}
-                      disabled={isExportingBackup}
-                      className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                      {isExportingBackup ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
-                      ) : (
-                        <Download className="w-4 h-4 text-slate-950" />
-                      )}
-                      <span>Télécharger le JSON (.json)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCopyBackupJson}
-                      className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 border border-slate-700 transition-colors cursor-pointer"
-                    >
-                      {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-amber-400" />}
-                      <span>{isCopied ? 'Copié !' : 'Copier JSON brut'}</span>
-                    </button>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                        Sauvegarde & Restauration Système
+                      </h2>
+                      <span className="px-2 py-0.5 rounded-md bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-mono font-bold">
+                        SUPER ADMIN
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Exportation complète et synchronisation instantanée du SI (JSON autonome)
+                    </p>
                   </div>
                 </div>
 
-                {/* QUICK LIVE COUNTERS */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4 pt-3.5 border-t border-white/10 text-xs">
-                  <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
-                    <span className="text-[11px] text-slate-400 block">Admissions</span>
-                    <span className="text-base font-extrabold text-amber-400 font-mono">{backupStatsLive.admissions} dossiers</span>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
-                    <span className="text-[11px] text-slate-400 block">Articles Actualité</span>
-                    <span className="text-base font-extrabold text-white font-mono">{backupStatsLive.news} articles</span>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
-                    <span className="text-[11px] text-slate-400 block">Agenda Officiel</span>
-                    <span className="text-base font-extrabold text-white font-mono">{backupStatsLive.events} événements</span>
-                  </div>
-                  <div className="bg-white/5 rounded-xl p-2.5 border border-white/5">
-                    <span className="text-[11px] text-slate-400 block">Slideshow Hero</span>
-                    <span className="text-base font-extrabold text-emerald-400 font-mono">{backupStatsLive.slides || 4} diapositives</span>
-                  </div>
+                <div className="flex items-center gap-2 self-start md:self-auto">
+                  <button
+                    type="button"
+                    onClick={handleDownloadBackup}
+                    disabled={isExportingBackup}
+                    className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                  >
+                    {isExportingBackup ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
+                    ) : (
+                      <Download className="w-3.5 h-3.5 text-slate-950" />
+                    )}
+                    <span>Télécharger (.json)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyBackupJson}
+                    className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 border border-slate-700/80 transition-colors cursor-pointer"
+                  >
+                    {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-slate-400" />}
+                    <span>{isCopied ? 'Copié' : 'Copier'}</span>
+                  </button>
                 </div>
               </div>
 
-              {/* TWO COLUMN GRID : EXPORT CARD & IMPORT CARD */}
+              {/* COMPACT METRIC COUNTERS (4 CARDS) */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] text-slate-500 font-medium block">Admissions</span>
+                    <span className="text-base font-extrabold text-slate-900 font-mono">{backupStatsLive.admissions}</span>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                </div>
+                <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] text-slate-500 font-medium block">Actualités</span>
+                    <span className="text-base font-extrabold text-slate-900 font-mono">{backupStatsLive.news}</span>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                </div>
+                <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] text-slate-500 font-medium block">Agenda</span>
+                    <span className="text-base font-extrabold text-slate-900 font-mono">{backupStatsLive.events}</span>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                </div>
+                <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center justify-between">
+                  <div>
+                    <span className="text-[11px] text-slate-500 font-medium block">Diaporama</span>
+                    <span className="text-base font-extrabold text-slate-900 font-mono">{backupStatsLive.slides || 4}</span>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                </div>
+              </div>
+
+              {/* TWO CLEAN BALANCED ACTION CARDS */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 
-                {/* CARD 1: EXPORTATION */}
+                {/* CARD 1: EXPORT */}
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between space-y-4">
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-                          <Download className="w-5 h-5" />
+                        <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                          <Download className="w-4 h-4" />
                         </div>
-                        <div>
-                          <h3 className="font-bold text-sm text-slate-900">Étape 1 : Télécharger la Sauvegarde</h3>
-                          <p className="text-[11.5px] text-slate-500">Sur le site en production, dans Dashboard (Paramètres)</p>
-                        </div>
+                        <h3 className="font-bold text-sm text-slate-900">Exporter la Sauvegarde</h3>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold">
-                        Sur Production
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-mono font-semibold">
+                        .json
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      Ce fichier JSON regroupe l'intégralité des données actives de votre établissement :
+                    <p className="text-xs text-slate-600">
+                      Téléchargez l’ensemble des données actives (paramètres, articles, agenda, admissions, utilisateurs et textes personnalisés).
                     </p>
-
-                    <ul className="space-y-1.5 text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span>Paramètres généraux, coordonnées et bannières d'alerte</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span>Diaporama Hero officiel de la page d'accueil (4 slides)</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span>Dossiers de préinscription et messages de contact reçus</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span>Articles publiés, événements de l'agenda et blocs CMS</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span>Comptes utilisateurs, équipes et droits d'accès</span>
-                      </li>
-                    </ul>
                   </div>
 
-                  <div className="pt-2 space-y-2">
-                    <button
-                      type="button"
-                      onClick={handleDownloadBackup}
-                      disabled={isExportingBackup}
-                      className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      {isExportingBackup ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
-                      ) : (
-                        <Download className="w-4 h-4 text-amber-400" />
-                      )}
-                      <span>Télécharger la Sauvegarde JSON (.json)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCopyBackupJson}
-                      className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Copy className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Copier dans le presse-papiers</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDownloadBackup}
+                    disabled={isExportingBackup}
+                    className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                  >
+                    {isExportingBackup ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-300" />
+                    ) : (
+                      <Download className="w-4 h-4 text-amber-400" />
+                    )}
+                    <span>Télécharger la Sauvegarde JSON</span>
+                  </button>
                 </div>
 
-                {/* CARD 2: IMPORTATION */}
+                {/* CARD 2: IMPORT */}
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between space-y-4">
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-                          <Upload className="w-5 h-5" />
+                        <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                          <Upload className="w-4 h-4" />
                         </div>
-                        <div>
-                          <h3 className="font-bold text-sm text-slate-900">Étape 2 : Importer & Restaurer</h3>
-                          <p className="text-[11.5px] text-slate-500">Sur le poste de développement local</p>
-                        </div>
+                        <h3 className="font-bold text-sm text-slate-900">Restaurer & Synchroniser</h3>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
-                        Sur Développement
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
+                        Restauration
                       </span>
                     </div>
 
-                    <p className="text-xs text-slate-600 leading-relaxed">
-                      Sélectionnez le fichier JSON téléchargé depuis la production pour appliquer immédiatement toutes les données :
-                    </p>
-
-                    {/* FILE UPLOAD DROPZONE */}
-                    <label className="border-2 border-dashed border-slate-300 hover:border-amber-400 rounded-xl p-4 flex flex-col items-center justify-center gap-2 bg-slate-50 hover:bg-amber-50/40 cursor-pointer transition-colors block text-center">
+                    {/* MINIMALIST FILE SELECTOR */}
+                    <label className="border-2 border-dashed border-slate-200 hover:border-amber-400 rounded-xl p-3 flex items-center justify-center gap-2.5 bg-slate-50/60 hover:bg-amber-50/30 cursor-pointer transition-colors block text-center">
                       <input
                         type="file"
                         accept=".json,application/json"
                         onChange={handleFileSelect}
                         className="hidden"
                       />
-                      <FileJson className="w-8 h-8 text-amber-500" />
-                      <div className="space-y-0.5">
-                        <span className="text-xs font-bold text-slate-800 block">
-                          {backupFileName ? backupFileName : 'Cliquez pour choisir le fichier JSON'}
-                        </span>
-                        <span className="text-[11px] text-slate-500 block">
-                          {backupFileName ? 'Fichier prêt pour la restauration' : 'Format accepté : backup_college_isaac_newton_*.json'}
-                        </span>
-                      </div>
+                      <FileJson className="w-5 h-5 text-amber-500 shrink-0" />
+                      <span className="text-xs font-semibold text-slate-700 truncate max-w-[240px]">
+                        {backupFileName ? backupFileName : 'Sélectionner un fichier JSON'}
+                      </span>
                     </label>
 
-                    {/* PREVIEW DETAILS IF FILE SELECTED */}
+                    {/* COMPACT PREVIEW IF FILE LOADED */}
                     {backupPreview && (
-                      <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900 space-y-1">
-                        <div className="flex items-center justify-between font-bold">
-                          <span className="flex items-center gap-1.5">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Sauvegarde analysée et valide</span>
-                          </span>
-                          <span className="text-[10px] font-mono text-emerald-700">
-                            {backupPreview.exportedAt ? new Date(backupPreview.exportedAt).toLocaleDateString('fr-FR') : 'Date inconnue'}
-                          </span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-emerald-200/60 mt-1">
-                          <span>Admissions : <strong>{backupPreview.admissions?.length || 0}</strong></span>
-                          <span>Articles : <strong>{backupPreview.news?.length || 0}</strong></span>
-                          <span>Événements : <strong>{backupPreview.events?.length || 0}</strong></span>
-                          <span>Slideshow : <strong>{backupPreview.heroSlides?.length || 0}</strong></span>
-                        </div>
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-[11px] text-emerald-900 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5 font-bold">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Fichier valide</span>
+                        </span>
+                        <span className="font-mono text-emerald-700">
+                          {backupPreview.admissions?.length || 0} adm · {backupPreview.news?.length || 0} art · {backupPreview.events?.length || 0} evt
+                        </span>
                       </div>
                     )}
-
-                    {/* OPTIONAL RAW JSON TEXTAREA */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] text-slate-500">Ou collez le JSON brut ci-dessous :</span>
-                        {rawJsonInput && (
-                          <button
-                            type="button"
-                            onClick={() => { setRawJsonInput(''); setBackupPreview(null); }}
-                            className="text-[10px] text-rose-500 hover:underline cursor-pointer"
-                          >
-                            Effacer
-                          </button>
-                        )}
-                      </div>
-                      <textarea
-                        value={rawJsonInput}
-                        onChange={(e) => {
-                          setRawJsonInput(e.target.value);
-                          try {
-                            const p = JSON.parse(e.target.value);
-                            setBackupPreview(p);
-                          } catch {
-                            setBackupPreview(null);
-                          }
-                        }}
-                        rows={2}
-                        placeholder='Collez {"siteSettings": ...} ici...'
-                        className="w-full text-xs font-mono p-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 resize-none focus:outline-hidden focus:ring-1 focus:ring-amber-400"
-                      />
-                    </div>
                   </div>
 
-                  <div className="pt-2">
-                    <button
-                      type="button"
-                      onClick={handleExecuteImport}
-                      disabled={isImportingBackup || (!backupPreview && !rawJsonInput.trim())}
-                      className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm ${
-                        !backupPreview && !rawJsonInput.trim()
-                          ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                          : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
-                      }`}
-                    >
-                      {isImportingBackup ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-white" />
-                      ) : (
-                        <FolderSync className="w-4 h-4" />
-                      )}
-                      <span>Restaurer & Synchroniser sur ce Serveur</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={handleExecuteImport}
+                    disabled={isImportingBackup || (!backupPreview && !rawJsonInput.trim())}
+                    className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
+                      !backupPreview && !rawJsonInput.trim()
+                        ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20'
+                    }`}
+                  >
+                    {isImportingBackup ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    ) : (
+                      <FolderSync className="w-4 h-4" />
+                    )}
+                    <span>Restaurer sur ce Serveur</span>
+                  </button>
                 </div>
 
               </div>
 
-              {/* EXPLAINER NOTICE / FAQ */}
-              <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4 text-xs text-slate-600 space-y-2">
-                <h4 className="font-bold text-slate-800 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Pourquoi le poste de développement ne reflétait pas les modifications de la production ?</span>
-                </h4>
-                <p className="leading-relaxed">
-                  Le serveur en production (Coolify) enregistre vos ajustements en direct dans sa propre base de données PostgreSQL isolée en ligne. Le poste de développement local dispose de sa propre base locale. Grâce à cette <strong>Option B</strong>, un simple téléchargement du fichier JSON depuis la production suivi de son importation ici transfère instantanément 100% des données réelles sans avoir à reconfigurer quoi que ce soit manuellement !
-                </p>
-              </div>
             </div>
           )}
 
