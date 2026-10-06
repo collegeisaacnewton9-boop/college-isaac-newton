@@ -401,18 +401,19 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
       {/* 4.5. GALERIE DES ACTIVITÉS SCOLAIRES & PÉRISCOLAIRES */}
       <ActivityGallerySection onNavigate={onNavigate} currentUser={currentUser} />
 
-      {/* 5. INTERACTIVE PEDAGOGICAL CYCLES HUB */}
-      <section className="bg-slate-50/80 py-5 sm:py-7 border-y border-slate-200/70">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 sm:space-y-5">
+      {/* 5. INTERACTIVE PEDAGOGICAL CYCLES HUB - Modern, Fluid, Compact Ergonomics */}
+      <section className="bg-slate-50/80 py-4 sm:py-6 border-y border-slate-200/70" aria-label="Cycles d'enseignement">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3 sm:space-y-4">
           
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-2.5">
-            <div>
-              <div className="flex items-center gap-2">
+          {/* Section Header & Tabs Switcher */}
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3 sm:gap-4">
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-2 mb-1">
                 <ContentEditable
                   contentKey="home.cycles.badge"
                   defaultContent="Parcours d’Apprentissage"
                   as="span"
-                  className="text-xs font-bold uppercase tracking-wider text-blue-900"
+                  className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-blue-900"
                   currentUser={currentUser}
                   multiline={false}
                 />
@@ -420,7 +421,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                   <button
                     type="button"
                     onClick={() => onNavigate('admin', 'cms')}
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold text-[10px] border border-amber-300 transition-colors cursor-pointer shadow-2xs"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 font-semibold text-[10px] border border-amber-300 transition-colors cursor-pointer shadow-2xs"
                     title="Gérer les cycles d'enseignement dans l'administration"
                   >
                     <Edit3 className="w-3 h-3 text-amber-700" />
@@ -432,7 +433,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                 contentKey="home.cycles.title"
                 defaultContent="Nos Cycles d’Enseignement"
                 as="h2"
-                className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 mt-0.5"
+                className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight"
                 currentUser={currentUser}
                 multiline={false}
               />
@@ -440,82 +441,114 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                 contentKey="home.cycles.desc"
                 defaultContent="Un accompagnement continu de la Petite Enfance jusqu'au Baccalauréat d'État. Cliquez sur un cycle pour visualiser ses spécificités."
                 as="p"
-                className="text-xs sm:text-sm text-slate-600 mt-0.5"
+                className="text-xs sm:text-sm text-slate-600 mt-0.5 leading-relaxed"
                 currentUser={currentUser}
               />
             </div>
 
-            {/* Quick tab switcher buttons */}
-            <div className="inline-flex p-1 bg-white rounded-xl border border-slate-200 text-xs shadow-2xs overflow-x-auto max-w-full">
-              {[
-                { id: 'prescolaire', label: '1. Préscolaire' },
-                { id: 'fondamental', label: '2. Fondamental' },
-                { id: 'secondaire', label: '3. Secondaire' },
-                { id: 'numerique', label: '4. Lab Tech' },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveCycleTab(tab.id as any)}
-                  className={`px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap cursor-pointer ${
-                    activeCycleTab === tab.id
-                      ? 'bg-blue-900 text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            {/* Modern Tab Bar - Clean, Fluid, Zero Ugly Scrollbar, Responsive */}
+            <div className="shrink-0 w-full lg:w-auto">
+              <div 
+                role="tablist"
+                aria-label="Sélection des cycles d'enseignement"
+                className="flex items-center gap-1 sm:gap-1.5 p-1 bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {[
+                  { id: 'prescolaire', num: '1', label: 'Préscolaire', icon: Sparkles },
+                  { id: 'fondamental', num: '2', label: 'Fondamental', icon: BookOpen },
+                  { id: 'secondaire', num: '3', label: 'Secondaire', icon: GraduationCap },
+                  { id: 'numerique', num: '4', label: 'Lab Tech', icon: Cpu },
+                ].map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeCycleTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      onClick={() => setActiveCycleTab(tab.id as any)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-[12.5px] font-bold transition-all whitespace-nowrap cursor-pointer select-none ${
+                        isActive
+                          ? 'bg-blue-900 text-white shadow-sm ring-1 ring-blue-950/20'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-mono font-bold ${
+                        isActive ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {tab.num}
+                      </span>
+                      <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-amber-300' : 'text-slate-400'}`} />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
-          {/* Active Cycle Card */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0">
+          {/* Active Cycle Card - Compact, Ergonomic 2-Column Responsive Layout */}
+          <div 
+            key={activeCycleTab}
+            className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-md transition-shadow animate-fade-in"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch">
               
-              {/* Text Info */}
-              <div className="lg:col-span-7 p-5 sm:p-7 flex flex-col justify-between space-y-3.5">
-                <div>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className={`px-2.5 py-0.5 rounded text-[10px] sm:text-[11px] font-bold border ${selectedCycle.badgeColor || 'bg-blue-100 text-blue-900 border-blue-200'}`}>
+              {/* Text Info Column */}
+              <div className="lg:col-span-7 p-4 sm:p-6 lg:p-7 flex flex-col justify-between space-y-3 sm:space-y-3.5">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10.5px] sm:text-[11px] font-bold border ${selectedCycle.badgeColor || 'bg-blue-100 text-blue-900 border-blue-200'}`}>
                       {selectedCycle.subtitle}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                      Inscriptions 2026-2027 Ouvertes
                     </span>
                   </div>
 
-                  <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900">
+                  <h3 className="font-serif text-xl sm:text-2xl lg:text-[26px] font-bold text-slate-900 tracking-tight leading-snug">
                     {selectedCycle.title}
                   </h3>
 
-                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed mt-1.5">
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl">
                     {selectedCycle.description}
                   </p>
 
-                  <div className="mt-3.5 pt-3.5 border-t border-slate-100">
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-900 mb-2">
-                      Points Forts & Spécificités
+                  <div className="pt-2 sm:pt-2.5 border-t border-slate-100">
+                    <h4 className="text-[10.5px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-800 mb-2 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-900" />
+                      <span>Points Forts & Spécificités</span>
                     </h4>
-                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-700">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11.5px] sm:text-xs">
                       {selectedCycle.highlights?.map((h, i) => (
-                        <li key={i} className="flex items-start gap-2">
+                        <div 
+                          key={i} 
+                          className="flex items-start gap-2 p-2 sm:p-2.5 rounded-xl bg-slate-50/80 hover:bg-emerald-50/40 border border-slate-100 hover:border-emerald-200 transition-colors"
+                        >
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                          <span>{h}</span>
-                        </li>
+                          <span className="text-slate-700 leading-snug font-medium">{h}</span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 </div>
 
-                <div className="pt-2 flex flex-wrap items-center gap-2.5">
+                <div className="pt-2 flex flex-wrap items-center gap-2 sm:gap-2.5">
                   <button
-                    onClick={() => onNavigate('pre-registration')}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs shadow-2xs transition-all cursor-pointer"
+                    type="button"
+                    onClick={() => onNavigate('pre-registration', activeCycleTab)}
+                    className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs shadow-2xs hover:shadow transition-all hover:-translate-y-0.5 cursor-pointer"
                   >
                     <span>Préinscrire pour ce cycle</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => onNavigate(selectedCycle.targetPage || 'programs')}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-medium text-xs transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 sm:py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs transition-colors cursor-pointer border border-slate-200"
                   >
                     <span>Programme détaillé</span>
                     <ChevronRight className="w-3.5 h-3.5" />
@@ -523,13 +556,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                 </div>
               </div>
 
-              {/* Visual Banner */}
-              <div className="lg:col-span-5 relative min-h-[220px] lg:min-h-full bg-slate-900">
+              {/* Visual Banner Column */}
+              <div className="lg:col-span-5 relative min-h-[220px] sm:min-h-[260px] lg:min-h-full bg-slate-950 group overflow-hidden">
                 <img
                   src={selectedCycle.image}
                   alt={selectedCycle.title}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-700 ease-out"
                   onError={(e) => {
                     const target = e.currentTarget;
                     if (!target.dataset.triedFallback) {
@@ -542,10 +575,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                     }
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent flex items-end p-4">
-                  <p className="text-white text-xs font-serif italic drop-shadow">
-                    Collège Isaac Newton · Cadre d'excellence et de rigueur à Delmas 50
-                  </p>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/20 to-transparent flex items-end p-3 sm:p-4">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950/75 backdrop-blur-md border border-white/15 text-white shadow-lg max-w-full">
+                    <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
+                    <span className="text-[11px] font-serif italic truncate">
+                      Collège Isaac Newton · Cadre d'excellence et de rigueur à Delmas 50
+                    </span>
+                  </div>
                 </div>
               </div>
 

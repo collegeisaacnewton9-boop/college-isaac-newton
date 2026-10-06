@@ -240,6 +240,7 @@ export default function App() {
 
         {currentPage === 'pre-registration' && (
           <PreRegistrationPage
+            subSection={currentSubSection}
             onNavigate={handleNavigate}
           />
         )}

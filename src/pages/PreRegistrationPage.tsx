@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   CheckCircle2, 
   ArrowRight, 
@@ -25,10 +25,11 @@ import { SCHOOL_INFO } from '../data/mockData';
 import { validateEmail, validatePhone, formatPhoneNumber } from '../utils/validation';
 
 interface PreRegistrationPageProps {
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, subSection?: string) => void;
+  subSection?: string;
 }
 
-export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavigate }) => {
+export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavigate, subSection }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submittedNumber, setSubmittedNumber] = useState<string | null>(null);
@@ -48,8 +49,8 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     studentGender: 'M',
     previousSchool: '',
     schoolYear: '2026-2027',
-    targetLevel: '7ème Année Fondamentale (7e AF)',
-    cycle: 'FONDAMENTAL_CYCLE_3',
+    targetLevel: subSection === 'prescolaire' ? 'Grande Section (GS)' : subSection === 'secondaire' ? 'Nouveau Secondaire 1 (NS1)' : '7ème Année Fondamentale (7e AF)',
+    cycle: subSection === 'prescolaire' ? 'PRESCOLAIRE' : subSection === 'secondaire' ? 'SECONDAIRE' : 'FONDAMENTAL_CYCLE_3',
     hasBirthCert: true,
     hasReportCards: true,
     hasPassCert: false,
@@ -57,6 +58,17 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     specialNotes: '',
     consentGiven: false,
   });
+
+  // Pre-select target level based on incoming cycle navigation
+  useEffect(() => {
+    if (subSection === 'prescolaire') {
+      setFormData(prev => ({ ...prev, cycle: 'PRESCOLAIRE', targetLevel: 'Grande Section (GS)' }));
+    } else if (subSection === 'secondaire') {
+      setFormData(prev => ({ ...prev, cycle: 'SECONDAIRE', targetLevel: 'Nouveau Secondaire 1 (NS1)' }));
+    } else if (subSection === 'fondamental') {
+      setFormData(prev => ({ ...prev, cycle: 'FONDAMENTAL_CYCLE_3', targetLevel: '7ème Année Fondamentale (7e AF)' }));
+    }
+  }, [subSection]);
 
   // Real-time validation state
   const [errors, setErrors] = useState<Record<string, string>>({});
