@@ -467,6 +467,34 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.strictEqual(typeof imgModule.calculateAspectRatioFit, 'function');
       assert.strictEqual(typeof imgModule.formatBytes, 'function');
       assert.strictEqual(typeof imgModule.isWebPSupported, 'function');
+      assert.ok(imgModule.ImageCompressor, 'ImageCompressor class must be exported');
+      assert.strictEqual(typeof imgModule.ImageCompressor.compressImage, 'function', 'ImageCompressor.compressImage must be a function');
+    });
+
+    it('should accurately constrain dimensions to maximum width 1200px while maintaining aspect ratio', async () => {
+      const { calculateAspectRatioFit } = await import('../src/utils/imageCompressor.ts');
+      
+      // Standard 16:9 photo (e.g. 1920x1080 -> 1200x675)
+      const res169 = calculateAspectRatioFit(1920, 1080, 1200, 1200);
+      assert.strictEqual(res169.width, 1200);
+      assert.strictEqual(res169.height, 675);
+
+      // 4:3 camera photo (e.g. 4000x3000 -> 1200x900)
+      const res43 = calculateAspectRatioFit(4000, 3000, 1200, 1200);
+      assert.strictEqual(res43.width, 1200);
+      assert.strictEqual(res43.height, 900);
+
+      // Image already under 1200px width (e.g. 900x600 -> unchanged)
+      const resSmall = calculateAspectRatioFit(900, 600, 1200, 1200);
+      assert.strictEqual(resSmall.width, 900);
+      assert.strictEqual(resSmall.height, 600);
+    });
+
+    it('should provide ImageCompressor utility component and hook', async () => {
+      const componentModule = await import('../src/components/common/ImageCompressor.tsx');
+      assert.ok(componentModule.ImageCompressor, 'ImageCompressor React component must be exported');
+      assert.strictEqual(typeof componentModule.ImageCompressor.compressImage, 'function');
+      assert.strictEqual(typeof componentModule.useImageCompressor, 'function');
     });
   });
 });

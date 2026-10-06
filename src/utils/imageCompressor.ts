@@ -216,24 +216,28 @@ export async function compressImage(
   options: CompressionOptions = {}
 ): Promise<CompressedImageResult> {
   let {
-    maxWidth = 1600,
-    maxHeight = 1000,
-    quality = 0.82,
+    maxWidth = 1200,
+    maxHeight = 1200,
+    quality = 0.8,
     mimeType = 'image/webp',
-    preset = 'balanced',
+    preset,
     targetMaxSizeBytes,
     minQuality = 0.55,
   } = options;
 
-  // Apply predefined preset configurations
+  // Apply predefined preset configurations if explicitly provided
   if (preset === 'ultra') {
     maxWidth = 1920;
     maxHeight = 1200;
     quality = 0.88;
   } else if (preset === 'speed') {
-    maxWidth = 1280;
-    maxHeight = 800;
+    maxWidth = 960;
+    maxHeight = 640;
     quality = 0.75;
+  } else if (preset === 'balanced') {
+    maxWidth = 1200;
+    maxHeight = 1200;
+    quality = 0.8;
   }
 
   // Resolve 'auto' MIME type: prefer WebP if supported, otherwise JPEG
@@ -362,3 +366,76 @@ export async function batchCompressImages(
 ): Promise<CompressedImageResult[]> {
   return Promise.all(files.map((file) => compressImage(file, options)));
 }
+
+/**
+ * ImageCompressor Utility Component / Class
+ * Exposes the compressImage method that accepts a File object,
+ * uses the HTML5 Canvas API to resize it to a maximum width of 1200px
+ * while maintaining the aspect ratio, and converts the output to WebP
+ * format with 0.8 quality before uploading to the server.
+ */
+export class ImageCompressor {
+  /**
+   * Resizes an image File using the HTML5 Canvas API to a maximum width of 1200px
+   * while maintaining the aspect ratio, and converts the output to WebP format with 0.8 quality.
+   * 
+   * @param file The original image File object
+   * @param options Optional overrides (defaults to maxWidth: 1200, quality: 0.8, mimeType: 'image/webp')
+   * @returns Promise<CompressedImageResult>
+   */
+  static async compressImage(
+    file: File,
+    options?: Partial<CompressionOptions>
+  ): Promise<CompressedImageResult> {
+    return compressImage(file, {
+      maxWidth: 1200,
+      quality: 0.8,
+      mimeType: 'image/webp',
+      ...options,
+    });
+  }
+
+  static async compressImageFromUrl(
+    url: string,
+    options?: Partial<CompressionOptions>
+  ): Promise<CompressedImageResult> {
+    return compressImageFromUrl(url, {
+      maxWidth: 1200,
+      quality: 0.8,
+      mimeType: 'image/webp',
+      ...options,
+    });
+  }
+
+  static async batchCompressImages(
+    files: File[],
+    options?: Partial<CompressionOptions>
+  ): Promise<CompressedImageResult[]> {
+    return batchCompressImages(files, {
+      maxWidth: 1200,
+      quality: 0.8,
+      mimeType: 'image/webp',
+      ...options,
+    });
+  }
+
+  static calculateAspectRatioFit(
+    srcWidth: number,
+    srcHeight: number,
+    maxWidth: number,
+    maxHeight: number
+  ) {
+    return calculateAspectRatioFit(srcWidth, srcHeight, maxWidth, maxHeight);
+  }
+
+  static formatBytes(bytes: number, decimals?: number): string {
+    return formatBytes(bytes, decimals);
+  }
+
+  static isWebPSupported(): boolean {
+    return isWebPSupported();
+  }
+}
+
+export default ImageCompressor;
+
