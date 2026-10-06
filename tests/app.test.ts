@@ -426,5 +426,48 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.strictEqual(eventNotificationService.isAlertDismissed(testEvent.id), false);
     });
   });
+
+  describe('Client-Side Image Compression & Resizing Utility (Canvas API)', () => {
+    it('should format bytes into accurate human-readable strings', async () => {
+      const { formatBytes } = await import('../src/utils/imageCompressor.ts');
+      assert.strictEqual(formatBytes(0), '0 Octet');
+      assert.strictEqual(formatBytes(512), '512 Octets');
+      assert.strictEqual(formatBytes(1024), '1 Ko');
+      assert.strictEqual(formatBytes(2048), '2 Ko');
+      assert.strictEqual(formatBytes(1024 * 1024), '1 Mo');
+      assert.strictEqual(formatBytes(4.5 * 1024 * 1024), '4.5 Mo');
+      assert.strictEqual(formatBytes(2 * 1024 * 1024 * 1024), '2 Go');
+    });
+
+    it('should calculate accurate aspect ratio preserving dimensions within bounds', async () => {
+      const { calculateAspectRatioFit } = await import('../src/utils/imageCompressor.ts');
+      
+      // Image already smaller than bounds
+      const small = calculateAspectRatioFit(800, 600, 1600, 1000);
+      assert.deepStrictEqual(small, { width: 800, height: 600 });
+
+      // Landscape image scaling down by width constraint
+      const wide = calculateAspectRatioFit(3200, 1600, 1600, 1000);
+      assert.deepStrictEqual(wide, { width: 1600, height: 800 });
+
+      // Portrait image scaling down by height constraint
+      const tall = calculateAspectRatioFit(2000, 3000, 1600, 1000);
+      assert.deepStrictEqual(tall, { width: 667, height: 1000 });
+
+      // Exact 16:9 ratio fit
+      const ratio169 = calculateAspectRatioFit(3840, 2160, 1920, 1080);
+      assert.deepStrictEqual(ratio169, { width: 1920, height: 1080 });
+    });
+
+    it('should export all required functions and types', async () => {
+      const imgModule = await import('../src/utils/imageCompressor.ts');
+      assert.strictEqual(typeof imgModule.compressImage, 'function');
+      assert.strictEqual(typeof imgModule.compressImageFromUrl, 'function');
+      assert.strictEqual(typeof imgModule.batchCompressImages, 'function');
+      assert.strictEqual(typeof imgModule.calculateAspectRatioFit, 'function');
+      assert.strictEqual(typeof imgModule.formatBytes, 'function');
+      assert.strictEqual(typeof imgModule.isWebPSupported, 'function');
+    });
+  });
 });
 
