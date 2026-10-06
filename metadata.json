@@ -1,0 +1,6 @@
+{
+  "name": "Collège Isaac Newton",
+  "description": "Site officiel du Collège Isaac Newton - Savoir aujourd'hui, réussir demain. Établissement d'excellence, de discipline et d'innovation technologique.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
