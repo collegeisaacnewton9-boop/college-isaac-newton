@@ -48,7 +48,9 @@ import {
   Lock,
   EyeOff,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  FileJson,
+  Database
 } from 'lucide-react';
 import { 
   User, 
@@ -790,6 +792,20 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </button>
               )}
 
+              {/* Option B: Sauvegarde JSON Complète */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('cms');
+                  showToast('Accès à l’Option B : Export / Import de Sauvegarde JSON');
+                }}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 hover:text-white text-xs font-bold transition-all border border-amber-600/70 cursor-pointer shadow-xs"
+                title="Accéder à l'Option B : Sauvegarde & Synchronisation JSON du site"
+              >
+                <FileJson className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden sm:inline">Sauvegarde JSON</span>
+              </button>
+
               {/* Vertical divider */}
               <div className="h-6 w-px bg-slate-800 mx-0.5 hidden sm:block" />
 
@@ -994,12 +1010,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 {import.meta.env.DEV ? (
                   <>
                     <Github className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Paramètres & GitHub</span>
+                    <span>Paramètres & Sauvegarde JSON</span>
                   </>
                 ) : (
                   <>
                     <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Configuration Système</span>
+                    <span>Paramètres Système & Sauvegarde</span>
                   </>
                 )}
               </button>
@@ -1234,8 +1250,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            {import.meta.env.DEV ? <Github className="w-3.5 h-3.5 text-amber-400" /> : <Sliders className="w-3.5 h-3.5 text-amber-400" />}
-                            <span>Paramètres & Synchronisation</span>
+                            <FileJson className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Paramètres & Sauvegarde JSON (Option B)</span>
                           </div>
                           {activeTab === 'cms' && <Check className="w-3.5 h-3.5 text-white" />}
                         </button>

@@ -249,5 +249,47 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.ok(coreModules.includes('users'), 'users must be present');
     });
   });
+
+  describe('Option B : Export & Import de Sauvegarde JSON (Système & Base)', () => {
+    it('should export complete backup JSON structure including settings, slides, admissions, news and events', async () => {
+      const { apiService } = await import('../src/services/api.ts');
+      assert.ok(typeof apiService.exportBackup === 'function', 'apiService.exportBackup must be defined');
+      assert.ok(typeof apiService.downloadBackupFile === 'function', 'apiService.downloadBackupFile must be defined');
+      assert.ok(typeof apiService.importBackup === 'function', 'apiService.importBackup must be defined');
+
+      const backup = await apiService.exportBackup();
+      assert.ok(backup, 'Backup payload must be generated');
+      assert.strictEqual(backup.exportVersion, '1.0', 'Backup version must be 1.0');
+      assert.ok(backup.exportedAt, 'Backup must include exportedAt timestamp');
+      assert.ok(backup.stats, 'Backup must include entity counters');
+      assert.ok(backup.siteSettings, 'Backup must contain siteSettings');
+      assert.ok(Array.isArray(backup.heroSlides), 'Backup must contain heroSlides array');
+      assert.ok(Array.isArray(backup.news), 'Backup must contain news array');
+      assert.ok(Array.isArray(backup.events), 'Backup must contain events array');
+      assert.ok(Array.isArray(backup.admissions), 'Backup must contain admissions array');
+    });
+
+    it('should validate and import valid backup JSON payload successfully', async () => {
+      const { apiService } = await import('../src/services/api.ts');
+      const testBackup = {
+        exportVersion: '1.0',
+        exportedAt: new Date().toISOString(),
+        siteSettings: {
+          announcement: {
+            enabled: true,
+            text: 'Test Annonce Synchronisée Option B',
+            type: 'info' as const,
+          },
+        },
+        contentBlocks: {
+          'test_block_1': 'Contenu synchronisé',
+        },
+      };
+
+      const result = await apiService.importBackup(testBackup);
+      assert.ok(result.success, 'Import should report success');
+      assert.ok(result.message, 'Import should include confirmation message');
+    });
+  });
 });
 

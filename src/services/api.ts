@@ -94,6 +94,9 @@ const STORAGE_KEYS = {
 // Helper for local persistent fallback
 function getLocal<T>(key: string, initial: T): T {
   try {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return initial;
+    }
     const raw = localStorage.getItem(key);
     if (!raw) {
       localStorage.setItem(key, JSON.stringify(initial));
@@ -107,6 +110,9 @@ function getLocal<T>(key: string, initial: T): T {
 
 function setLocal<T>(key: string, val: T): void {
   try {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return;
+    }
     localStorage.setItem(key, JSON.stringify(val));
   } catch (e) {
     console.error('Storage write error', e);
@@ -1136,5 +1142,148 @@ export const apiService = {
       // Fallback
     }
     return updated;
+  },
+
+  // --- SAUVEGARDE & RESTAURATION JSON (OPTION B) ---
+  async exportBackup(): Promise<any> {
+    try {
+      const res = await appFetch('/api/admin/backup/export');
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Fallback offline compile
+    }
+
+    // Offline client fallback
+    const admissions = getLocal(STORAGE_KEYS.ADMISSIONS, INITIAL_ADMISSIONS);
+    const news = getLocal(STORAGE_KEYS.NEWS, INITIAL_NEWS);
+    const events = getLocal(STORAGE_KEYS.EVENTS, INITIAL_EVENTS);
+    const gallery = getLocal(STORAGE_KEYS.GALLERY, INITIAL_GALLERY);
+    const users = getLocal(STORAGE_KEYS.USERS, INITIAL_USERS);
+    const settings = getLocal(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
+    const contentBlocks = getLocal(STORAGE_KEYS.CONTENT_BLOCKS, {});
+    const heroSlides = getLocal(STORAGE_KEYS.HERO_SLIDES, []);
+    const media = getLocal(STORAGE_KEYS.MEDIA, []);
+    const contact = getLocal(STORAGE_KEYS.CONTACT, []);
+
+    return {
+      system: 'Collège Isaac Newton - Système Intégré de Gestion Scolaire',
+      exportVersion: '1.0',
+      exportedAt: new Date().toISOString(),
+      environment: 'client-offline-cache',
+      stats: {
+        admissionsCount: admissions.length,
+        newsCount: news.length,
+        eventsCount: events.length,
+        slidesCount: heroSlides.length,
+        usersCount: users.length,
+        mediaCount: media.length,
+        galleryCount: gallery.length,
+        contactCount: contact.length,
+        contentBlocksCount: Object.keys(contentBlocks).length,
+      },
+      siteSettings: settings,
+      contentBlocks,
+      heroSlides,
+      news,
+      events,
+      admissions,
+      gallery,
+      media,
+      contactMessages: contact,
+      users,
+    };
+  },
+
+  downloadBackupFile(backupData: any, customFilename?: string): void {
+    if (typeof window === 'undefined') return;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const filename = customFilename || `backup_college_isaac_newton_${dateStr}.json`;
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  },
+
+  async importBackup(backupData: any): Promise<{ success: boolean; message: string; stats?: any }> {
+    if (!backupData || typeof backupData !== 'object') {
+      throw new Error('Données JSON invalides pour la restauration.');
+    }
+
+    // 1. Synchronisation immédiate des caches locaux
+    if (backupData.siteSettings) {
+      setLocal(STORAGE_KEYS.SETTINGS, backupData.siteSettings);
+    }
+    if (backupData.contentBlocks) {
+      setLocal(STORAGE_KEYS.CONTENT_BLOCKS, backupData.contentBlocks);
+    }
+    if (backupData.heroSlides || backupData.slides) {
+      setLocal(STORAGE_KEYS.HERO_SLIDES, backupData.heroSlides || backupData.slides);
+    }
+    if (backupData.news || backupData.newsArticles) {
+      setLocal(STORAGE_KEYS.NEWS, backupData.news || backupData.newsArticles);
+    }
+    if (backupData.events || backupData.schoolEvents) {
+      setLocal(STORAGE_KEYS.EVENTS, backupData.events || backupData.schoolEvents);
+    }
+    if (backupData.admissions) {
+      setLocal(STORAGE_KEYS.ADMISSIONS, backupData.admissions);
+    }
+    if (backupData.gallery || backupData.galleryItems) {
+      setLocal(STORAGE_KEYS.GALLERY, backupData.gallery || backupData.galleryItems);
+    }
+    if (backupData.media || backupData.mediaItems) {
+      setLocal(STORAGE_KEYS.MEDIA, backupData.media || backupData.mediaItems);
+    }
+    if (backupData.contactMessages || backupData.messages) {
+      setLocal(STORAGE_KEYS.CONTACT, backupData.contactMessages || backupData.messages);
+    }
+    if (backupData.users || backupData.systemUsers) {
+      setLocal(STORAGE_KEYS.USERS, backupData.users || backupData.systemUsers);
+    }
+
+    // 2. Notification de mise à jour aux fenêtres/composants actifs
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:backup-restored', { detail: backupData }));
+      if (backupData.contentBlocks) {
+        window.dispatchEvent(new CustomEvent('cin:content-blocks-updated', { detail: { blocks: backupData.contentBlocks } }));
+      }
+    }
+
+    // 3. Appel de l'API serveur pour persister dans PostgreSQL / Disque
+    try {
+      const res = await appFetch('/api/admin/backup/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(backupData),
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+      const errJson = await res.json().catch(() => null);
+      if (errJson && errJson.error) {
+        throw new Error(errJson.error);
+      }
+    } catch (e: any) {
+      console.warn('[Import API Call Warning]', e.message);
+      // Even if network failed, local storage was updated
+      return {
+        success: true,
+        message: 'Données restaurées dans le cache du navigateur avec succès (serveur non joint ou hors-ligne).',
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Sauvegarde JSON restaurée avec succès !',
+    };
   },
 };

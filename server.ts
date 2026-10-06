@@ -2503,6 +2503,269 @@ app.get('/api/audit', (req: Request, res: Response) => {
   res.json(auditLogs);
 });
 
+// ==============================================================================
+// 13. SAUVEGARDE & RESTAURATION COMPLÈTE JSON (OPTION B) - EXPORT / IMPORT DU SI
+// ==============================================================================
+app.get(['/api/admin/backup/export', '/api/backup'], async (req: Request, res: Response) => {
+  try {
+    let currentNews = newsArticles;
+    let currentEvents = schoolEvents;
+    let currentAdmissions = admissions;
+    let currentUsers = systemUsers;
+    let currentGallery = memoryGallery;
+    let currentSlides = memoryHeroSlides;
+    let currentSettings = siteSettings;
+    let currentContentBlocks = memoryContentBlocks;
+    let currentMedia = memoryMediaItems;
+    let currentContact = contactMessages;
+
+    if (isDbActive()) {
+      try {
+        const [dbN, dbE, dbA, dbU, dbG, dbS, dbSet, dbCB, dbM, dbC] = await Promise.allSettled([
+          dbGetNews(),
+          dbGetEvents(),
+          dbGetAdmissions(),
+          dbGetUsers(),
+          dbGetGallery(),
+          dbGetHeroSlides(),
+          dbGetSettings(),
+          dbGetContentBlocks(),
+          dbGetMedia(),
+          dbGetContactMessages(),
+        ]);
+        if (dbN.status === 'fulfilled' && dbN.value && dbN.value.length > 0) currentNews = dbN.value;
+        if (dbE.status === 'fulfilled' && dbE.value && dbE.value.length > 0) currentEvents = dbE.value;
+        if (dbA.status === 'fulfilled' && dbA.value && dbA.value.length > 0) currentAdmissions = dbA.value;
+        if (dbU.status === 'fulfilled' && dbU.value && dbU.value.length > 0) currentUsers = dbU.value;
+        if (dbG.status === 'fulfilled' && dbG.value && dbG.value.length > 0) currentGallery = dbG.value;
+        if (dbS.status === 'fulfilled' && dbS.value && dbS.value.length > 0) currentSlides = dbS.value;
+        if (dbSet.status === 'fulfilled' && dbSet.value) currentSettings = dbSet.value;
+        if (dbCB.status === 'fulfilled' && dbCB.value) currentContentBlocks = dbCB.value;
+        if (dbM.status === 'fulfilled' && dbM.value && dbM.value.length > 0) currentMedia = dbM.value;
+        if (dbC.status === 'fulfilled' && dbC.value && dbC.value.length > 0) currentContact = dbC.value;
+      } catch (err: any) {
+        console.warn('[Backup Export DB Fetch Warning]', err.message);
+      }
+    }
+
+    const payload = {
+      system: 'Collège Isaac Newton - Système Intégré de Gestion Scolaire',
+      exportVersion: '1.0',
+      exportedAt: new Date().toISOString(),
+      environment: process.env.DATABASE_URL ? 'production-coolify' : 'development',
+      stats: {
+        admissionsCount: currentAdmissions.length,
+        newsCount: currentNews.length,
+        eventsCount: currentEvents.length,
+        slidesCount: currentSlides.length,
+        usersCount: currentUsers.length,
+        mediaCount: currentMedia.length,
+        galleryCount: currentGallery.length,
+        contactCount: currentContact.length,
+        contentBlocksCount: Object.keys(currentContentBlocks).length,
+      },
+      siteSettings: currentSettings,
+      contentBlocks: currentContentBlocks,
+      heroSlides: currentSlides,
+      news: currentNews,
+      events: currentEvents,
+      admissions: currentAdmissions,
+      gallery: currentGallery,
+      media: currentMedia,
+      contactMessages: currentContact,
+      users: currentUsers.map(u => ({ ...u, password: '' })),
+    };
+
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const filename = `backup_college_isaac_newton_${dateStr}.json`;
+
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    if (req.query.download === '1' || req.query.download === 'true') {
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    }
+
+    auditLogs.push({
+      id: `log-${Date.now()}`,
+      action: 'BACKUP_EXPORTED',
+      user: 'Super Admin (Système)',
+      details: `Sauvegarde JSON complète générée (${currentAdmissions.length} admissions, ${currentNews.length} articles, ${currentEvents.length} événements)`,
+      timestamp: new Date().toISOString(),
+    });
+
+    res.json(payload);
+  } catch (err: any) {
+    console.error('[Backup Export Error]', err);
+    res.status(500).json({ error: 'Erreur lors de la génération de la sauvegarde', details: err.message });
+  }
+});
+
+app.post(['/api/admin/backup/import', '/api/backup/import'], async (req: Request, res: Response) => {
+  try {
+    const backup = req.body;
+    if (!backup || typeof backup !== 'object') {
+      return res.status(400).json({ error: 'Fichier ou données JSON de sauvegarde invalides.' });
+    }
+
+    const importedStats = {
+      admissions: 0,
+      news: 0,
+      events: 0,
+      slides: 0,
+      contentBlocks: 0,
+      media: 0,
+      contact: 0,
+      users: 0,
+      settingsUpdated: false,
+    };
+
+    // 1. Site Settings
+    if (backup.siteSettings && typeof backup.siteSettings === 'object') {
+      siteSettings = { ...siteSettings, ...backup.siteSettings };
+      saveSettingsToDisk(siteSettings);
+      if (isDbActive()) {
+        try { await dbSaveSettings(siteSettings); } catch (e: any) { console.error(e.message); }
+      }
+      importedStats.settingsUpdated = true;
+    }
+
+    // 2. Content Blocks
+    if (backup.contentBlocks && typeof backup.contentBlocks === 'object') {
+      memoryContentBlocks = { ...memoryContentBlocks, ...backup.contentBlocks };
+      saveContentBlocksToDisk(memoryContentBlocks);
+      if (isDbActive()) {
+        try { await dbSaveContentBlocks(memoryContentBlocks); } catch (e: any) { console.error(e.message); }
+      }
+      importedStats.contentBlocks = Object.keys(memoryContentBlocks).length;
+    }
+
+    // 3. Hero Slides
+    const slidesData = backup.heroSlides || backup.slides;
+    if (Array.isArray(slidesData) && slidesData.length > 0) {
+      memoryHeroSlides = slidesData;
+      if (isDbActive()) {
+        try { await dbSaveHeroSlides(memoryHeroSlides); } catch (e: any) { console.error(e.message); }
+      }
+      importedStats.slides = memoryHeroSlides.length;
+    }
+
+    // 4. News Articles
+    const newsData = backup.news || backup.newsArticles;
+    if (Array.isArray(newsData) && newsData.length > 0) {
+      newsArticles = newsData;
+      if (isDbActive()) {
+        for (const art of newsData) {
+          try {
+            await dbInsertNews(art);
+          } catch {
+            try { await dbUpdateNews(art.id, art); } catch {}
+          }
+        }
+      }
+      importedStats.news = newsArticles.length;
+    }
+
+    // 5. School Events
+    const eventsData = backup.events || backup.schoolEvents;
+    if (Array.isArray(eventsData) && eventsData.length > 0) {
+      schoolEvents = eventsData;
+      if (isDbActive()) {
+        for (const evt of eventsData) {
+          try {
+            await dbInsertEvent(evt);
+          } catch {
+            try { await dbUpdateEvent(evt.id, evt); } catch {}
+          }
+        }
+      }
+      importedStats.events = schoolEvents.length;
+    }
+
+    // 6. Admissions
+    const admData = backup.admissions;
+    if (Array.isArray(admData) && admData.length > 0) {
+      admissions = admData;
+      if (isDbActive()) {
+        for (const a of admData) {
+          try {
+            await dbInsertAdmission(a);
+          } catch {}
+        }
+      }
+      importedStats.admissions = admissions.length;
+    }
+
+    // 7. Gallery
+    const galleryData = backup.gallery || backup.galleryItems;
+    if (Array.isArray(galleryData) && galleryData.length > 0) {
+      memoryGallery = galleryData;
+      if (isDbActive()) {
+        try { await dbSaveGallery(memoryGallery); } catch {}
+      }
+    }
+
+    // 8. Media
+    const mediaData = backup.media || backup.mediaItems;
+    if (Array.isArray(mediaData) && mediaData.length > 0) {
+      memoryMediaItems = mediaData;
+      if (isDbActive()) {
+        for (const m of mediaData) {
+          try { await dbInsertMedia(m); } catch {}
+        }
+      }
+      importedStats.media = memoryMediaItems.length;
+    }
+
+    // 9. Contact Messages
+    const contactData = backup.contactMessages || backup.messages;
+    if (Array.isArray(contactData) && contactData.length > 0) {
+      contactMessages = contactData;
+      if (isDbActive()) {
+        for (const c of contactData) {
+          try { await dbInsertContactMessage(c); } catch {}
+        }
+      }
+      importedStats.contact = contactMessages.length;
+    }
+
+    // 10. Users
+    const usersData = backup.users || backup.systemUsers;
+    if (Array.isArray(usersData) && usersData.length > 0) {
+      for (const u of usersData) {
+        const existingIdx = systemUsers.findIndex(su => su.email === u.email || su.id === u.id);
+        if (existingIdx >= 0) {
+          systemUsers[existingIdx] = { ...systemUsers[existingIdx], ...u, password: systemUsers[existingIdx].password };
+        } else {
+          systemUsers.push(u);
+        }
+        if (isDbActive()) {
+          try { await dbInsertUser(u); } catch {}
+        }
+      }
+      importedStats.users = systemUsers.length;
+    }
+
+    auditLogs.push({
+      id: `log-${Date.now()}`,
+      action: 'BACKUP_RESTORED',
+      user: 'Super Admin (Système)',
+      details: `Restauration de sauvegarde JSON réussie (${importedStats.admissions} adm, ${importedStats.news} art, ${importedStats.events} evt, ${importedStats.slides} slides)`,
+      timestamp: new Date().toISOString(),
+    });
+
+    res.json({
+      success: true,
+      message: 'Sauvegarde JSON restaurée avec succès sur le serveur !',
+      stats: importedStats,
+      exportedAt: backup.exportedAt || null,
+      serverTimestamp: new Date().toISOString(),
+    });
+  } catch (err: any) {
+    console.error('[Backup Import Error]', err);
+    res.status(500).json({ error: 'Erreur lors de la restauration de la sauvegarde', details: err.message });
+  }
+});
+
 // Global error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('[Error]', err);
