@@ -136,7 +136,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
               className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between h-full group hover:border-blue-900/40"
             >
               <div>
-                <div className="relative h-44 sm:h-48 overflow-hidden bg-slate-950">
+                <div className="relative aspect-video w-full overflow-hidden bg-slate-950">
                   <img
                     src={featuredArticle.coverImage}
                     alt={featuredArticle.title}

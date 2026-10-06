@@ -106,12 +106,14 @@ export const SchoolLifePage: React.FC<SchoolLifePageProps> = ({ onNavigate, curr
 
           <div className="lg:col-span-6">
             <div className="rounded-3xl overflow-hidden shadow-xl border border-slate-200">
-              <img
-                src={SCHOOL_IMAGES.studentsAssembly}
-                alt="Rassemblement des élèves du Collège Isaac Newton"
-                referrerPolicy="no-referrer"
-                className="w-full h-80 sm:h-96 object-cover"
-              />
+              <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+                <img
+                  src={SCHOOL_IMAGES.studentsAssembly}
+                  alt="Rassemblement des élèves du Collège Isaac Newton"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div className="p-4 bg-slate-900 text-white text-xs">
                 <p className="font-semibold text-amber-300">Rassemblement civique des élèves</p>
                 <p className="text-slate-300 text-[11px]">Discipline, élégance et dignité lors de la cérémonie de début de semaine</p>

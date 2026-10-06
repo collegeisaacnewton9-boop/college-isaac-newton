@@ -127,12 +127,14 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate, currentUser })
 
           <div className="lg:col-span-6">
             <div className="relative rounded-3xl overflow-hidden shadow-xl border border-slate-200">
-              <img
-                src={SCHOOL_IMAGES.heroCampus}
-                alt="Bâtiment principal du Collège Isaac Newton"
-                referrerPolicy="no-referrer"
-                className="w-full h-80 sm:h-96 object-cover"
-              />
+              <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+                <img
+                  src={SCHOOL_IMAGES.heroCampus}
+                  alt="Bâtiment principal du Collège Isaac Newton"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div className="p-4 bg-slate-900 text-white text-xs">
                 <p className="font-semibold text-amber-300">Campus Principal du Collège Isaac Newton (Delmas 50, Haïti)</p>
                 <p className="text-slate-300 text-[11px]">Un cadre d'étude moderne, sécurisé et aéré propice à la sérénité des apprentissages</p>

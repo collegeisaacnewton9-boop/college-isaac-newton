@@ -123,7 +123,7 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
           <div
             key={item.id}
             onClick={() => setActivePhoto(item)}
-            className="group relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/90 shadow-2xs hover:shadow-xl transition-all duration-300 aspect-[16/11] cursor-pointer"
+            className="group relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/90 shadow-2xs hover:shadow-xl transition-all duration-300 aspect-video w-full cursor-pointer"
           >
             <img
               src={item.imageUrl}

@@ -54,7 +54,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({
         </button>
 
         <article className="bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-100">
-          <div className="relative h-64 sm:h-80 w-full">
+          <div className="relative aspect-video sm:aspect-[21/9] w-full max-h-[380px] overflow-hidden bg-slate-900">
             <img
               src={selectedArticle.coverImage}
               alt={selectedArticle.title}
@@ -159,7 +159,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({
             onClick={() => setSelectedArticle(art)}
             className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col group"
           >
-            <div className="relative h-48 overflow-hidden bg-slate-100">
+            <div className="relative aspect-video w-full overflow-hidden bg-slate-100">
               <img
                 src={art.coverImage}
                 alt={art.title}

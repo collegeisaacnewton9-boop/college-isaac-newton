@@ -129,7 +129,7 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
         {previewUrl ? (
           <div className="space-y-2.5">
             {/* Image Preview Container */}
-            <div className={`relative rounded-xl overflow-hidden bg-slate-950 aspect-[16/9] ${compact ? 'max-h-36 sm:max-h-44' : 'max-h-48 sm:max-h-56'} w-full border border-slate-200 shadow-xs flex items-center justify-center`}>
+            <div className={`relative rounded-xl overflow-hidden bg-slate-950 aspect-video ${compact ? 'max-h-36 sm:max-h-44' : 'max-h-48 sm:max-h-56'} w-full border border-slate-200 shadow-xs flex items-center justify-center`}>
               <img
                 src={previewUrl}
                 alt="Aperçu de la couverture"

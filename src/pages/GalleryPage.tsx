@@ -130,9 +130,9 @@ export const GalleryPage: React.FC<GalleryPageProps> = ({ currentUser }) => {
           <div
             key={item.id}
             onClick={() => setActiveItem(item)}
-            className="group relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/90 shadow-2xs aspect-[4/3] cursor-pointer hover:shadow-xl transition-all duration-300"
+            className="group relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-200/90 shadow-2xs aspect-video w-full cursor-pointer hover:shadow-xl transition-all duration-300"
           >
-            {/* Image with zoom on hover */}
+            {/* Image with fixed aspect-video and object-cover */}
             <img
               src={item.imageUrl}
               alt={item.altText || item.title}

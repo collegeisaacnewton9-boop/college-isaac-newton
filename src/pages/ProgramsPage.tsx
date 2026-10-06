@@ -722,12 +722,12 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
             </div>
 
             <div className="lg:col-span-6 space-y-4">
-              <div className="rounded-2xl overflow-hidden shadow-md border border-slate-200">
+              <div className="rounded-2xl overflow-hidden shadow-md border border-slate-200 aspect-video w-full bg-slate-900 relative">
                 <img
                   src={SCHOOL_IMAGES.computerLab}
                   alt="Laboratoire informatique du Collège Isaac Newton"
                   referrerPolicy="no-referrer"
-                  className="w-full h-72 sm:h-80 object-cover"
+                  className="w-full h-full object-cover"
                 />
               </div>
               <div className="p-4 rounded-xl bg-slate-900 text-white text-xs flex items-center justify-between">

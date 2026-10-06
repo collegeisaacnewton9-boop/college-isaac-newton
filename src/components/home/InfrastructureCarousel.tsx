@@ -511,8 +511,8 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
               </button>
             </div>
 
-            {/* Image */}
-            <div className="relative aspect-[16/10] sm:aspect-[16/9] bg-slate-950 flex items-center justify-center overflow-hidden">
+            {/* Image with fixed aspect-video */}
+            <div className="relative aspect-video w-full bg-slate-950 flex items-center justify-center overflow-hidden">
               <img
                 src={lightboxItem.imageUrl}
                 alt={lightboxItem.altText || lightboxItem.title}
