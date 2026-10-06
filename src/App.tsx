@@ -9,7 +9,6 @@ import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { AuthModal } from './components/auth/AuthModal';
 import { WhatsAppFloatingButton } from './components/ui/WhatsAppFloatingButton';
-import { ScrollNavigationButton } from './components/ui/ScrollNavigationButton';
 import { GlobalTopLoadingBar } from './components/layout/GlobalTopLoadingBar';
 import { Breadcrumbs } from './components/layout/Breadcrumbs';
 import { DynamicMetaTags } from './components/seo/DynamicMetaTags';
@@ -323,11 +322,8 @@ export default function App() {
         onNavigate={handleNavigate}
       />
 
-      {/* Dynamic Floating WhatsApp Quick Contact Button */}
+      {/* Unified Dynamic Floating Action Dock (WhatsApp Quick Contact & Scroll Navigation) */}
       <WhatsAppFloatingButton />
-
-      {/* Floating Fast Scroll-to-Top / Scroll-to-Bottom Button */}
-      <ScrollNavigationButton />
 
       {/* Floating Formatting Toolbar & Admin Inline Editor Toggle (Visible only to authorized admins) */}
       <FloatingEditorToolbar currentUser={currentUser} />
