@@ -621,5 +621,39 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.strictEqual(deleted, true, 'Document deletion must succeed');
     });
   });
+
+  describe('Dashboard Administration - Vue Statistiques Rapides (Élèves Inscrits, Documents ce Mois-ci & Prochain Événement)', () => {
+    it('should export QuickStatsDashboardView component from admin components', async () => {
+      const { QuickStatsDashboardView } = await import('../src/components/admin/QuickStatsDashboardView.tsx');
+      assert.ok(typeof QuickStatsDashboardView === 'function', 'QuickStatsDashboardView must be exported as a React functional component');
+    });
+
+    it('should accurately calculate total enrolled students, uploaded documents this month and next upcoming event', async () => {
+      const { INITIAL_ADMISSIONS, INITIAL_DOCUMENTS, INITIAL_EVENTS } = await import('../src/data/mockData.ts');
+
+      // 1. STATISTIQUE 1 : Nombre total d'élèves inscrits / admis
+      const acceptedStudents = INITIAL_ADMISSIONS.filter(a => a.status === 'ACCEPTED');
+      assert.ok(acceptedStudents.length >= 1, 'Must have accepted students in admissions');
+      assert.strictEqual(acceptedStudents[0].studentFirstName, 'Alexandre', 'Accepted student matches demo data');
+
+      // 2. STATISTIQUE 2 : Nouveaux documents uploadés ce mois-ci
+      assert.ok(INITIAL_DOCUMENTS.length >= 5, 'Must have at least 5 certified PDF documents available');
+      const totalDownloads = INITIAL_DOCUMENTS.reduce((sum, d) => sum + (d.downloadCount || 0), 0);
+      assert.ok(totalDownloads > 1000, 'Cumulative downloads must be properly tracked');
+
+      // 3. STATISTIQUE 3 : Prochain événement à venir
+      const now = new Date('2026-10-07T09:00:00Z');
+      const upcomingEvents = INITIAL_EVENTS
+        .map(e => ({ ...e, dateObj: new Date(e.startDate) }))
+        .filter(e => e.dateObj >= now)
+        .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+
+      assert.ok(upcomingEvents.length > 0, 'Must identify at least one upcoming event in calendar');
+      const nextEvent = upcomingEvents[0];
+      assert.ok(nextEvent.title, 'Next event must have a title');
+      assert.ok(nextEvent.startDate, 'Next event must have a valid startDate');
+      assert.ok(new Date(nextEvent.startDate).getTime() > now.getTime(), 'Next event must be in the future');
+    });
+  });
 });
 

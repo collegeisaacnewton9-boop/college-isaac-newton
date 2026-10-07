@@ -61,7 +61,8 @@ import {
   NewsArticle, 
   SchoolEvent,
   ContactMessage,
-  SiteSettings
+  SiteSettings,
+  DocumentFile
 } from '../types';
 import { apiService } from '../services/api';
 import { INITIAL_USERS } from '../data/mockData';
@@ -70,6 +71,7 @@ import { AccessControlView } from '../components/admin/AccessControlView';
 import { MediaLibraryView } from '../components/admin/MediaLibraryView';
 import { SlideshowEditorView } from '../components/admin/SlideshowEditorView';
 import { MenuEditorView } from '../components/admin/MenuEditorView';
+import { QuickStatsDashboardView } from '../components/admin/QuickStatsDashboardView';
 import { GitHubSyncModal } from '../components/admin/GitHubSyncModal';
 import { EventLastMinuteModal } from '../components/events/EventLastMinuteModal';
 import { eventNotificationService, ImminentEventAlert } from '../services/eventNotificationService';
@@ -165,6 +167,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const [events, setEvents] = useState<SchoolEvent[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [documents, setDocuments] = useState<DocumentFile[]>([]);
+  const [overviewDisplayMode, setOverviewDisplayMode] = useState<'quick_stats' | 'all'>('quick_stats');
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -236,12 +240,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [admList, newsList, evts, msgList, setts] = await Promise.all([
+      const [admList, newsList, evts, msgList, setts, docsList] = await Promise.all([
         apiService.getAdmissions(),
         apiService.getNews(),
         apiService.getEvents(),
         apiService.getContactMessages(),
         apiService.getSettings(),
+        apiService.getDocuments(),
       ]);
       setAdmissions(admList);
       setNews(newsList);
@@ -249,6 +254,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       setMessages(msgList);
       setSettings(setts);
       setCmsSettings(setts);
+      setDocuments(docsList);
 
       // fetch audit logs from backend if available
       try {
@@ -269,6 +275,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
   useEffect(() => {
     loadData();
+
+    const handleDocsUpdate = () => {
+      apiService.getDocuments().then(setDocuments);
+    };
+    window.addEventListener('cin:documents-updated', handleDocsUpdate);
+    return () => window.removeEventListener('cin:documents-updated', handleDocsUpdate);
   }, []);
 
   // Automated notification system for events within 48h
@@ -1387,82 +1399,141 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               </div>
             )}
 
-            {/* Top 4 KPI Metrics - High Density Responsive Grid */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
-              
-              <div className="bg-white p-2.5 sm:px-3 sm:py-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-                <div className="flex items-center justify-between text-slate-500 text-[10.5px]">
-                  <span className="font-semibold uppercase tracking-wider">Préinscriptions</span>
-                  <FileCheck className="w-3.5 h-3.5 text-blue-600" />
+            {/* Dashboard View Mode Switcher Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white p-2 sm:px-3 rounded-xl border border-slate-200 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-blue-900 text-white flex items-center justify-center font-bold">
+                  <Award className="w-3.5 h-3.5 text-amber-400" />
                 </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{totalAdmissions}</span>
-                  <span className="text-[9.5px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded-full font-sans">
-                    2026-2027
-                  </span>
-                </div>
-                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
-                  <span>Admis : <strong className="text-emerald-700">{acceptedCount}</strong></span>
-                  <span>Attente : <strong className="text-amber-600">{pendingCount}</strong></span>
+                <div>
+                  <h3 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
+                    Tableau de Bord & Indicateurs Rapides
+                  </h3>
+                  <p className="text-[11px] text-slate-500 font-sans">
+                    Suivi instantané des effectifs d'élèves inscrits, des documents téléchargeables et de l'agenda officiel.
+                  </p>
                 </div>
               </div>
 
-              <div className="bg-white p-2.5 sm:px-3 sm:py-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-                <div className="flex items-center justify-between text-slate-500 text-[10.5px]">
-                  <span className="font-semibold uppercase tracking-wider">Entretiens Prévus</span>
-                  <Clock className="w-3.5 h-3.5 text-amber-600" />
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{interviewCount}</span>
-                  <span className="text-[9.5px] text-slate-500 font-sans">convoqués</span>
-                </div>
-                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
-                  <span>Examen : <strong>{underReviewCount}</strong></span>
-                  <span>Validation : <strong>{totalAdmissions > 0 ? Math.round((acceptedCount / totalAdmissions) * 100) : 0}%</strong></span>
-                </div>
+              <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 self-start sm:self-auto">
+                <button
+                  type="button"
+                  data-overview-mode="quick_stats"
+                  onClick={() => setOverviewDisplayMode('quick_stats')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    overviewDisplayMode === 'quick_stats'
+                      ? 'bg-blue-900 text-white shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Statistiques Rapides</span>
+                </button>
+                <button
+                  type="button"
+                  data-overview-mode="all"
+                  onClick={() => setOverviewDisplayMode('all')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                    overviewDisplayMode === 'all'
+                      ? 'bg-blue-900 text-white shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Vue Globale KPIs</span>
+                </button>
               </div>
-
-              <div className="bg-white p-2.5 sm:px-3 sm:py-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-                <div className="flex items-center justify-between text-slate-500 text-[10.5px]">
-                  <span className="font-semibold uppercase tracking-wider">Articles & News</span>
-                  <Newspaper className="w-3.5 h-3.5 text-purple-600" />
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{news.length}</span>
-                  <span className="text-[9.5px] text-purple-700 font-bold bg-purple-50 px-1.5 py-0.2 rounded-full font-sans">
-                    En ligne
-                  </span>
-                </div>
-                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
-                  <span>Agenda : <strong>{events.length}</strong></span>
-                  <span>À la une : <strong>{news.filter(n => n.featured).length}</strong></span>
-                </div>
-              </div>
-
-              <div className="bg-white p-2.5 sm:px-3 sm:py-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-                <div className="flex items-center justify-between text-slate-500 text-[10.5px]">
-                  <span className="font-semibold uppercase tracking-wider">Secrétariat</span>
-                  <Mail className="w-3.5 h-3.5 text-blue-600" />
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{messages.length}</span>
-                  {unreadMessagesCount > 0 ? (
-                    <span className="text-[9.5px] text-rose-700 font-bold bg-rose-50 px-1.5 py-0.2 rounded-full font-sans">
-                      {unreadMessagesCount} non lus
-                    </span>
-                  ) : (
-                    <span className="text-[9.5px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded-full font-sans">
-                      Tous traités
-                    </span>
-                  )}
-                </div>
-                <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
-                  <span>Heures : <strong>7h30 - 15h30</strong></span>
-                  <span>Delmas 50</span>
-                </div>
-              </div>
-
             </div>
+
+            {/* VUE 1 : STATISTIQUES RAPIDES (PAR DÉFAUT) */}
+            {overviewDisplayMode === 'quick_stats' && (
+              <QuickStatsDashboardView
+                admissions={admissions}
+                documents={documents}
+                events={events}
+                onNavigateTab={(tab) => setActiveTab(tab)}
+                onOpenUploadDoc={() => setActiveTab('media')}
+              />
+            )}
+
+            {/* VUE 2 : TOP 4 KPI METRICS - HIGH DENSITY RESPONSIVE GRID */}
+            {overviewDisplayMode === 'all' && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
+                
+                <div className="bg-white p-2.5 sm:px-3 sm:py-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
+                  <div className="flex items-center justify-between text-slate-500 text-[10.5px]">
+                    <span className="font-semibold uppercase tracking-wider">Préinscriptions</span>
+                    <FileCheck className="w-3.5 h-3.5 text-blue-600" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{totalAdmissions}</span>
+                    <span className="text-[9.5px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded-full font-sans">
+                      2026-2027
+                    </span>
+                  </div>
+                  <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
+                    <span>Admis : <strong className="text-emerald-700">{acceptedCount}</strong></span>
+                    <span>Attente : <strong className="text-amber-600">{pendingCount}</strong></span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-2.5 sm:px-3 sm:py-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
+                  <div className="flex items-center justify-between text-slate-500 text-[10.5px]">
+                    <span className="font-semibold uppercase tracking-wider">Entretiens Prévus</span>
+                    <Clock className="w-3.5 h-3.5 text-amber-600" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{interviewCount}</span>
+                    <span className="text-[9.5px] text-slate-500 font-sans">convoqués</span>
+                  </div>
+                  <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
+                    <span>Examen : <strong>{underReviewCount}</strong></span>
+                    <span>Validation : <strong>{totalAdmissions > 0 ? Math.round((acceptedCount / totalAdmissions) * 100) : 0}%</strong></span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-2.5 sm:px-3 sm:py-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
+                  <div className="flex items-center justify-between text-slate-500 text-[10.5px]">
+                    <span className="font-semibold uppercase tracking-wider">Articles & News</span>
+                    <Newspaper className="w-3.5 h-3.5 text-purple-600" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{news.length}</span>
+                    <span className="text-[9.5px] text-purple-700 font-bold bg-purple-50 px-1.5 py-0.2 rounded-full font-sans">
+                      En ligne
+                    </span>
+                  </div>
+                  <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
+                    <span>Agenda : <strong>{events.length}</strong></span>
+                    <span>À la une : <strong>{news.filter(n => n.featured).length}</strong></span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-2.5 sm:px-3 sm:py-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
+                  <div className="flex items-center justify-between text-slate-500 text-[10.5px]">
+                    <span className="font-semibold uppercase tracking-wider">Secrétariat</span>
+                    <Mail className="w-3.5 h-3.5 text-blue-600" />
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{messages.length}</span>
+                    {unreadMessagesCount > 0 ? (
+                      <span className="text-[9.5px] text-rose-700 font-bold bg-rose-50 px-1.5 py-0.2 rounded-full font-sans">
+                        {unreadMessagesCount} non lus
+                      </span>
+                    ) : (
+                      <span className="text-[9.5px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded-full font-sans">
+                        Tous traités
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
+                    <span>Heures : <strong>7h30 - 15h30</strong></span>
+                    <span>Delmas 50</span>
+                  </div>
+                </div>
+
+              </div>
+            )}
 
             {/* Quick Actions Shortcuts for Director */}
             <div className="bg-white rounded-xl p-2.5 sm:px-3 sm:py-2.5 border border-slate-200 shadow-2xs space-y-2">
