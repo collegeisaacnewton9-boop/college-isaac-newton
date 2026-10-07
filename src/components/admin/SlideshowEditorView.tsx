@@ -629,6 +629,7 @@ export const SlideshowEditorView: React.FC<SlideshowEditorViewProps> = ({
                         }}
                         recommendedAspect="16:9"
                         compact
+                        enforce169AspectRatio={true}
                       />
                     </div>
                   )}

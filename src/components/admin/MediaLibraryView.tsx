@@ -1377,6 +1377,7 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                       label="Photo Réelle de la Diapositive (WebP)"
                       recommendedAspect="Panoramique 16:9 (1280px)"
                       compact={true}
+                      enforce169AspectRatio={true}
                     />
                   </div>
 

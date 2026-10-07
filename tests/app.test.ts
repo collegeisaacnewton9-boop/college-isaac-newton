@@ -496,6 +496,16 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.strictEqual(typeof componentModule.ImageCompressor.compressImage, 'function');
       assert.strictEqual(typeof componentModule.useImageCompressor, 'function');
     });
+
+    it('should export ImageAspectRatioController hook and utility enforcing 16:9 ratio', async () => {
+      const hookModule = await import('../src/hooks/useImageAspectRatioController.ts');
+      assert.ok(hookModule.useImageAspectRatioController, 'useImageAspectRatioController hook must be exported');
+      assert.ok(hookModule.ImageAspectRatioController, 'ImageAspectRatioController object must be exported');
+      assert.strictEqual(typeof hookModule.enforce169AspectRatio, 'function', 'enforce169AspectRatio must be a function');
+      assert.strictEqual(typeof hookModule.ImageAspectRatioController.processCarouselImage, 'function');
+      assert.strictEqual(hookModule.CAROUSEL_TARGET_RATIO, 16 / 9);
+      assert.strictEqual(hookModule.CAROUSEL_RATIO_LABEL, '16:9');
+    });
   });
 });
 

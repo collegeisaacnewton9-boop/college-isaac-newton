@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { compressImage, formatBytes, CompressedImageResult } from '../../utils/imageCompressor';
+import { enforce169AspectRatio } from '../../hooks/useImageAspectRatioController';
 import { SCHOOL_IMAGES } from '../../assets/images';
 
 interface ImageUploadCompressorProps {
@@ -21,6 +22,7 @@ interface ImageUploadCompressorProps {
   label?: string;
   recommendedAspect?: string;
   compact?: boolean;
+  enforce169AspectRatio?: boolean;
 }
 
 const PRESET_IMAGES = [
@@ -37,6 +39,7 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
   label = 'Image de Couverture (Optimisation & Compression Automatique)',
   recommendedAspect = 'Format recommandé : 16:9 ou 16:10 (Max 1600px)',
   compact = false,
+  enforce169AspectRatio: shouldEnforce169 = false,
 }) => {
   const [previewUrl, setPreviewUrl] = useState<string>(currentImageUrl || '');
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
@@ -50,6 +53,7 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
   } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const is169Locked = shouldEnforce169 || recommendedAspect.includes('16:9');
 
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,11 +69,23 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
 
     setIsCompressing(true);
     try {
-      // Compress client-side with chosen preset to guarantee sharp quality and lightweight payload
-      const result = await compressImage(file, {
-        preset: selectedPreset,
-        mimeType: 'image/webp',
-      });
+      let result: CompressedImageResult;
+
+      if (is169Locked) {
+        // Automatically enforce 16:9 aspect ratio and compress via ImageCompressor
+        result = await enforce169AspectRatio(file, {
+          preset: selectedPreset,
+          maxWidth: 1200,
+          quality: selectedPreset === 'ultra' ? 0.88 : selectedPreset === 'speed' ? 0.75 : 0.8,
+          mimeType: 'image/webp',
+        });
+      } else {
+        // Compress client-side with chosen preset to guarantee sharp quality and lightweight payload
+        result = await compressImage(file, {
+          preset: selectedPreset,
+          mimeType: 'image/webp',
+        });
+      }
 
       setPreviewUrl(result.dataUrl);
       setCompressionStats({
@@ -160,6 +176,15 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
           </button>
         </div>
       </div>
+
+      {is169Locked && (
+        <div className="flex items-center justify-between text-[10px] text-blue-900 bg-blue-50/80 px-2.5 py-1 rounded-lg border border-blue-200/80">
+          <span className="font-bold flex items-center gap-1">
+            <span>📐 Ratio 16:9 Verrouillé</span>
+          </span>
+          <span className="text-slate-600 font-mono text-[9.5px]">Recadrage & centrage carrousel automatiques</span>
+        </div>
+      )}
 
       {/* Main Dropzone / Preview Area */}
       <div className={`relative border-2 border-dashed border-slate-200 hover:border-slate-400 rounded-2xl bg-slate-50/70 ${compact ? 'p-2.5 sm:p-3' : 'p-3 sm:p-4'} transition-all`}>
