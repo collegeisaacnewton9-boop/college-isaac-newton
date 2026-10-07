@@ -89,6 +89,7 @@ const STORAGE_KEYS = {
   HERO_SLIDES: 'cin_hero_slides_v1',
   GALLERY: 'cin_gallery_items_v1',
   CONTENT_BLOCKS: 'cin_content_blocks_v1',
+  DOCUMENTS: 'cin_official_documents_v1',
 };
 
 // Helper for local persistent fallback
@@ -698,7 +699,162 @@ export const apiService = {
   },
 
   async getDocuments(): Promise<DocumentFile[]> {
-    return INITIAL_DOCUMENTS;
+    try {
+      const res = await appFetch('/api/documents');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setLocal(STORAGE_KEYS.DOCUMENTS, data);
+          return data;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+    return getLocal<DocumentFile[]>(STORAGE_KEYS.DOCUMENTS, INITIAL_DOCUMENTS);
+  },
+
+  async addDocument(doc: Omit<DocumentFile, 'id'> & { id?: string }): Promise<DocumentFile> {
+    const payload = {
+      ...doc,
+      id: doc.id || `doc-${Date.now()}`,
+      downloadCount: doc.downloadCount || 0,
+      schoolYear: doc.schoolYear || '2026-2027',
+      fileType: doc.fileType || 'PDF',
+    };
+    try {
+      const res = await appFetch('/api/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        const current = await this.getDocuments();
+        const updated = [created, ...current.filter(d => d.id !== created.id)];
+        setLocal(STORAGE_KEYS.DOCUMENTS, updated);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('cin:documents-updated', { detail: { action: 'add', doc: created } }));
+        }
+        return created;
+      }
+    } catch {
+      // Offline fallback
+    }
+
+    const current = await this.getDocuments();
+    const updated = [payload as DocumentFile, ...current.filter(d => d.id !== payload.id)];
+    setLocal(STORAGE_KEYS.DOCUMENTS, updated);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:documents-updated', { detail: { action: 'add', doc: payload } }));
+    }
+    return payload as DocumentFile;
+  },
+
+  async updateDocument(id: string, doc: Partial<DocumentFile>): Promise<DocumentFile> {
+    try {
+      const res = await appFetch(`/api/documents/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(doc),
+      });
+      if (res.ok) {
+        const updatedDoc = await res.json();
+        const current = await this.getDocuments();
+        const updated = current.map(d => d.id === id ? { ...d, ...updatedDoc } : d);
+        setLocal(STORAGE_KEYS.DOCUMENTS, updated);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('cin:documents-updated', { detail: { action: 'update', id } }));
+        }
+        return updatedDoc;
+      }
+    } catch {
+      // Offline fallback
+    }
+
+    const current = await this.getDocuments();
+    const updated = current.map(d => d.id === id ? { ...d, ...doc } : d);
+    setLocal(STORAGE_KEYS.DOCUMENTS, updated);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:documents-updated', { detail: { action: 'update', id } }));
+    }
+    const found = updated.find(d => d.id === id);
+    return found || (doc as DocumentFile);
+  },
+
+  async deleteDocument(id: string): Promise<boolean> {
+    try {
+      const res = await appFetch(`/api/documents/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        const current = await this.getDocuments();
+        const updated = current.filter(d => d.id !== id);
+        setLocal(STORAGE_KEYS.DOCUMENTS, updated);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('cin:documents-updated', { detail: { action: 'delete', id } }));
+        }
+        return true;
+      }
+    } catch {
+      // Fallback
+    }
+
+    const current = await this.getDocuments();
+    const updated = current.filter(d => d.id !== id);
+    setLocal(STORAGE_KEYS.DOCUMENTS, updated);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:documents-updated', { detail: { action: 'delete', id } }));
+    }
+    return true;
+  },
+
+  async recordDocumentDownload(id: string): Promise<number> {
+    try {
+      const res = await appFetch(`/api/documents/${id}/download`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        const current = await this.getDocuments();
+        const updated = current.map(d => d.id === id ? { ...d, downloadCount: (d.downloadCount || 0) + 1 } : d);
+        setLocal(STORAGE_KEYS.DOCUMENTS, updated);
+        return data.downloadCount;
+      }
+    } catch {}
+
+    const current = await this.getDocuments();
+    let newCount = 1;
+    const updated = current.map(d => {
+      if (d.id === id) {
+        newCount = (d.downloadCount || 0) + 1;
+        return { ...d, downloadCount: newCount };
+      }
+      return d;
+    });
+    setLocal(STORAGE_KEYS.DOCUMENTS, updated);
+    return newCount;
+  },
+
+  async uploadDocumentPdf(fileName: string, dataBase64: string): Promise<{ fileUrl: string; fileName: string; fileSize: string; fileType: string }> {
+    try {
+      const res = await appFetch('/api/documents/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fileName, dataBase64 }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e: any) {
+      console.warn('[Upload PDF Fallback]', e.message);
+    }
+
+    // Local fallback: return data URI directly
+    const sizeKb = Math.round(dataBase64.length * 0.75 / 1024);
+    const sizeStr = sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} Mo` : `${sizeKb} Ko`;
+    return {
+      fileUrl: dataBase64,
+      fileName,
+      fileSize: sizeStr,
+      fileType: 'PDF'
+    };
   },
 
   // --- CONTACT MESSAGES ---

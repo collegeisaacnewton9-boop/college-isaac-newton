@@ -568,5 +568,58 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.ok(Array.isArray(cached), 'Cached hero slides must return an array');
     });
   });
+
+  describe('Gestion des Documents PDF & Centre de Ressources Scolaires', () => {
+    it('should retrieve official certified documents with valid PDF formats and categories', async () => {
+      const { apiService } = await import('../src/services/api.ts');
+      const docs = await apiService.getDocuments();
+
+      assert.ok(Array.isArray(docs), 'Documents must be an array');
+      assert.ok(docs.length >= 5, 'Must contain at least 5 certified documents');
+
+      const categories = ['reglement', 'calendrier', 'fournitures', 'formulaires'];
+      for (const doc of docs) {
+        assert.ok(doc.id, 'Document must have an id');
+        assert.ok(doc.title, 'Document must have a title');
+        assert.ok(categories.includes(doc.category), `Document category ${doc.category} must be valid`);
+        assert.strictEqual(doc.fileType, 'PDF', 'Document must be PDF format');
+        assert.ok(doc.fileSize, 'Document must state file size');
+        assert.ok(typeof doc.downloadCount === 'number', 'Download count must be numeric');
+      }
+    });
+
+    it('should support adding, updating and recording downloads for PDF documents', async () => {
+      const { apiService } = await import('../src/services/api.ts');
+      
+      const newDoc = await apiService.addDocument({
+        title: 'Guide d’Accueil des Parents 2026-2027',
+        description: 'Livret pratique avec contacts et chartes d’évaluation',
+        category: 'reglement',
+        fileUrl: '/documents/guide_accueil_parents_2026_2027.pdf',
+        fileSize: '512 Ko',
+        fileType: 'PDF',
+        targetCycle: 'Tous les cycles',
+        schoolYear: '2026-2027',
+        downloadCount: 0,
+      });
+
+      assert.ok(newDoc.id, 'Created doc must have an id');
+      assert.strictEqual(newDoc.title, 'Guide d’Accueil des Parents 2026-2027');
+
+      // Record download
+      const count = await apiService.recordDocumentDownload(newDoc.id);
+      assert.strictEqual(count, 1, 'Download count should increment to 1');
+
+      // Update doc
+      const updated = await apiService.updateDocument(newDoc.id, {
+        description: 'Description mise à jour avec horaires de permanence',
+      });
+      assert.strictEqual(updated.description, 'Description mise à jour avec horaires de permanence');
+
+      // Delete doc
+      const deleted = await apiService.deleteDocument(newDoc.id);
+      assert.strictEqual(deleted, true, 'Document deletion must succeed');
+    });
+  });
 });
 

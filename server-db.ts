@@ -213,6 +213,24 @@ export async function initDatabase(): Promise<boolean> {
         );
       `);
 
+      // 11. Table Official Documents (PDFs for parents & students)
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS official_documents (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT,
+          category TEXT NOT NULL DEFAULT 'reglement',
+          file_url TEXT NOT NULL,
+          file_size TEXT NOT NULL DEFAULT '0 Ko',
+          file_type TEXT NOT NULL DEFAULT 'PDF',
+          target_cycle TEXT,
+          school_year TEXT NOT NULL DEFAULT '2026-2027',
+          download_count INTEGER DEFAULT 0,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+      `);
+
       // Seed if empty
       const countRes = await client.query('SELECT COUNT(*) FROM admissions');
       if (parseInt(countRes.rows[0].count, 10) === 0) {
@@ -1522,6 +1540,132 @@ export async function dbSaveContentBlocks(blocks: Record<string, string>): Promi
   } catch (err: any) {
     console.error('[DB Save Content Blocks Error]', err.message);
     return false;
+  }
+}
+
+// --- OFFICIAL DOCUMENTS PERSISTENCE (POSTGRESQL) ---
+export async function dbGetOfficialDocuments(): Promise<any[]> {
+  const p = getDbPool();
+  if (!p || !isConnected) return [];
+  try {
+    const res = await p.query('SELECT * FROM official_documents ORDER BY created_at ASC');
+    return res.rows.map((r: any) => ({
+      id: r.id,
+      title: r.title,
+      description: r.description || '',
+      category: r.category || 'reglement',
+      fileUrl: r.file_url,
+      fileSize: r.file_size || '0 Ko',
+      fileType: r.file_type || 'PDF',
+      targetCycle: r.target_cycle || 'Tous les cycles',
+      schoolYear: r.school_year || '2026-2027',
+      downloadCount: r.download_count || 0,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }));
+  } catch (err: any) {
+    console.error('[DB Get Documents Error]', err.message);
+    return [];
+  }
+}
+
+export async function dbInsertOfficialDocument(doc: any): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query(
+      `INSERT INTO official_documents (
+        id, title, description, category, file_url, file_size, file_type, target_cycle, school_year, download_count, created_at, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+      ON CONFLICT (id) DO UPDATE SET
+        title = EXCLUDED.title,
+        description = EXCLUDED.description,
+        category = EXCLUDED.category,
+        file_url = EXCLUDED.file_url,
+        file_size = EXCLUDED.file_size,
+        file_type = EXCLUDED.file_type,
+        target_cycle = EXCLUDED.target_cycle,
+        school_year = EXCLUDED.school_year,
+        updated_at = NOW()`,
+      [
+        doc.id,
+        doc.title,
+        doc.description || '',
+        doc.category || 'reglement',
+        doc.fileUrl,
+        doc.fileSize || '0 Ko',
+        doc.fileType || 'PDF',
+        doc.targetCycle || 'Tous les cycles',
+        doc.schoolYear || '2026-2027',
+        doc.downloadCount || 0,
+      ]
+    );
+    return true;
+  } catch (err: any) {
+    console.error('[DB Insert Document Error]', err.message);
+    return false;
+  }
+}
+
+export async function dbUpdateOfficialDocument(id: string, doc: any): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query(
+      `UPDATE official_documents SET
+        title = COALESCE($2, title),
+        description = COALESCE($3, description),
+        category = COALESCE($4, category),
+        file_url = COALESCE($5, file_url),
+        file_size = COALESCE($6, file_size),
+        file_type = COALESCE($7, file_type),
+        target_cycle = COALESCE($8, target_cycle),
+        school_year = COALESCE($9, school_year),
+        updated_at = NOW()
+      WHERE id = $1`,
+      [
+        id,
+        doc.title,
+        doc.description,
+        doc.category,
+        doc.fileUrl,
+        doc.fileSize,
+        doc.fileType,
+        doc.targetCycle,
+        doc.schoolYear,
+      ]
+    );
+    return true;
+  } catch (err: any) {
+    console.error('[DB Update Document Error]', err.message);
+    return false;
+  }
+}
+
+export async function dbDeleteOfficialDocument(id: string): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query('DELETE FROM official_documents WHERE id = $1', [id]);
+    return true;
+  } catch (err: any) {
+    console.error('[DB Delete Document Error]', err.message);
+    return false;
+  }
+}
+
+export async function dbIncrementDocumentDownload(id: string): Promise<number> {
+  const p = getDbPool();
+  if (!p || !isConnected) return 1;
+  try {
+    const res = await p.query(
+      'UPDATE official_documents SET download_count = download_count + 1 WHERE id = $1 RETURNING download_count',
+      [id]
+    );
+    return res.rows[0]?.download_count || 1;
+  } catch (err: any) {
+    console.error('[DB Inc Download Error]', err.message);
+    return 1;
   }
 }
 

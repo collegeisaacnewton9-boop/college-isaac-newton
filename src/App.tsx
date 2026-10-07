@@ -271,6 +271,7 @@ export default function App() {
           <ResourcesPage
             onOpenAuth={() => setIsAuthOpen(true)}
             onNavigate={handleNavigate}
+            currentUser={currentUser}
           />
         )}
 

@@ -47,7 +47,12 @@ import {
   dbGetGitHubConfig,
   dbSaveGitHubConfig,
   dbGetContentBlocks,
-  dbSaveContentBlocks
+  dbSaveContentBlocks,
+  dbGetOfficialDocuments,
+  dbInsertOfficialDocument,
+  dbUpdateOfficialDocument,
+  dbDeleteOfficialDocument,
+  dbIncrementDocumentDownload
 } from './server-db';
 
 const execPromise = util.promisify(exec);
@@ -1833,6 +1838,234 @@ app.delete('/api/gallery/:id', async (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
+// 5e. Official Documents & PDF Resources (Parents & Students)
+let memoryDocuments = [
+  {
+    id: 'doc-1',
+    title: 'Règlement Intérieur du Collège Isaac Newton',
+    description: 'Charte de vie scolaire, règles de discipline, tenue vestimentaire et engagements réciproques.',
+    category: 'reglement',
+    fileUrl: '/documents/reglement_interieur_college_isaac_newton.pdf',
+    fileSize: '420 Ko',
+    fileType: 'PDF',
+    targetCycle: 'Tous les cycles',
+    schoolYear: '2026-2027',
+    downloadCount: 184,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'doc-2',
+    title: 'Calendrier Académique Officiel 2026-2027',
+    description: 'Dates de rentrée, trimestres, congés officiels, périodes d’examens et remises de bulletins.',
+    category: 'calendrier',
+    fileUrl: '/documents/calendrier_academique_2026_2027.pdf',
+    fileSize: '310 Ko',
+    fileType: 'PDF',
+    targetCycle: 'Tous les cycles',
+    schoolYear: '2026-2027',
+    downloadCount: 295,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'doc-3',
+    title: 'Liste des fournitures scolaires - Cycle Fondamental (7e à 9e AF)',
+    description: 'Manuels obligatoires, cahiers, matériel de géométrie et tenue de sport réglementaire.',
+    category: 'fournitures',
+    fileUrl: '/documents/fournitures_scolaires_fondamental_7e_9e.pdf',
+    fileSize: '240 Ko',
+    fileType: 'PDF',
+    targetCycle: 'Cycle Fondamental',
+    schoolYear: '2026-2027',
+    downloadCount: 412,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'doc-4',
+    title: 'Liste des fournitures scolaires - Secondaire (NS1 à NS4)',
+    description: 'Ouvrages de référence, calculatrice scientifique agréée et fournitures de laboratoire.',
+    category: 'fournitures',
+    fileUrl: '/documents/fournitures_scolaires_secondaire_ns1_ns4.pdf',
+    fileSize: '260 Ko',
+    fileType: 'PDF',
+    targetCycle: 'Cycle Secondaire',
+    schoolYear: '2026-2027',
+    downloadCount: 388,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'doc-5',
+    title: 'Fiche médicale et autorisation de soins d’urgence',
+    description: 'Formulaire à compléter obligatoirement par le médecin traitant avant la rentrée scolaire.',
+    category: 'formulaires',
+    fileUrl: '/documents/fiche_medicale_autorisation_urgence.pdf',
+    fileSize: '190 Ko',
+    fileType: 'PDF',
+    targetCycle: 'Tous les cycles',
+    schoolYear: '2026-2027',
+    downloadCount: 156,
+    createdAt: new Date().toISOString(),
+  },
+];
+
+app.get('/api/documents', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  if (isDbActive()) {
+    try {
+      const dbDocs = await dbGetOfficialDocuments();
+      if (dbDocs && Array.isArray(dbDocs) && dbDocs.length > 0) {
+        memoryDocuments = dbDocs;
+        return res.json(dbDocs);
+      }
+    } catch (e: any) {
+      console.error('[API Documents DB Error]', e.message);
+    }
+  }
+  res.json(memoryDocuments);
+});
+
+app.post('/api/documents', async (req: Request, res: Response) => {
+  const { title, description, category, fileUrl, fileSize, fileType, targetCycle, schoolYear } = req.body;
+  if (!title || !fileUrl) {
+    return res.status(400).json({ error: 'Titre et fichier requis' });
+  }
+
+  const newDoc = {
+    id: `doc-${Date.now()}`,
+    title: title.trim(),
+    description: description || '',
+    category: category || 'reglement',
+    fileUrl,
+    fileSize: fileSize || '350 Ko',
+    fileType: fileType || 'PDF',
+    targetCycle: targetCycle || 'Tous les cycles',
+    schoolYear: schoolYear || '2026-2027',
+    downloadCount: 0,
+    createdAt: new Date().toISOString(),
+  };
+
+  memoryDocuments.unshift(newDoc);
+
+  if (isDbActive()) {
+    try {
+      await dbInsertOfficialDocument(newDoc);
+    } catch (e: any) {
+      console.error('[API Insert Document DB Error]', e.message);
+    }
+  }
+
+  auditLogs.push({
+    id: `log-${Date.now()}`,
+    action: 'OFFICIAL_DOCUMENT_ADDED',
+    user: 'Direction (Admin)',
+    details: `Document PDF téléversé : ${newDoc.title} (${newDoc.category})`,
+    timestamp: new Date().toISOString(),
+  });
+
+  res.status(201).json(newDoc);
+});
+
+app.put('/api/documents/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const idx = memoryDocuments.findIndex(d => d.id === id);
+  if (idx === -1) {
+    return res.status(404).json({ error: 'Document introuvable' });
+  }
+
+  memoryDocuments[idx] = {
+    ...memoryDocuments[idx],
+    ...req.body,
+    updatedAt: new Date().toISOString(),
+  };
+
+  if (isDbActive()) {
+    try {
+      await dbUpdateOfficialDocument(id, memoryDocuments[idx]);
+    } catch (e: any) {
+      console.error('[API Update Document DB Error]', e.message);
+    }
+  }
+
+  auditLogs.push({
+    id: `log-${Date.now()}`,
+    action: 'OFFICIAL_DOCUMENT_UPDATED',
+    user: 'Direction (Admin)',
+    details: `Document PDF mis à jour : ${memoryDocuments[idx].title}`,
+    timestamp: new Date().toISOString(),
+  });
+
+  res.json(memoryDocuments[idx]);
+});
+
+app.delete('/api/documents/:id', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const doc = memoryDocuments.find(d => d.id === id);
+  memoryDocuments = memoryDocuments.filter(d => d.id !== id);
+
+  if (isDbActive()) {
+    try {
+      await dbDeleteOfficialDocument(id);
+    } catch (e: any) {
+      console.error('[API Delete Document DB Error]', e.message);
+    }
+  }
+
+  auditLogs.push({
+    id: `log-${Date.now()}`,
+    action: 'OFFICIAL_DOCUMENT_DELETED',
+    user: 'Direction (Admin)',
+    details: `Document PDF supprimé : ${doc?.title || id}`,
+    timestamp: new Date().toISOString(),
+  });
+
+  res.json({ success: true });
+});
+
+app.post('/api/documents/:id/download', async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const doc = memoryDocuments.find(d => d.id === id);
+  if (doc) {
+    doc.downloadCount = (doc.downloadCount || 0) + 1;
+  }
+  if (isDbActive()) {
+    try {
+      await dbIncrementDocumentDownload(id);
+    } catch {}
+  }
+  res.json({ success: true, downloadCount: doc?.downloadCount || 1 });
+});
+
+app.post('/api/documents/upload', async (req: Request, res: Response) => {
+  try {
+    const { fileName, dataBase64 } = req.body;
+    if (!dataBase64 || !fileName) {
+      return res.status(400).json({ error: 'Fichier requis' });
+    }
+
+    const safeName = fileName.replace(/[^a-zA-Z0-9_.-]/g, '_');
+    const diskPath = path.join(__dirname, 'public', 'documents', safeName);
+    const base64Data = dataBase64.replace(/^data:([A-Za-z-+/]+);base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    await fs.promises.mkdir(path.join(__dirname, 'public', 'documents'), { recursive: true });
+    await fs.promises.writeFile(diskPath, buffer);
+
+    const fileUrl = `/documents/${safeName}`;
+    const sizeKb = Math.round(buffer.length / 1024);
+    const sizeStr = sizeKb > 1024 ? `${(sizeKb / 1024).toFixed(1)} Mo` : `${sizeKb} Ko`;
+
+    res.json({
+      success: true,
+      fileUrl,
+      fileName: safeName,
+      fileSize: sizeStr,
+      fileType: 'PDF'
+    });
+  } catch (err: any) {
+    console.error('[Document Upload Error]', err);
+    res.status(500).json({ error: 'Erreur lors de l’enregistrement du PDF', details: err.message });
+  }
+});
+
 // 6. Contact & Secretarial Messages routes
 app.get('/api/contact', async (req: Request, res: Response) => {
   if (isDbActive()) {
@@ -2849,6 +3082,17 @@ async function startServer() {
           systemUsers = dbUsers;
           console.log(`[Database] ${dbUsers.length} comptes utilisateurs synchronisés depuis PostgreSQL.`);
         }
+
+        // Synchronize Official Documents from PostgreSQL
+        const dbDocs = await dbGetOfficialDocuments();
+        if (dbDocs && dbDocs.length > 0) {
+          memoryDocuments = dbDocs;
+          console.log(`[Database] ${dbDocs.length} documents officiels synchronisés depuis PostgreSQL.`);
+        } else {
+          for (const d of memoryDocuments) {
+            try { await dbInsertOfficialDocument(d); } catch {}
+          }
+        }
       } catch (err: any) {
         console.error('[Database Background Sync Error]', err.message);
       }
@@ -2859,12 +3103,14 @@ async function startServer() {
 
   // Static asset serving for images (accessible in dev, preview, docker, and production builds)
   const noCacheHeaders = (res: Response, filePath: string) => {
-    if (filePath.match(/\.(jpg|jpeg|png|webp|svg|gif|ico)$/i)) {
+    if (filePath.match(/\.(jpg|jpeg|png|webp|svg|gif|ico|pdf)$/i)) {
       res.setHeader('Cache-Control', 'no-cache, must-revalidate, max-age=0');
       res.setHeader('Pragma', 'no-cache');
     }
   };
 
+  app.use('/documents', express.static(path.join(__dirname, 'public', 'documents')));
+  app.use('/documents', express.static(path.join(__dirname, 'dist', 'documents')));
   app.use('/images', express.static(path.join(__dirname, 'public', 'images'), { setHeaders: noCacheHeaders }));
   app.use('/images', express.static(path.join(__dirname, 'src', 'assets', 'images'), { setHeaders: noCacheHeaders }));
   app.use('/images', express.static(path.join(__dirname, 'dist', 'images')));

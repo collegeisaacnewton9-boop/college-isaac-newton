@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Users, 
   FileCheck, 
+  FileText,
   Calendar, 
   Newspaper, 
   Settings, 
@@ -1546,6 +1547,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   <p className="text-[9.5px] text-slate-500 line-clamp-1">
                     {import.meta.env.DEV ? 'Alertes & Export REST' : 'Alertes & Paramètres Généraux'}
                   </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('media')}
+                  className="p-2 rounded-lg border border-red-200/80 hover:border-red-400 bg-red-50/50 hover:bg-red-50 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-6 h-6 rounded-md bg-red-100 text-red-700 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                    <FileText className="w-3 h-3 text-red-700" />
+                  </div>
+                  <h4 className="font-semibold text-slate-900 text-xs">Documents PDF</h4>
+                  <p className="text-[9.5px] text-slate-500 line-clamp-1">Upload & téléchargements</p>
                 </button>
 
               </div>

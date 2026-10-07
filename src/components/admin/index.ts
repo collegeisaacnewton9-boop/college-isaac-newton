@@ -5,4 +5,5 @@ export * from './RolePermissionsMatrix';
 export * from './MediaLibraryView';
 export * from './SlideshowEditorView';
 export * from './MenuEditorView';
+export * from './DocumentManagerView';
 

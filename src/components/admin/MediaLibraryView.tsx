@@ -30,15 +30,18 @@ import { MediaItem, HeroSlide, GalleryItem } from '../../types';
 import { apiService } from '../../services/api';
 import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
 import { SCHOOL_IMAGES } from '../../assets/images';
+import { DocumentManagerView } from './DocumentManagerView';
 
 interface MediaLibraryViewProps {
   onSelectImageForTarget?: (url: string) => void;
+  initialSubTab?: 'documents' | 'slideshow' | 'gallery' | 'media';
 }
 
 export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
-  onSelectImageForTarget
+  onSelectImageForTarget,
+  initialSubTab = 'documents'
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'slideshow' | 'gallery' | 'media'>('slideshow');
+  const [activeSubTab, setActiveSubTab] = useState<'documents' | 'slideshow' | 'gallery' | 'media'>(initialSubTab);
   
   // Media items state
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
@@ -358,6 +361,17 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
           <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs shadow-2xs overflow-x-auto">
             <button
               type="button"
+              onClick={() => setActiveSubTab('documents')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap ${
+                activeSubTab === 'documents'
+                  ? 'bg-blue-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Documents PDF
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveSubTab('slideshow')}
               className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap ${
                 activeSubTab === 'slideshow'
@@ -365,7 +379,7 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Diaporama d'Entête ({slides.length})
+              Diaporama ({slides.length})
             </button>
             <button
               type="button"
@@ -376,7 +390,7 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Galerie d'Activités ({galleryItems.length})
+              Galerie ({galleryItems.length})
             </button>
             <button
               type="button"
@@ -401,6 +415,13 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* =========================================================================
+          SUB-TAB 0 : DOCUMENTS PDF & RESSOURCES TÉLÉCHARGEABLES (ÉLÈVES & PARENTS)
+      ========================================================================= */}
+      {activeSubTab === 'documents' && (
+        <DocumentManagerView />
+      )}
 
       {/* =========================================================================
           SUB-TAB 1 : SLIDESHOW (DIAPORAMA D'ENTÊTE HOMEPAGE)
