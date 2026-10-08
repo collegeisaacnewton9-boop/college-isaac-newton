@@ -1,0 +1,56 @@
+[
+  {
+    "id": "gal-1",
+    "title": "Cour d’honneur & Bâtiment principal",
+    "imageUrl": "/images/campus_courtyard_building_1790531780046.jpg",
+    "caption": "Cour intérieure moderne et sécurisée au campus de Delmas 50",
+    "altText": "Bâtiment moderne du Collège Isaac Newton avec ses galeries bleues et son terrain de basket",
+    "category": "Infrastructure",
+    "updatedAt": "2026-10-08T09:24:01.158Z"
+  },
+  {
+    "id": "gal-2",
+    "title": "Façade d’accueil du campus",
+    "imageUrl": "/images/campus_facade_real_1790679454540.jpg",
+    "caption": "Entrée officielle et accueil des familles à Delmas 50",
+    "altText": "Façade d’accueil du Collège Isaac Newton avec son fronton et sa devise",
+    "category": "Campus",
+    "updatedAt": "2026-10-08T09:24:01.158Z"
+  },
+  {
+    "id": "gal-3",
+    "title": "Cérémonie solennelle de graduation",
+    "imageUrl": "/images/graduation_promo_real_1790679465649.jpg",
+    "caption": "Célébration académique des bâtisseurs de demain",
+    "altText": "Lauréats et diplômés du Collège Isaac Newton en toges bleues et blanches",
+    "category": "Événements & Cérémonies",
+    "updatedAt": "2026-10-08T09:24:01.158Z"
+  },
+  {
+    "id": "gal-4",
+    "title": "Laboratoire informatique et multimédia",
+    "imageUrl": "/images/computer_lab_real_1790679476180.jpg",
+    "caption": "Postes connectés pour la pratique bureautique et le codage",
+    "altText": "Élèves travaillant sur les postes informatiques",
+    "category": "Pôle Technologique",
+    "updatedAt": "2026-10-08T09:24:01.158Z"
+  },
+  {
+    "id": "gal-5",
+    "title": "Rassemblement civique & Esprit de corps",
+    "imageUrl": "/images/students_assembly_1790529184364.jpg",
+    "caption": "Discipline, fierté et respect des valeurs républicaines",
+    "altText": "Rassemblement des élèves en uniforme bleu et blanc",
+    "category": "Vie Scolaire",
+    "updatedAt": "2026-10-08T09:24:01.158Z"
+  },
+  {
+    "id": "gal-6",
+    "title": "Perspective architecturale du campus",
+    "imageUrl": "/images/campus_courtyard_building_1790531780046.jpg",
+    "caption": "Un cadre structuré et serein propice à l’étude",
+    "altText": "Vue d’ensemble des installations scolaires",
+    "category": "Campus",
+    "updatedAt": "2026-10-08T09:24:01.158Z"
+  }
+]
