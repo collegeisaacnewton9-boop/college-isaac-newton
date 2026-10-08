@@ -40,7 +40,6 @@ import {
   Bell,
   Building,
   GraduationCap,
-  Github,
   GitBranch,
   KeyRound,
   UserCheck,
@@ -78,6 +77,7 @@ import { eventNotificationService, ImminentEventAlert } from '../services/eventN
 import { ROLE_PERMISSIONS } from '../data/rolePermissions';
 import { appFetch } from '../services/loadingService';
 import { ImageUploadCompressor } from '../components/common/ImageUploadCompressor';
+import { isDevEnvironment, shouldProposeGitHubOption } from '../utils/environment';
 import { toast } from 'sonner';
 
 interface AdminDashboardPageProps {
@@ -830,16 +830,16 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <span className="hidden md:inline">Actualiser</span>
               </button>
 
-              {/* GitHub Synchronizer Button for Super Admin */}
-              {currentUser.role === 'ADMIN' && (
+              {/* GitHub Synchronizer Button - STRICTLY EXCLUDED ON PRODUCTION WORKSTATIONS */}
+              {shouldProposeGitHubOption() && currentUser.role === 'ADMIN' && (
                 <button
                   type="button"
                   onClick={() => setShowGitHubModal(true)}
                   className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 text-emerald-300 hover:text-white text-xs font-bold transition-all border border-emerald-700/60 cursor-pointer shadow-xs"
-                  title="Exporter et synchroniser les sources vers GitHub"
+                  title="Exporter et synchroniser les sources vers GitHub (Développement Uniquement)"
                 >
                   <GitBranch className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="hidden sm:inline">GitHub</span>
+                  <span className="hidden sm:inline">GitHub (Dev)</span>
                 </button>
               )}
 
@@ -1078,17 +1078,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
                 }`}
               >
-                {import.meta.env.DEV ? (
-                  <>
-                    <Github className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Paramètres & Sauvegarde JSON</span>
-                  </>
-                ) : (
-                  <>
-                    <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Paramètres Système & Sauvegarde</span>
-                  </>
-                )}
+                <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                <span>Paramètres Système & Sauvegarde</span>
               </button>
 
               {/* Tab 10: Access Control */}
@@ -1613,10 +1604,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     <Sliders className="w-3 h-3" />
                   </div>
                   <h4 className="font-semibold text-slate-900 text-xs">
-                    {import.meta.env.DEV ? 'Paramètres & GitHub' : 'Configuration Système'}
+                    Configuration Système
                   </h4>
                   <p className="text-[9.5px] text-slate-500 line-clamp-1">
-                    {import.meta.env.DEV ? 'Alertes & Export REST' : 'Alertes & Paramètres Généraux'}
+                    Alertes & Paramètres Généraux
                   </p>
                 </button>
 
@@ -2573,7 +2564,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         )}
 
         {/* =========================================================================
-            TAB 6: PARAMÈTRES & SYNCHRONISATION GITHUB (SETTINGSVIEW)
+            TAB 6: PARAMÈTRES SYSTÈME & SAUVEGARDE (SETTINGSVIEW)
         ========================================================================= */}
         {activeTab === 'cms' && (
           <SettingsView
@@ -2900,11 +2891,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         </div>
       )}
 
-      {/* MODAL DE SYNCHRONISATION GITHUB (CONFORME AU DESIGN DEMANDÉ & PERSISTANT) */}
-      <GitHubSyncModal
-        isOpen={showGitHubModal}
-        onClose={() => setShowGitHubModal(false)}
-      />
+      {/* MODAL DE SYNCHRONISATION GITHUB (STRICTEMENT EXCLU SUR LE POSTE EN PRODUCTION) */}
+      {shouldProposeGitHubOption() && (
+        <GitHubSyncModal
+          isOpen={showGitHubModal}
+          onClose={() => setShowGitHubModal(false)}
+        />
+      )}
 
       {/* MODAL AJUSTEMENT DERNIÈRE MINUTE & RAPPEL AUTOMATISÉ (< 48H) */}
       <EventLastMinuteModal

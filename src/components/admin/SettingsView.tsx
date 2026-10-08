@@ -53,6 +53,7 @@ import { AccessControlView } from './AccessControlView';
 import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
 import { GitHubSyncModal } from './GitHubSyncModal';
 import { MenuEditorView } from './MenuEditorView';
+import { shouldProposeGitHubOption } from '../../utils/environment';
 
 interface SettingsViewProps {
   initialSettings?: SiteSettings | null;
@@ -335,9 +336,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // Load config and settings on mount
   useEffect(() => {
-    const loadedConfig = githubService.getConfig();
-    setConfig(loadedConfig);
-    checkGitHubStatus(loadedConfig);
+    if (shouldProposeGitHubOption()) {
+      const loadedConfig = githubService.getConfig();
+      setConfig(loadedConfig);
+      checkGitHubStatus(loadedConfig);
+    }
 
     if (!initialSettings) {
       loadSettings();
@@ -976,8 +979,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           )}
 
-          {/* DÉPÔT GITHUB MINI CARD (BOTTOM OF SIDEBAR - DEV ONLY) */}
-          {import.meta.env.DEV && (
+          {/* DÉPÔT GITHUB MINI CARD (STRICTEMENT EXCLU SUR LE POSTE EN PRODUCTION) */}
+          {shouldProposeGitHubOption() && (
             <div className="bg-slate-950 text-white rounded-2xl p-3 border border-slate-800 shadow-md space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -2783,17 +2786,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       </div>
 
-      {/* =========================================================================
-          MODAL DE SYNCHRONISATION GITHUB (CLEAN & COMPACT)
-      ========================================================================= */}
-      {/* MODAL DE SYNCHRONISATION GITHUB (CONFORME AU DESIGN DEMANDÉ & PERSISTANT) */}
-      <GitHubSyncModal
-        isOpen={isGitHubModalOpen}
-        onClose={() => {
-          setIsGitHubModalOpen(false);
-          checkGitHubStatus(config);
-        }}
-      />
+      {/* MODAL DE SYNCHRONISATION GITHUB (STRICTEMENT EXCLU SUR LE POSTE EN PRODUCTION) */}
+      {shouldProposeGitHubOption() && (
+        <GitHubSyncModal
+          isOpen={isGitHubModalOpen}
+          onClose={() => {
+            setIsGitHubModalOpen(false);
+            if (shouldProposeGitHubOption()) {
+              checkGitHubStatus(config);
+            }
+          }}
+        />
+      )}
 
     </div>
   );

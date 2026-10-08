@@ -11,6 +11,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { githubService, GitHubRepoConfig, DEFAULT_GITHUB_CONFIG } from '../../services/githubService';
+import { isProductionEnvironment } from '../../utils/environment';
 
 interface GitHubSyncModalProps {
   isOpen: boolean;
@@ -47,7 +48,7 @@ export const GitHubSyncModal: React.FC<GitHubSyncModalProps> = ({ isOpen, onClos
     }).catch(() => {});
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  if (!isOpen || isProductionEnvironment()) return null;
 
   // Real-time input updates with automatic persistence
   const handleChangeField = (field: keyof GitHubRepoConfig, value: string) => {
