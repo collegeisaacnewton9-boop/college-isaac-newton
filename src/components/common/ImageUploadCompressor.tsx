@@ -43,7 +43,7 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
 }) => {
   const [previewUrl, setPreviewUrl] = useState<string>(currentImageUrl || '');
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
-  const [showPresets, setShowPresets] = useState<boolean>(!currentImageUrl);
+  const [showPresets, setShowPresets] = useState<boolean>(compact ? false : !currentImageUrl);
   const [selectedPreset, setSelectedPreset] = useState<'ultra' | 'balanced' | 'speed'>('balanced');
   const [compressionStats, setCompressionStats] = useState<{
     originalSize: number;
@@ -249,20 +249,20 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
         ) : (
           <div 
             onClick={() => fileInputRef.current?.click()}
-            className={`flex flex-col items-center justify-center ${compact ? 'py-4' : 'py-6'} text-center cursor-pointer group`}
+            className={`flex flex-col items-center justify-center ${compact ? 'py-2.5 sm:py-3' : 'py-6'} text-center cursor-pointer group`}
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-center text-slate-500 group-hover:scale-105 group-hover:border-slate-900 group-hover:text-slate-900 transition-all mb-2">
+            <div className={`${compact ? 'w-8 h-8 rounded-xl mb-1' : 'w-10 h-10 sm:w-12 sm:h-12 rounded-2xl mb-2'} bg-white border border-slate-200 shadow-2xs flex items-center justify-center text-slate-500 group-hover:scale-105 group-hover:border-slate-900 group-hover:text-slate-900 transition-all`}>
               {isCompressing ? (
-                <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
+                <Loader2 className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} animate-spin text-amber-500`} />
               ) : (
-                <Upload className="w-5 h-5 text-slate-700" />
+                <Upload className={`${compact ? 'w-4 h-4' : 'w-5 h-5'} text-slate-700`} />
               )}
             </div>
 
             <p className="font-bold text-slate-800 text-xs">
               {isCompressing ? 'Compression en cours...' : 'Cliquez ou glissez une photo ici'}
             </p>
-            <p className="text-[10.5px] text-slate-500 mt-0.5">
+            <p className="text-[10px] text-slate-500 mt-0.5">
               Compression WebP 1280px automatique
             </p>
           </div>

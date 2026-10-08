@@ -1554,25 +1554,25 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <button
                   type="button"
                   onClick={handleOpenNewArticle}
-                  className="p-2 rounded-lg border border-slate-200 hover:border-blue-600/40 bg-slate-50/50 hover:bg-blue-50/50 text-left transition-all group cursor-pointer"
+                  className="p-2 sm:p-2.5 rounded-xl border border-slate-200 hover:border-blue-600/40 bg-slate-50/60 hover:bg-blue-50/50 text-left transition-all group cursor-pointer shadow-2xs"
                 >
-                  <div className="w-6 h-6 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-                    <Plus className="w-3 h-3" />
+                  <div className="w-6 h-6 rounded-lg bg-blue-100 text-blue-900 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                    <Plus className="w-3.5 h-3.5 text-blue-900" />
                   </div>
-                  <h4 className="font-semibold text-slate-900 text-xs">Publier Annonce</h4>
-                  <p className="text-[9.5px] text-slate-500 line-clamp-1">Article visible sur le site</p>
+                  <h4 className="font-bold text-slate-900 text-xs">Nouvelle Publication</h4>
+                  <p className="text-[9.5px] text-slate-500 line-clamp-1">Rédiger un article vitrine</p>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleOpenNewEvent}
-                  className="p-2 rounded-lg border border-slate-200 hover:border-purple-600/40 bg-slate-50/50 hover:bg-purple-50/50 text-left transition-all group cursor-pointer"
+                  className="p-2 sm:p-2.5 rounded-xl border border-slate-200 hover:border-purple-600/40 bg-slate-50/60 hover:bg-purple-50/50 text-left transition-all group cursor-pointer shadow-2xs"
                 >
-                  <div className="w-6 h-6 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
-                    <Calendar className="w-3 h-3" />
+                  <div className="w-6 h-6 rounded-lg bg-purple-100 text-purple-800 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform">
+                    <Calendar className="w-3.5 h-3.5 text-purple-700" />
                   </div>
-                  <h4 className="font-semibold text-slate-900 text-xs">Planifier Événement</h4>
-                  <p className="text-[9.5px] text-slate-500 line-clamp-1">Date au calendrier officiel</p>
+                  <h4 className="font-bold text-slate-900 text-xs">Échéance Officielle</h4>
+                  <p className="text-[9.5px] text-slate-500 line-clamp-1">Ajouter un délai à l’agenda</p>
                 </button>
 
                 <button
@@ -2121,10 +2121,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <button
                 type="button"
                 onClick={handleOpenNewArticle}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer shrink-0 font-sans"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer shrink-0 font-sans"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-400" />
-                <span>Rédiger un Nouvel Article</span>
+                <span>Rédiger une Nouvelle Publication</span>
               </button>
             </div>
 
@@ -2329,10 +2329,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <button
                 type="button"
                 onClick={handleOpenNewEvent}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer shrink-0"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer shrink-0"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-400" />
-                <span>Ajouter un Événement</span>
+                <span>Ajouter une Échéance Officielle</span>
               </button>
             </div>
 
@@ -2647,126 +2647,194 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       {/* =========================================================================
           MODAL: CRÉATION & ÉDITION D'ARTICLE (CMS NEWS)
       ========================================================================= */}
+      {/* =========================================================================
+          MODAL: RÉDIGER UNE NOUVELLE PUBLICATION (CMS NEWS) - MODERNE, FLUIDE & COMPACT
+      ========================================================================= */}
       {showArticleModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-3 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-3 sm:px-4 sm:py-3 space-y-2.5 shadow-xl border border-slate-200/90 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <div>
-                <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
-                  {editingArticleId ? 'Modifier la Publication' : 'Rédiger une Nouvelle Publication'}
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  L'article apparaîtra directement sur la page Actualités et en page d'accueil.
-                </p>
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-3xl lg:max-w-4xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl border border-slate-200/90 animate-scale-in overflow-hidden">
+            
+            {/* Header: Compact, modern icon badge & breadcrumb */}
+            <div className="flex items-center justify-between px-3.5 sm:px-5 py-2 sm:py-2.5 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-blue-50/40 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-100 border border-blue-200/80 text-blue-900 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Newspaper className="w-4 h-4 text-blue-900" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-sans font-black text-slate-900 text-xs sm:text-sm tracking-tight">
+                      {editingArticleId ? 'Modifier la Publication' : 'Rédiger une Nouvelle Publication'}
+                    </h3>
+                    <span className="px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[9.5px] font-bold border border-blue-200 font-mono">
+                      CMS Actualités
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 line-clamp-1">
+                    Diffusion officielle sur le portail public et la vitrine d'accueil du Collège Isaac Newton.
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowArticleModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                aria-label="Fermer la fenêtre"
               >
                 <XCircle className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveArticle} className="space-y-3 text-xs">
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Titre de la publication : *</label>
-                <input
-                  type="text"
-                  required
-                  value={articleForm.title}
-                  onChange={(e) => setArticleForm({ ...articleForm, title: e.target.value })}
-                  placeholder="Ex : Réunion d’orientation avec les Parents de 9ème AF"
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 font-medium text-xs transition-colors"
-                />
-              </div>
+            {/* Scrollable Form Body with Compact Spacing Rhythm */}
+            <form onSubmit={handleSaveArticle} className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-2.5 sm:py-3 space-y-2 sm:space-y-2.5 text-xs">
+              
+              {/* Row 1: Titre (8 cols) + Catégorie (4 cols) */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-2.5">
+                <div className="md:col-span-8 space-y-0.5">
+                  <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                    Titre de la publication <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={articleForm.title}
+                    onChange={(e) => setArticleForm({ ...articleForm, title: e.target.value })}
+                    placeholder="Ex : Cérémonie officielle de remise des diplômes et rentrée 2026-2027"
+                    className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 font-semibold text-xs text-slate-900 transition-all outline-none"
+                  />
+                </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Catégorie :</label>
+                <div className="md:col-span-4 space-y-0.5">
+                  <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                    Catégorie
+                  </label>
                   <select
                     value={articleForm.category}
                     onChange={(e) => setArticleForm({ ...articleForm, category: e.target.value })}
-                    className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
+                    className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 text-xs text-slate-800 transition-all outline-none font-medium"
                   >
                     <option value="Admissions">Admissions</option>
-                    <option value="Académique">Académique</option>
+                    <option value="Académique">Académique & Pédagogie</option>
                     <option value="Technologie">Technologie & Informatique</option>
-                    <option value="Vie Scolaire">Vie Scolaire</option>
+                    <option value="Vie Scolaire">Vie Scolaire & Campus</option>
                     <option value="Direction">Direction Générale</option>
                   </select>
                 </div>
+              </div>
 
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Statut :</label>
+              {/* Row 2: Statut & Visibilité (sm:col-6) + À la une (sm:col-6) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 items-center">
+                <div className="space-y-0.5">
+                  <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                    Visibilité & Statut
+                  </label>
                   <select
                     value={articleForm.status}
                     onChange={(e) => setArticleForm({ ...articleForm, status: e.target.value as any })}
-                    className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
+                    className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 text-xs text-slate-800 transition-all outline-none font-medium"
                   >
-                    <option value="PUBLISHED">Publié immédiatement</option>
-                    <option value="DRAFT">Brouillon interne</option>
+                    <option value="PUBLISHED">🟢 Publié immédiatement sur le portail</option>
+                    <option value="DRAFT">🟡 Brouillon interne (non public)</option>
                   </select>
+                </div>
+
+                <div className="pt-0 sm:pt-4">
+                  <label className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                    articleForm.featured 
+                      ? 'bg-amber-50/80 border-amber-300 text-amber-950 font-bold shadow-2xs' 
+                      : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-slate-100'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={articleForm.featured}
+                      onChange={(e) => setArticleForm({ ...articleForm, featured: e.target.checked })}
+                      className="w-3.5 h-3.5 text-amber-600 rounded-sm focus:ring-amber-500 cursor-pointer"
+                    />
+                    <span className="text-[11px] leading-tight flex items-center gap-1">
+                      <span>⭐</span>
+                      <span>Mettre à la une sur la Page d'Accueil</span>
+                    </span>
+                  </label>
                 </div>
               </div>
 
-              <div>
-                <ImageUploadCompressor
-                  currentImageUrl={articleForm.coverImage}
-                  onImageReady={(compressedUrl) => setArticleForm({ ...articleForm, coverImage: compressedUrl })}
-                  label="Image de Couverture (Optimisation & Compression WebP / JPEG)"
-                  recommendedAspect="Format 16:9 recommandé (Résolution max 1280px)"
-                />
-              </div>
+              {/* Row 3: Split Editor (Left: Excerpt + Content | Right: Compressed Media Cover) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-2.5 items-start">
+                
+                {/* Left Column: Textual Content (7 cols on lg) */}
+                <div className="lg:col-span-7 space-y-1.5 sm:space-y-2">
+                  <div className="space-y-0.5">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                        Résumé / Extrait d'introduction <span className="text-rose-500">*</span>
+                      </label>
+                      <span className="text-[9.5px] font-mono text-slate-400">
+                        {articleForm.excerpt.length} car.
+                      </span>
+                    </div>
+                    <textarea
+                      rows={2}
+                      required
+                      value={articleForm.excerpt}
+                      onChange={(e) => setArticleForm({ ...articleForm, excerpt: e.target.value })}
+                      placeholder="Résumé percutant qui s'affiche sur les cartes d'actualité..."
+                      className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 text-xs text-slate-800 transition-all outline-none leading-relaxed resize-none"
+                    />
+                  </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Résumé / Extrait d'introduction : *</label>
-                <textarea
-                  rows={2}
-                  required
-                  value={articleForm.excerpt}
-                  onChange={(e) => setArticleForm({ ...articleForm, excerpt: e.target.value })}
-                  placeholder="Bref résumé accrocheur visible sur les cartes d'accueil..."
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
-                />
-              </div>
+                  <div className="space-y-0.5">
+                    <div className="flex items-center justify-between">
+                      <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                        Contenu Détaillé de la Publication <span className="text-rose-500">*</span>
+                      </label>
+                      <span className="text-[9.5px] font-mono text-slate-400">
+                        {articleForm.content.length} car.
+                      </span>
+                    </div>
+                    <textarea
+                      rows={4}
+                      required
+                      value={articleForm.content}
+                      onChange={(e) => setArticleForm({ ...articleForm, content: e.target.value })}
+                      placeholder="Rédigez ici le communiqué officiel complet, les consignes et les précisions destinées aux familles et élèves..."
+                      className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15 text-xs text-slate-800 transition-all outline-none leading-relaxed resize-y"
+                    />
+                  </div>
+                </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Contenu Détaillé : *</label>
-                <textarea
-                  rows={5}
-                  required
-                  value={articleForm.content}
-                  onChange={(e) => setArticleForm({ ...articleForm, content: e.target.value })}
-                  placeholder="Texte complet de l'annonce officielle pour les élèves et parents..."
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 leading-relaxed text-xs transition-colors"
-                />
-              </div>
-
-              <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={articleForm.featured}
-                    onChange={(e) => setArticleForm({ ...articleForm, featured: e.target.checked })}
-                    className="w-3.5 h-3.5 text-blue-600 rounded-sm"
+                {/* Right Column: Image Compression (5 cols on lg) */}
+                <div className="lg:col-span-5 bg-slate-50/60 p-2 sm:p-2.5 rounded-xl border border-slate-200/80 space-y-1">
+                  <ImageUploadCompressor
+                    currentImageUrl={articleForm.coverImage}
+                    onImageReady={(compressedUrl) => setArticleForm({ ...articleForm, coverImage: compressedUrl })}
+                    label="Photo de Couverture"
+                    recommendedAspect="Format 16:9 recommandé"
+                    compact={true}
                   />
-                  <span className="font-semibold text-slate-800 text-[11px]">Mettre à la une sur l'accueil</span>
-                </label>
+                </div>
 
-                <div className="flex items-center gap-2">
+              </div>
+
+              {/* Modal Footer with Actions */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 shrink-0">
+                <div className="text-[10px] text-slate-500 hidden sm:flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span>Validation automatique & compression WebP 16:9 activée</span>
+                </div>
+
+                <div className="flex items-center gap-2 ml-auto">
                   <button
                     type="button"
                     onClick={() => setShowArticleModal(false)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs cursor-pointer font-medium"
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs cursor-pointer shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs transition-colors cursor-pointer shadow-xs"
                   >
-                    {editingArticleId ? 'Mettre à jour' : 'Publier'}
+                    <Check className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{editingArticleId ? 'Mettre à jour' : 'Publier l’Article'}</span>
                   </button>
                 </div>
               </div>
@@ -2777,60 +2845,83 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       )}
 
       {/* =========================================================================
-          MODAL: PLANIFIER UN ÉVÉNEMENT (AGENDA)
+          MODAL: AJOUTER UNE ÉCHÉANCE OFFICIELLE (AGENDA) - MODERNE, FLUIDE & COMPACT
       ========================================================================= */}
       {showEventModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-3 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-md w-full p-3 sm:px-4 sm:py-3 space-y-2.5 shadow-xl border border-slate-200/90 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <div>
-                <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
-                  {editingEventId ? 'Modifier l’Événement' : 'Ajouter une Échéance Officielle'}
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  Visible par les familles et élèves sur le calendrier public.
-                </p>
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-2xl sm:rounded-3xl max-w-3xl lg:max-w-4xl w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl border border-slate-200/90 animate-scale-in overflow-hidden">
+            
+            {/* Header: Compact, modern icon badge & subtitle */}
+            <div className="flex items-center justify-between px-3.5 sm:px-5 py-2 sm:py-2.5 border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-amber-50/40 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 border border-amber-200/80 text-amber-800 flex items-center justify-center shrink-0 shadow-2xs">
+                  <Calendar className="w-4 h-4 text-amber-700" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-sans font-black text-slate-900 text-xs sm:text-sm tracking-tight">
+                      {editingEventId ? 'Modifier l’Événement' : 'Ajouter une Échéance Officielle'}
+                    </h3>
+                    <span className="px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[9.5px] font-bold border border-amber-200 font-mono">
+                      Agenda & Délais
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 line-clamp-1">
+                    Synchronisé en temps réel sur le calendrier scolaire officiel et le compte à rebours d'alerte.
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowEventModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                aria-label="Fermer la fenêtre"
               >
                 <XCircle className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEvent} className="space-y-3 text-xs">
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Titre de l'événement : *</label>
+            {/* Scrollable Form Body with Compact Spacing Rhythm */}
+            <form onSubmit={handleSaveEvent} className="flex-1 overflow-y-auto px-3.5 sm:px-5 py-2.5 sm:py-3 space-y-2 sm:space-y-2.5 text-xs">
+              
+              {/* Row 1: Titre de l'échéance */}
+              <div className="space-y-0.5">
+                <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                  Titre de l'échéance ou de l'événement <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
                   required
                   value={eventForm.title}
                   onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
-                  placeholder="Ex : Réunion d’orientation avec les Parents de 9ème AF"
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 font-medium text-xs transition-colors"
+                  placeholder="Ex : Réunion d’orientation avec les Parents de 9ème AF & Bac"
+                  className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/15 font-semibold text-xs text-slate-900 transition-all outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Date de début : *</label>
+              {/* Row 2: 3-column metadata grid (Date, Catégorie, Public) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2.5">
+                <div className="space-y-0.5">
+                  <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                    Date de début <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     type="date"
                     required
                     value={eventForm.startDate}
                     onChange={(e) => setEventForm({ ...eventForm, startDate: e.target.value })}
-                    className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 font-mono text-xs transition-colors"
+                    className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/15 font-mono text-xs text-slate-900 transition-all outline-none font-medium"
                   />
                 </div>
 
-                <div>
-                  <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Catégorie :</label>
+                <div className="space-y-0.5">
+                  <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                    Catégorie
+                  </label>
                   <select
                     value={eventForm.category}
                     onChange={(e) => setEventForm({ ...eventForm, category: e.target.value as any })}
-                    className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
+                    className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/15 text-xs text-slate-800 transition-all outline-none font-medium"
                   >
                     <option value="Pédagogique">Pédagogique</option>
                     <option value="Réunion">Réunion des Parents</option>
@@ -2840,66 +2931,95 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     <option value="Férié">Jour Férié / Congé</option>
                   </select>
                 </div>
+
+                <div className="space-y-0.5">
+                  <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                    Public Ciblé
+                  </label>
+                  <select
+                    value={eventForm.audience}
+                    onChange={(e) => setEventForm({ ...eventForm, audience: e.target.value as any })}
+                    className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/15 text-xs text-slate-800 transition-all outline-none font-medium"
+                  >
+                    <option value="ALL">Tout le collège (Élèves, Parents, Profs)</option>
+                    <option value="PARENTS">Exclusivement les Parents</option>
+                    <option value="STUDENTS">Exclusivement les Élèves</option>
+                  </select>
+                </div>
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Lieu :</label>
+              {/* Row 3: Lieu du rassemblement */}
+              <div className="space-y-0.5">
+                <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                  Lieu du rassemblement / Salle
+                </label>
                 <input
                   type="text"
                   value={eventForm.location}
                   onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
-                  placeholder="Auditorium du Collège, Delmas 50"
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
+                  placeholder="Ex : Auditorium du Campus, Delmas 50, Port-au-Prince"
+                  className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/15 text-xs text-slate-800 transition-all outline-none font-medium"
                 />
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Public Ciblé :</label>
-                <select
-                  value={eventForm.audience}
-                  onChange={(e) => setEventForm({ ...eventForm, audience: e.target.value as any })}
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
-                >
-                  <option value="ALL">Tout le collège (Élèves, Parents, Professeurs)</option>
-                  <option value="PARENTS">Exclusivement les Parents d'Élèves</option>
-                  <option value="STUDENTS">Exclusivement les Élèves</option>
-                </select>
+              {/* Row 4: Split Layout (Left: Description + Alerte | Right: Image/Affiche) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-2.5 items-start">
+                
+                <div className="lg:col-span-7 space-y-1.5 sm:space-y-2">
+                  <div className="space-y-0.5">
+                    <label className="font-bold text-slate-700 text-[10.5px] uppercase tracking-wide block">
+                      Description, Ordre du Jour & Consignes
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={eventForm.description}
+                      onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                      placeholder="Précisions sur l'horaire précis, pièces à apporter, modalités de participation..."
+                      className="w-full py-1.5 px-3 rounded-xl bg-slate-50/70 border border-slate-200 focus:bg-white focus:border-amber-600 focus:ring-2 focus:ring-amber-500/15 text-xs text-slate-800 transition-all outline-none leading-relaxed resize-none"
+                    />
+                  </div>
+
+                  <div className="p-2 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-center gap-2 text-[10.5px] text-amber-950">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                    <span>Rappel automatique activé : alerte WhatsApp & compte à rebours si échéance &lt; 48 heures.</span>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-5 bg-slate-50/60 p-2 sm:p-2.5 rounded-xl border border-slate-200/80 space-y-1">
+                  <ImageUploadCompressor
+                    currentImageUrl={eventForm.image}
+                    onImageReady={(url) => setEventForm({ ...eventForm, image: url })}
+                    label="Affiche de l'Événement"
+                    recommendedAspect="Format 16:9 recommandé"
+                    compact={true}
+                  />
+                </div>
+
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Description / Précisions :</label>
-                <textarea
-                  rows={2.5}
-                  value={eventForm.description}
-                  onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
-                  placeholder="Ordre du jour, consignes pour les participants..."
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
-                />
-              </div>
+              {/* Modal Footer with Actions */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 shrink-0">
+                <div className="text-[10px] text-slate-500 hidden sm:flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span>Synchronisé avec l'Agenda scolaire officiel</span>
+                </div>
 
-              <div>
-                <ImageUploadCompressor
-                  currentImageUrl={eventForm.image}
-                  onImageReady={(url) => setEventForm({ ...eventForm, image: url })}
-                  label="Affiche ou Photo de l'Événement (Optionnelle) :"
-                  recommendedAspect="Format 16:9 ou 4:3 (Compression automatique)"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2.5 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowEventModal(false)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs cursor-pointer font-medium"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs cursor-pointer shadow-xs"
-                >
-                  {editingEventId ? 'Mettre à jour' : 'Enregistrer'}
-                </button>
+                <div className="flex items-center gap-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => setShowEventModal(false)}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs transition-colors cursor-pointer shadow-xs"
+                  >
+                    <Check className="w-3.5 h-3.5 text-amber-400" />
+                    <span>{editingEventId ? 'Mettre à jour' : 'Enregistrer l’Échéance'}</span>
+                  </button>
+                </div>
               </div>
 
             </form>

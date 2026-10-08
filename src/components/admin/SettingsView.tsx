@@ -2154,57 +2154,65 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <button
                     type="button"
                     onClick={handleOpenNewArticle}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer self-start sm:self-auto"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs shadow-xs transition-colors cursor-pointer self-start sm:self-auto font-sans"
                   >
-                    <Plus className="w-4 h-4 text-amber-400" />
-                    <span>Rédiger un Article</span>
+                    <Plus className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Rédiger une Nouvelle Publication</span>
                   </button>
                 )}
               </div>
 
-              {/* EDITOR FORM WITH IMAGE COMPRESSOR */}
+              {/* EDITOR FORM WITH IMAGE COMPRESSOR - MODERNE, FLUIDE & COMPACT */}
               {isNewsFormOpen && (
-                <div className="bg-white rounded-2xl border-2 border-slate-900/10 shadow-md p-4 sm:p-5 space-y-4 animate-scale-in">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div className="bg-white rounded-2xl border border-slate-200/90 shadow-md p-3 sm:p-4 space-y-2.5 animate-scale-in">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                     <div className="flex items-center gap-2">
-                      <Edit3 className="w-4 h-4 text-blue-900" />
-                      <h3 className="font-black text-slate-900 text-sm sm:text-base">
-                        {editingArticleId ? 'Modifier l’Article d’Actualité' : 'Nouvelle Publication pour l’Accueil'}
-                      </h3>
+                      <div className="w-7 h-7 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 flex items-center justify-center shadow-2xs">
+                        <Edit3 className="w-3.5 h-3.5 text-blue-900" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-xs sm:text-sm">
+                          {editingArticleId ? 'Modifier la Publication' : 'Rédiger une Nouvelle Publication'}
+                        </h3>
+                        <p className="text-[10px] text-slate-500">
+                          Rédaction et diffusion immédiate sur la page d'accueil et le journal officiel.
+                        </p>
+                      </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsNewsFormOpen(false)}
-                      className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <form onSubmit={handleSaveArticle} className="space-y-4 text-xs">
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
-                        Titre de l'Actualité *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={newsForm.title}
-                        onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })}
-                        placeholder="ex: Modernisation continue de notre laboratoire informatique et sciences"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-bold focus:border-slate-900 outline-none transition-colors text-xs"
-                      />
-                    </div>
+                  <form onSubmit={handleSaveArticle} className="space-y-2.5 text-xs">
+                    {/* Row 1: Titre (8 cols) + Catégorie (4 cols) */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-2.5">
+                      <div className="md:col-span-8 space-y-0.5">
+                        <label className="block font-bold text-slate-700 text-[10.5px] uppercase tracking-wide">
+                          Titre de l'Actualité <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={newsForm.title}
+                          onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })}
+                          placeholder="ex: Modernisation continue de notre laboratoire informatique et sciences"
+                          className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white text-slate-900 font-bold focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all text-xs"
+                        />
+                      </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
+                      <div className="md:col-span-4 space-y-0.5">
+                        <label className="block font-bold text-slate-700 text-[10.5px] uppercase tracking-wide">
                           Catégorie
                         </label>
                         <select
                           value={newsForm.category}
                           onChange={(e) => setNewsForm({ ...newsForm, category: e.target.value })}
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors"
+                          className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white text-slate-900 font-medium focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all text-xs"
                         >
                           <option value="Admissions">Admissions</option>
                           <option value="Technologie">Technologie & Sciences</option>
@@ -2213,80 +2221,95 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                           <option value="Direction">Direction Générale</option>
                         </select>
                       </div>
+                    </div>
 
-                      <div className="flex items-center pt-5 sm:pt-6">
-                        <label className="flex items-center gap-2 cursor-pointer bg-slate-50 border border-slate-200 px-3.5 py-2 rounded-xl w-full">
-                          <input
-                            type="checkbox"
-                            checked={newsForm.featured}
-                            onChange={(e) => setNewsForm({ ...newsForm, featured: e.target.checked })}
-                            className="w-4 h-4 text-amber-500 rounded-sm"
+                    {/* Row 2: Featured banner toggle */}
+                    <div>
+                      <label className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                        newsForm.featured
+                          ? 'bg-amber-50/80 border-amber-300 text-amber-950 font-bold shadow-2xs'
+                          : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          checked={newsForm.featured}
+                          onChange={(e) => setNewsForm({ ...newsForm, featured: e.target.checked })}
+                          className="w-3.5 h-3.5 text-amber-500 rounded-sm"
+                        />
+                        <span className="text-[11px] leading-tight">
+                          ⭐ Mettre à la une sur la Page d'Accueil du collège
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* Row 3: Split Editor (Left: Excerpt + Content | Right: Image Compression) */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-2.5 sm:gap-3 items-start">
+                      <div className="lg:col-span-7 space-y-2">
+                        <div className="space-y-0.5">
+                          <label className="block font-bold text-slate-700 text-[10.5px] uppercase tracking-wide">
+                            Extrait / Résumé d'Accroche <span className="text-rose-500">*</span>
+                          </label>
+                          <textarea
+                            rows={2}
+                            required
+                            value={newsForm.excerpt}
+                            onChange={(e) => setNewsForm({ ...newsForm, excerpt: e.target.value })}
+                            placeholder="Court texte percutant décrivant la nouvelle..."
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white text-slate-900 font-medium focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all text-xs leading-relaxed resize-none"
                           />
-                          <span className="font-bold text-slate-900 text-[11px]">
-                            ⭐ Mettre à la une sur la Page d'Accueil
-                          </span>
-                        </label>
+                        </div>
+
+                        <div className="space-y-0.5">
+                          <label className="block font-bold text-slate-700 text-[10.5px] uppercase tracking-wide">
+                            Contenu Détaillé de l'Article <span className="text-rose-500">*</span>
+                          </label>
+                          <textarea
+                            rows={4}
+                            required
+                            value={newsForm.content}
+                            onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })}
+                            placeholder="Texte complet de l'article accessible lors du clic..."
+                            className="w-full px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white text-slate-900 font-medium focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 outline-none transition-all text-xs leading-relaxed resize-y"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="lg:col-span-5 bg-slate-50/60 p-2 sm:p-2.5 rounded-xl border border-slate-200/80 space-y-1">
+                        <ImageUploadCompressor
+                          currentImageUrl={newsForm.coverImage}
+                          onImageReady={(compressedUrl) => setNewsForm({ ...newsForm, coverImage: compressedUrl })}
+                          label="Image de Couverture"
+                          recommendedAspect="Format 16:9 recommandé"
+                          compact={true}
+                        />
                       </div>
                     </div>
 
-                    {/* CLIENT-SIDE IMAGE COMPRESSOR */}
-                    <div>
-                      <ImageUploadCompressor
-                        currentImageUrl={newsForm.coverImage}
-                        onImageReady={(compressedUrl) => setNewsForm({ ...newsForm, coverImage: compressedUrl })}
-                        label="Image de Couverture (Compression & Allègement Automatique WebP)"
-                        recommendedAspect="Format 16:9 recommandé (Résolution max 1280px)"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
-                        Extrait / Résumé d'Accroche (Visible sur la carte d'accueil) *
-                      </label>
-                      <textarea
-                        rows={2}
-                        required
-                        value={newsForm.excerpt}
-                        onChange={(e) => setNewsForm({ ...newsForm, excerpt: e.target.value })}
-                        placeholder="Court texte percutant décrivant la nouvelle..."
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors text-xs leading-relaxed"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-1 text-[11px] uppercase tracking-wide">
-                        Contenu Détaillé de l'Article *
-                      </label>
-                      <textarea
-                        rows={4}
-                        required
-                        value={newsForm.content}
-                        onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })}
-                        placeholder="Texte complet de l'article accessible lors du clic..."
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/60 focus:bg-white text-slate-900 font-medium focus:border-slate-900 outline-none transition-colors text-xs leading-relaxed"
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
-                      <button
-                        type="button"
-                        onClick={() => setIsNewsFormOpen(false)}
-                        className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer"
-                      >
-                        Annuler
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={isSavingNews}
-                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold transition-colors cursor-pointer shadow-xs"
-                      >
-                        {isSavingNews ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
-                        ) : (
-                          <Check className="w-3.5 h-3.5 text-amber-400" />
-                        )}
-                        <span>Enregistrer la Publication</span>
-                      </button>
+                    <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-100">
+                      <div className="text-[10px] text-slate-500 hidden sm:block">
+                        Enregistrement synchronisé sur le site public
+                      </div>
+                      <div className="flex items-center gap-2 ml-auto">
+                        <button
+                          type="button"
+                          onClick={() => setIsNewsFormOpen(false)}
+                          className="px-3.5 py-1.5 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold cursor-pointer border border-slate-200"
+                        >
+                          Annuler
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isSavingNews}
+                          className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold transition-colors cursor-pointer shadow-xs"
+                        >
+                          {isSavingNews ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                          ) : (
+                            <Check className="w-3.5 h-3.5 text-amber-400" />
+                          )}
+                          <span>Enregistrer la Publication</span>
+                        </button>
+                      </div>
                     </div>
                   </form>
                 </div>
