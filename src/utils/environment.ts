@@ -1,17 +1,40 @@
 /**
- * Utilitaires de détection d'environnement et de configuration.
- * Sur les postes et environnements de Production (site officiel, serveurs de déploiement,
- * espace administratif de l'établissement scolaire), les options de développement
- * telles que la synchronisation GitHub de code source sont strictement désactivées et non proposées.
+ * Utilitaires de détection d'environnement :
+ * - Poste de développement (Google AI Studio : ais-dev-*.run.app, ais-pre-*.run.app, localhost)
+ * - Poste de Production réelle (site officiel : collegeisaacnewton.com, serveur de prod scolaire)
  */
 
+export const isAIStudioOrDev = (): boolean => {
+  if (typeof window === 'undefined') {
+    return Boolean(import.meta.env.DEV);
+  }
+  const hostname = window.location.hostname.toLowerCase();
+
+  // Environnement de développement Google AI Studio ou localhost
+  if (
+    hostname.includes('run.app') ||
+    hostname.includes('aistudio') ||
+    hostname.includes('localhost') ||
+    hostname.includes('127.0.0.1') ||
+    Boolean(import.meta.env.DEV)
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
 export const isProductionEnvironment = (): boolean => {
+  // Si on est dans Google AI Studio ou en local, nous sommes sur le poste de développement
+  if (isAIStudioOrDev()) {
+    return false;
+  }
+
   if (typeof window === 'undefined') {
     return Boolean(import.meta.env.PROD);
   }
+
   const hostname = window.location.hostname.toLowerCase();
-  
-  // Noms d'hôtes officiels de production
   if (
     hostname === 'collegeisaacnewton.com' ||
     hostname.endsWith('.collegeisaacnewton.com') ||
@@ -20,32 +43,25 @@ export const isProductionEnvironment = (): boolean => {
     return true;
   }
 
-  // Tout environnement compilé pour la production
-  if (import.meta.env.PROD) {
-    return true;
-  }
-
-  // Tout hôte distant non-local (postes et serveurs déployés)
-  if (!hostname.includes('localhost') && !hostname.includes('127.0.0.1')) {
-    return true;
-  }
-
-  return false;
+  return Boolean(import.meta.env.PROD);
 };
 
 export const isDevEnvironment = (): boolean => {
-  return !isProductionEnvironment() && Boolean(import.meta.env.DEV);
+  return isAIStudioOrDev();
 };
 
 /**
- * Règle de gouvernance : L'option de synchronisation GitHub ne doit JAMAIS
- * être proposée sur les postes en Production ni dans l'interface de gestion scolaire.
+ * Règle essentielle : Depuis l'interface Google AI Studio en développement, le bouton
+ * pour uploader les modifications sur le serveur (dépôt GitHub officiel) DOIT TOUJOURS
+ * être proposé et accessible à l'administrateur.
+ * Sur le poste en production réelle (collegeisaacnewton.com), il est masqué.
  */
 export const shouldProposeGitHubOption = (): boolean => {
-  // Strictement interdit et masqué en Production
-  if (isProductionEnvironment()) {
-    return false;
+  // Toujours disponible dans Google AI Studio et en développement
+  if (isAIStudioOrDev()) {
+    return true;
   }
-  // Désactivé par défaut afin de ne jamais encombrer l'interface utilisateur
-  return Boolean(import.meta.env.VITE_ENABLE_DEV_GITHUB_TOOLING === 'true');
+  // Masqué sur le poste en production réelle
+  return false;
 };
+

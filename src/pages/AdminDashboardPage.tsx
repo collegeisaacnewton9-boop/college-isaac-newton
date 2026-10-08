@@ -50,7 +50,8 @@ import {
   ShieldAlert,
   ArrowRight,
   FileJson,
-  Database
+  Database,
+  UploadCloud
 } from 'lucide-react';
 import { 
   User, 
@@ -830,16 +831,17 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <span className="hidden md:inline">Actualiser</span>
               </button>
 
-              {/* GitHub Synchronizer Button - STRICTLY EXCLUDED ON PRODUCTION WORKSTATIONS */}
+              {/* GitHub Synchronizer Button - DISPONIBLE DANS GOOGLE AI STUDIO */}
               {shouldProposeGitHubOption() && currentUser.role === 'ADMIN' && (
                 <button
                   type="button"
                   onClick={() => setShowGitHubModal(true)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 text-emerald-300 hover:text-white text-xs font-bold transition-all border border-emerald-700/60 cursor-pointer shadow-xs"
-                  title="Exporter et synchroniser les sources vers GitHub (Développement Uniquement)"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold transition-all border border-emerald-500 cursor-pointer shadow-xs"
+                  title="Uploader et synchroniser les modifications sur le serveur officiel GitHub"
                 >
-                  <GitBranch className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="hidden sm:inline">GitHub (Dev)</span>
+                  <UploadCloud className="w-3.5 h-3.5 text-emerald-200" />
+                  <span className="hidden sm:inline">Uploader sur le serveur (GitHub)</span>
+                  <span className="sm:hidden">Uploader</span>
                 </button>
               )}
 
@@ -1338,6 +1340,20 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </div>
               )}
             </div>
+
+            {/* BOUTON UPLOAD SERVEUR GITHUB DIRECT DANS LA BARRE STICKY (GOOGLE AI STUDIO & DEV) */}
+            {shouldProposeGitHubOption() && currentUser?.role === 'ADMIN' && (
+              <button
+                type="button"
+                onClick={() => setShowGitHubModal(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-all cursor-pointer whitespace-nowrap shrink-0 border border-emerald-400/40 ml-1 group"
+                title="Uploader et synchroniser les modifications sur le serveur officiel GitHub"
+              >
+                <UploadCloud className="w-3.5 h-3.5 text-white group-hover:scale-110 transition-transform" />
+                <span className="hidden md:inline">Uploader (GitHub)</span>
+                <span className="md:hidden">Upload</span>
+              </button>
+            )}
 
           </div>
         </div>

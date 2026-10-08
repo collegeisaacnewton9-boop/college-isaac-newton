@@ -802,7 +802,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* -------------------------------------------------------------
             LEFT SIDEBAR : VERTICAL TABS NAVIGATION + GITHUB MINI CARD
         ------------------------------------------------------------- */}
-        <aside className="w-full lg:w-72 shrink-0 space-y-3">
+        <aside className="w-full lg:w-72 shrink-0 space-y-3 pb-24 sm:pb-8">
           
           <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-2 space-y-1">
             
@@ -948,6 +948,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </button>
             )}
 
+            {/* Uploader les modifications vers le serveur / GitHub (Google AI Studio en développement) */}
+            {shouldProposeGitHubOption() && isSuperAdmin && (
+              <button
+                type="button"
+                onClick={() => setIsGitHubModalOpen(true)}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-bold text-xs sm:text-[13px] transition-all cursor-pointer bg-emerald-950/90 hover:bg-emerald-900 text-emerald-200 hover:text-white border border-emerald-600/70 shadow-xs group"
+                title="Uploader et synchroniser les modifications sur le serveur officiel GitHub"
+              >
+                <div className="flex items-center gap-2.5">
+                  <UploadCloud className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                  <span>Uploader sur le Serveur</span>
+                </div>
+                <span className="px-1.5 py-0.5 rounded text-[9.5px] font-mono font-black bg-emerald-400 text-slate-950 shadow-2xs">
+                  GITHUB
+                </span>
+              </button>
+            )}
+
           </div>
 
           {/* SAUVEGARDE JSON MINI CARD (Super Admin Only) */}
@@ -979,33 +997,33 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           )}
 
-          {/* DÉPÔT GITHUB MINI CARD (STRICTEMENT EXCLU SUR LE POSTE EN PRODUCTION) */}
+          {/* DÉPÔT GITHUB MINI CARD (DISPONIBLE DANS GOOGLE AI STUDIO) */}
           {shouldProposeGitHubOption() && (
-            <div className="bg-slate-950 text-white rounded-2xl p-3 border border-slate-800 shadow-md space-y-2">
+            <div className="bg-slate-950 text-white rounded-2xl p-3 border border-emerald-600/50 shadow-md space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
                     <Github className="w-4 h-4" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-xs text-white">Dépôt GitHub</h4>
-                    <p className="text-[10.5px] text-slate-400 font-mono truncate max-w-[140px]">
+                    <h4 className="font-bold text-xs text-white">Dépôt GitHub / Serveur</h4>
+                    <p className="text-[10.5px] text-emerald-300 font-mono truncate max-w-[140px]">
                       {config.owner} / {config.repo}
                     </p>
                   </div>
                 </div>
-                <span className="px-1.5 py-0.5 rounded bg-indigo-500/30 text-indigo-300 border border-indigo-400/30 text-[9px] font-mono font-bold">
-                  DEV ONLY
+                <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[9px] font-mono font-bold">
+                  AI STUDIO
                 </span>
               </div>
 
               <button
                 type="button"
                 onClick={() => setIsGitHubModalOpen(true)}
-                className="w-full py-1.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer border border-white/10 shadow-xs"
+                className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
               >
-                <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
-                <span>Exporter & Synchroniser</span>
+                <UploadCloud className="w-3.5 h-3.5 text-white" />
+                <span>Uploader les modifs sur le serveur</span>
               </button>
             </div>
           )}
@@ -1044,19 +1062,33 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => handleSaveSettings()}
-                  disabled={isSaving}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer self-start sm:self-auto"
-                >
-                  {isSaving ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
-                  ) : (
-                    <Save className="w-4 h-4 text-amber-400" />
+                <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                  {shouldProposeGitHubOption() && (
+                    <button
+                      type="button"
+                      onClick={() => setIsGitHubModalOpen(true)}
+                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer group"
+                      title="Uploader et synchroniser les modifications sur le serveur officiel GitHub"
+                    >
+                      <UploadCloud className="w-4 h-4 text-emerald-200 group-hover:scale-110 transition-transform" />
+                      <span>Uploader les modifs sur le serveur</span>
+                    </button>
                   )}
-                  <span>Enregistrer</span>
-                </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleSaveSettings()}
+                    disabled={isSaving}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-bold text-xs transition-colors shadow-xs cursor-pointer"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                    ) : (
+                      <Save className="w-4 h-4 text-amber-400" />
+                    )}
+                    <span>Enregistrer</span>
+                  </button>
+                </div>
               </div>
 
               {/* Form Content */}
