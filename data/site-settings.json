@@ -1,0 +1,344 @@
+{
+  "announcement": {
+    "text": "Campagne de préinscription 2026-2027 ouverte · Accueil des familles à Delmas 50",
+    "type": "info",
+    "enabled": false,
+    "linkUrl": "pre-registration",
+    "linkText": "Formulaire de Préinscription"
+  },
+  "admissionsStatus": {
+    "isOpen": true,
+    "deadlineNotice": "Dépôt des dossiers ouvert jusqu'au 31 août 2026",
+    "currentSchoolYear": "2026-2027"
+  },
+  "contactInfo": {
+    "email": "collegeisaacnewton9@gmail.com",
+    "phone": "+509 3316-0934",
+    "address": "Delmas 50, rue Dominique #2 bis, Port-au-Prince, Haïti",
+    "phoneAlt": "+509 3721-1818",
+    "openingHours": "Lun - Ven : 7h30 - 15h30"
+  },
+  "directorInfo": {
+    "name": "Orphe Jean Marie",
+    "role": "Professeur de Mathématiques & Sciences Physiques",
+    "title": "Directeur fondateur"
+  },
+  "schoolMotto": "Savoir aujourd'hui, réussir demain",
+  "directorWelcome": "Bienvenue au Collège Isaac Newton. Sous la direction d'Orphe Jean Marie, notre mission est de forger les bâtisseurs de demain par la rigueur scientifique, la maîtrise des mathématiques, la discipline civique et les technologies.",
+  "legalInfo": {
+    "nif": "456-652-985-9",
+    "schoolName": "COLLÈGE ISAAC NEWTON",
+    "signerTitle": "Directeur fondateur",
+    "licenseNumber": "548552",
+    "foundationYear": "1991",
+    "officialSigner": "ORPHE JEAN MARIE",
+    "dateFormatLanguage": "Français (ex: 16 août 2026 - Fait à ...)"
+  },
+  "smtpConfig": {
+    "enabled": true,
+    "smtpHost": "smtp.gmail.com",
+    "smtpPass": "ujwy suyt gjcp fnxf",
+    "smtpPort": 465,
+    "smtpUser": "collegeisaacnewton9@gmail.com",
+    "encryption": "SSL",
+    "senderName": "Direction Collège Isaac Newton",
+    "senderEmail": "collegeisaacnewton9@gmail.com"
+  },
+  "educationalCycles": {
+    "numerique": {
+      "image": "/images/computer_lab_real_1790679476180.jpg",
+      "title": "Pôle Numérique & Informatique",
+      "subtitle": "Laboratoire Technologique pour tous les cycles",
+      "badgeColor": "bg-emerald-100 text-emerald-900 border-emerald-200",
+      "highlights": [
+        "25+ postes informatiques équipés sous onduleurs",
+        "Initiation aux suites bureautiques et au traitement de texte",
+        "Fondements de la logique algorithmique et codage",
+        "Éthique numérique et recherche documentaire sécurisée"
+      ],
+      "targetPage": "numerique",
+      "description": "Formation pratique hebdomadaire sur ordinateurs récents, de la bureautique essentielle à la logique algorithmique et la cybersécurité."
+    },
+    "secondaire": {
+      "image": "/images/graduation_promo_real_1790679465649.jpg",
+      "title": "Nouveau Secondaire (NS1 à NS4)",
+      "subtitle": "Filières Scientifiques (SVT/SMP) et Économiques",
+      "badgeColor": "bg-purple-100 text-purple-900 border-purple-200",
+      "highlights": [
+        "Corps professoral spécialisé de haut niveau académique",
+        "Laboratoire scientifique et informatique en libre accès tutoré",
+        "Coaching d’orientation post-bac et méthode universitaire",
+        "100% de présentation aux épreuves officielles"
+      ],
+      "targetPage": "secondaire",
+      "description": "Formation intellectuelle de haut niveau menant au Baccalauréat d’État, préparant les lauréats aux facultés et universités réputées."
+    },
+    "fondamental": {
+      "image": "/images/students_assembly_1790529184364.jpg",
+      "title": "Cycle Fondamental (1er, 2e et 3e Cycles)",
+      "subtitle": "De la 1ère à la 9ème Année Fondamentale (AF)",
+      "badgeColor": "bg-blue-100 text-blue-900 border-blue-200",
+      "highlights": [
+        "Curriculum national enrichi par nos référentiels",
+        "Initiation pratique au laboratoire informatique dès le 2e cycle",
+        "Évaluations continues et bulletins périodiques transparents",
+        "Préparation rigoureuse et examens blancs pour la 9e AF"
+      ],
+      "targetPage": "fondamental",
+      "description": "Acquisition des socles fondamentaux : lecture courante, calcul mathématique, sciences expérimentales et préparation aux examens officiels d’État de 9e AF."
+    },
+    "prescolaire": {
+      "image": "/images/campus_courtyard_building_1790531780046.jpg",
+      "title": "Cycle Préscolaire",
+      "subtitle": "De 3 à 5 ans · Petite, Moyenne et Grande Section",
+      "badgeColor": "bg-amber-100 text-amber-900 border-amber-200",
+      "highlights": [
+        "Enseignantes qualifiées en petite enfance",
+        "Ateliers de motricité fine et créativité",
+        "Initiation bilingue (Créole / Français)",
+        "Espace récréatif sécurisé et adapté"
+      ],
+      "targetPage": "prescolaire",
+      "description": "Un espace protecteur, stimulant et chaleureux dédié à l’éveil sensoriel, à l’apprentissage précoce des langues et à la socialisation positive de votre enfant."
+    }
+  },
+  "securityConfig": {
+    "updatedAt": "2026-10-03T10:27:00.000Z",
+    "sessionLockEnabled": true,
+    "inactivityTimeoutMinutes": 15
+  },
+  "navigationMenu": [
+    {
+      "id": "home",
+      "label": "Accueil",
+      "order": 1,
+      "isActive": true,
+      "hideOnDesktop": true
+    },
+    {
+      "id": "college",
+      "label": "Le Collège",
+      "order": 2,
+      "children": [
+        {
+          "id": "college",
+          "label": "Notre histoire & Fondation",
+          "order": 1,
+          "iconName": "Target",
+          "isActive": true,
+          "subSection": "histoire",
+          "description": "L’héritage scientifique et les valeurs fondatrices"
+        },
+        {
+          "id": "college",
+          "label": "Mission & Vision pédagogique",
+          "order": 2,
+          "iconName": "Sparkles",
+          "isActive": true,
+          "subSection": "mission",
+          "description": "Exigence académique et formation citoyenne"
+        },
+        {
+          "id": "college",
+          "label": "Direction & Corps professoral",
+          "order": 3,
+          "iconName": "Users",
+          "isActive": true,
+          "subSection": "equipe",
+          "description": "Dirigé par M. Orphe Jean Marie, Directeur fondateur"
+        },
+        {
+          "id": "college",
+          "label": "Infrastructures & Campus",
+          "order": 4,
+          "iconName": "Building",
+          "isActive": true,
+          "subSection": "infrastructures",
+          "description": "Bâtiments modernes et cour sécurisée à Delmas 50"
+        },
+        {
+          "id": "support",
+          "label": "Soutenir le Collège & Partenariats",
+          "order": 5,
+          "iconName": "HeartHandshake",
+          "isActive": true,
+          "description": "Bourses scolaires, équipements et dons de soutien"
+        },
+        {
+          "id": "contact",
+          "label": "Localisation & Secrétariat",
+          "order": 6,
+          "iconName": "MapPin",
+          "isActive": true,
+          "description": "Delmas 50, rue Dominique #2 bis · Port-au-Prince"
+        }
+      ],
+      "isActive": true,
+      "description": "Histoire, mission, corps enseignant et installations"
+    },
+    {
+      "id": "programs",
+      "label": "Programmes",
+      "order": 3,
+      "children": [
+        {
+          "id": "programs",
+          "label": "Cycle Préscolaire (TPS - GS)",
+          "order": 1,
+          "iconName": "Sparkles",
+          "isActive": true,
+          "subSection": "prescolaire",
+          "description": "Éveil, motricité et premiers apprentissages"
+        },
+        {
+          "id": "programs",
+          "label": "Cycle Fondamental (1ère - 9ème AF)",
+          "order": 2,
+          "iconName": "BookOpen",
+          "isActive": true,
+          "subSection": "fondamental",
+          "description": "Bases solides, rigueur et préparation aux examens officiels"
+        },
+        {
+          "id": "programs",
+          "label": "Nouveau Secondaire (NS1 - NS4)",
+          "order": 3,
+          "iconName": "GraduationCap",
+          "isActive": true,
+          "subSection": "secondaire",
+          "description": "Séries scientifiques et littéraires vers l’université"
+        },
+        {
+          "id": "programs",
+          "label": "Pôle Numérique & Informatique",
+          "order": 4,
+          "iconName": "Cpu",
+          "isActive": true,
+          "subSection": "numerique",
+          "description": "Laboratoire équipé, programmation et bureautique"
+        }
+      ],
+      "isActive": true,
+      "description": "Du préscolaire au baccalauréat d’État et pôle multimédia"
+    },
+    {
+      "id": "admissions",
+      "label": "Admissions",
+      "order": 4,
+      "children": [
+        {
+          "id": "admissions",
+          "label": "Pourquoi choisir notre école",
+          "order": 1,
+          "iconName": "CheckCircle2",
+          "isActive": true,
+          "subSection": "pourquoi",
+          "description": "L’encadrement d’excellence et nos réussites"
+        },
+        {
+          "id": "admissions",
+          "label": "Conditions & Pièces à fournir",
+          "order": 2,
+          "iconName": "FileText",
+          "isActive": true,
+          "subSection": "conditions",
+          "description": "Dossier scolaire et certificat de naissance"
+        },
+        {
+          "id": "admissions",
+          "label": "Procédure & Frais de scolarité",
+          "order": 3,
+          "iconName": "ShieldCheck",
+          "isActive": true,
+          "subSection": "procedure",
+          "description": "Échéancier transparent et modalités de paiement"
+        },
+        {
+          "id": "pre-registration",
+          "label": "Formulaire de préinscription",
+          "order": 4,
+          "iconName": "FileCheck",
+          "isActive": true,
+          "description": "Candidature en ligne rapide pour 2026-2027"
+        },
+        {
+          "id": "admissions",
+          "label": "Questions fréquentes (FAQ)",
+          "order": 5,
+          "iconName": "HelpCircle",
+          "isActive": true,
+          "subSection": "faq",
+          "description": "Toutes les réponses à vos interrogations"
+        }
+      ],
+      "isActive": true,
+      "description": "Modalités d’inscription, pièces requises et tarifs"
+    },
+    {
+      "id": "school-life",
+      "label": "Vie Scolaire",
+      "order": 5,
+      "children": [
+        {
+          "id": "events",
+          "label": "Calendrier scolaire & Agenda",
+          "order": 1,
+          "iconName": "Calendar",
+          "isActive": true,
+          "description": "Examens, jours fériés et réunions parents-profs"
+        },
+        {
+          "id": "news",
+          "label": "Actualités & Vie de l’école",
+          "order": 2,
+          "iconName": "Newspaper",
+          "isActive": true,
+          "description": "Événements, projets et réalisations des élèves"
+        },
+        {
+          "id": "gallery",
+          "label": "Galerie photos du campus",
+          "order": 3,
+          "iconName": "Image",
+          "isActive": true,
+          "description": "Instantanés des cours, cérémonies et tournois"
+        },
+        {
+          "id": "school-life",
+          "label": "Clubs & Activités périscolaires",
+          "order": 4,
+          "iconName": "Trophy",
+          "isActive": true,
+          "subSection": "activites",
+          "description": "Génie scolaire, basket, échecs et robotique"
+        },
+        {
+          "id": "resources",
+          "label": "Documents officiels à télécharger",
+          "order": 5,
+          "iconName": "Download",
+          "isActive": true,
+          "subSection": "documents",
+          "description": "Règlements, listes de manuels et fiches"
+        },
+        {
+          "id": "resources",
+          "label": "Résultats d’examens & Palmarès",
+          "order": 6,
+          "iconName": "Award",
+          "isActive": true,
+          "subSection": "resultats",
+          "description": "Performances aux examens de 9e AF et du Bac"
+        }
+      ],
+      "isActive": true,
+      "description": "Agenda, vie étudiante, actualités et documents"
+    },
+    {
+      "id": "contact",
+      "label": "Contact",
+      "order": 6,
+      "isActive": true
+    }
+  ]
+}
