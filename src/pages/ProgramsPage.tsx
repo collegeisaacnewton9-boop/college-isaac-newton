@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { SCHOOL_IMAGES } from '../assets/images';
 import { ContentEditable } from '../components/common/ContentEditable';
+import { ImageEditable } from '../components/common/ImageEditable';
 import { User } from '../types';
 
 interface ProgramsPageProps {
@@ -723,17 +724,33 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
 
             <div className="lg:col-span-6 space-y-4">
               <div className="rounded-2xl overflow-hidden shadow-md border border-slate-200 aspect-video w-full bg-slate-900 relative">
-                <img
-                  src={SCHOOL_IMAGES.computerLab}
+                <ImageEditable
+                  contentKey="programs.lab.image"
+                  defaultImage={SCHOOL_IMAGES.computerLab}
                   alt="Laboratoire informatique du Collège Isaac Newton"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
+                  currentUser={currentUser}
+                  label="Photo du Laboratoire Informatique (Programmes)"
+                  recommendedAspect="Format 16:9 recommandé"
                 />
               </div>
               <div className="p-4 rounded-xl bg-slate-900 text-white text-xs flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-amber-400">Postes informatiques individuels</p>
-                  <p className="text-slate-300 text-[11px]">Chaque élève dispose de sa propre machine durant les travaux dirigés</p>
+                <div className="space-y-0.5">
+                  <ContentEditable
+                    contentKey="programs.lab.caption"
+                    defaultContent="Postes informatiques individuels"
+                    as="p"
+                    className="font-semibold text-amber-400"
+                    currentUser={currentUser}
+                    multiline={false}
+                  />
+                  <ContentEditable
+                    contentKey="programs.lab.subcaption"
+                    defaultContent="Chaque élève dispose de sa propre machine durant les travaux dirigés"
+                    as="p"
+                    className="text-slate-300 text-[11px]"
+                    currentUser={currentUser}
+                    multiline={false}
+                  />
                 </div>
                 <button
                   onClick={() => onNavigate('pre-registration', 'numerique')}

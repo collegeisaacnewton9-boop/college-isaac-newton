@@ -13,6 +13,7 @@ import {
 import { SCHOOL_IMAGES } from '../assets/images';
 import { SCHOOL_INFO } from '../data/mockData';
 import { ContentEditable } from '../components/common/ContentEditable';
+import { ImageEditable } from '../components/common/ImageEditable';
 import { User } from '../types';
 
 interface AboutPageProps {
@@ -127,17 +128,31 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate, currentUser })
 
           <div className="lg:col-span-6">
             <div className="relative rounded-3xl overflow-hidden shadow-xl border border-slate-200">
-              <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
-                <img
-                  src={SCHOOL_IMAGES.heroCampus}
-                  alt="Bâtiment principal du Collège Isaac Newton"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover"
+              <ImageEditable
+                contentKey="about.campus.image"
+                defaultImage={SCHOOL_IMAGES.heroCampus}
+                alt="Bâtiment principal du Collège Isaac Newton"
+                currentUser={currentUser}
+                label="Photo du Campus Principal (À Propos)"
+                recommendedAspect="Format 16:9 recommandé"
+              />
+              <div className="p-4 bg-slate-900 text-white text-xs space-y-1">
+                <ContentEditable
+                  contentKey="about.campus.caption"
+                  defaultContent="Campus Principal du Collège Isaac Newton (Delmas 50, Haïti)"
+                  as="p"
+                  className="font-semibold text-amber-300"
+                  currentUser={currentUser}
+                  multiline={false}
                 />
-              </div>
-              <div className="p-4 bg-slate-900 text-white text-xs">
-                <p className="font-semibold text-amber-300">Campus Principal du Collège Isaac Newton (Delmas 50, Haïti)</p>
-                <p className="text-slate-300 text-[11px]">Un cadre d'étude moderne, sécurisé et aéré propice à la sérénité des apprentissages</p>
+                <ContentEditable
+                  contentKey="about.campus.subcaption"
+                  defaultContent="Un cadre d'étude moderne, sécurisé et aéré propice à la sérénité des apprentissages"
+                  as="p"
+                  className="text-slate-300 text-[11px]"
+                  currentUser={currentUser}
+                  multiline={false}
+                />
               </div>
             </div>
           </div>

@@ -51,7 +51,8 @@ import {
   ArrowRight,
   FileJson,
   Database,
-  UploadCloud
+  UploadCloud,
+  Camera
 } from 'lucide-react';
 import { 
   User, 
@@ -69,7 +70,7 @@ import { INITIAL_USERS } from '../data/mockData';
 import { SettingsView } from '../components/admin/SettingsView';
 import { AccessControlView } from '../components/admin/AccessControlView';
 import { MediaLibraryView } from '../components/admin/MediaLibraryView';
-import { SlideshowEditorView } from '../components/admin/SlideshowEditorView';
+import { SiteImagesManagerView } from '../components/admin/SiteImagesManagerView';
 import { MenuEditorView } from '../components/admin/MenuEditorView';
 import { QuickStatsDashboardView } from '../components/admin/QuickStatsDashboardView';
 import { GitHubSyncModal } from '../components/admin/GitHubSyncModal';
@@ -948,7 +949,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <span>Tableau de Bord</span>
               </button>
 
-              {/* Tab 2: Slideshow Hero */}
+              {/* Tab 2: Images du Site & Hero */}
               <button
                 type="button"
                 data-tab-id="slideshow"
@@ -959,8 +960,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     : 'text-amber-300 hover:text-white hover:bg-slate-800/70 border border-amber-400/40 bg-amber-950/20'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Éditeur Diaporama (Hero)</span>
+                <Camera className="w-3.5 h-3.5 text-amber-400" />
+                <span>Images du Site & Hero</span>
               </button>
 
               {/* Tab 3: Menus & Navigation */}
@@ -1176,8 +1177,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                            <span>Éditeur Diaporama (Hero)</span>
+                            <Camera className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Images du Site & Hero (Accueil, Vie Scolaire, Campus)</span>
                           </div>
                           {activeTab === 'slideshow' && <Check className="w-3.5 h-3.5 text-slate-950" />}
                         </button>
@@ -1578,13 +1579,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <button
                   type="button"
                   onClick={() => setActiveTab('slideshow')}
-                  className="p-2 rounded-lg border border-amber-300/60 hover:border-amber-500 bg-amber-50/60 hover:bg-amber-100/50 text-left transition-all group cursor-pointer"
+                  className="p-2 sm:p-2.5 rounded-xl border border-amber-300/60 hover:border-amber-500 bg-amber-50/60 hover:bg-amber-100/50 text-left transition-all group cursor-pointer shadow-2xs"
                 >
-                  <div className="w-6 h-6 rounded-md bg-amber-400 text-slate-950 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform font-bold">
-                    <Sparkles className="w-3 h-3" />
+                  <div className="w-6 h-6 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform font-bold">
+                    <Camera className="w-3.5 h-3.5 text-slate-950" />
                   </div>
-                  <h4 className="font-bold text-slate-900 text-xs">Éditeur Diaporama</h4>
-                  <p className="text-[9.5px] text-slate-600 line-clamp-1">Textes, photos & slogans</p>
+                  <h4 className="font-bold text-slate-900 text-xs">Images du Site & « Notre Photo »</h4>
+                  <p className="text-[9.5px] text-slate-600 line-clamp-1">Hero, Vie Scolaire, Campus (Zéro code)</p>
                 </button>
 
                 <button
@@ -2401,10 +2402,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         )}
 
         {/* =========================================================================
-            TAB 4.2: ÉDITEUR DU DIAPORAMA D'ACCUEIL (HERO SLIDESHOW FORMULAIRE SIMPLE)
+            TAB 4.2: GESTIONNAIRE DES IMAGES PRINCIPALES DU SITE & HERO (SANS CODE)
         ========================================================================= */}
         {activeTab === 'slideshow' && (
-          <SlideshowEditorView 
+          <SiteImagesManagerView 
             currentUserRole={currentUser?.role} 
             onNavigate={onNavigate} 
           />

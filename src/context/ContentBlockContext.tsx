@@ -7,6 +7,7 @@ interface ContentBlockContextType {
   blocks: Record<string, string>;
   getBlock: (key: string, defaultContent: string) => string;
   saveBlock: (key: string, content: string) => Promise<boolean>;
+  saveBlocks: (blocksToSave: Record<string, string>) => Promise<boolean>;
   resetBlock: (key: string) => Promise<boolean>;
   isEditModeActive: boolean;
   setIsEditModeActive: (active: boolean) => void;
@@ -93,13 +94,30 @@ export const ContentBlockProvider: React.FC<{ children: React.ReactNode; current
     try {
       const updated = await apiService.saveContentBlock(key, content);
       setBlocks(updated);
-      toast.success('Texte enregistré avec succès dans PostgreSQL !', {
+      toast.success('Modifications enregistrées avec succès dans PostgreSQL !', {
         description: `Clé : ${key}`,
         duration: 2500,
       });
       return true;
     } catch (err: any) {
-      toast.error('Erreur lors de la sauvegarde du texte');
+      toast.error('Erreur lors de la sauvegarde du contenu');
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const saveBlocks = async (blocksToSave: Record<string, string>): Promise<boolean> => {
+    setIsSaving(true);
+    try {
+      const updated = await apiService.saveMultipleContentBlocks(blocksToSave);
+      setBlocks(updated);
+      toast.success('Toutes les modifications ont été enregistrées avec succès !', {
+        duration: 2500,
+      });
+      return true;
+    } catch (err: any) {
+      toast.error('Erreur lors de la sauvegarde groupée');
       return false;
     } finally {
       setIsSaving(false);
@@ -131,6 +149,7 @@ export const ContentBlockProvider: React.FC<{ children: React.ReactNode; current
         blocks,
         getBlock,
         saveBlock,
+        saveBlocks,
         resetBlock,
         isEditModeActive: canEdit && isEditModeActive,
         setIsEditModeActive: handleSetEditModeActive,

@@ -1301,6 +1301,34 @@ export const apiService = {
     return updated;
   },
 
+  async saveMultipleContentBlocks(newBlocks: Record<string, string>): Promise<Record<string, string>> {
+    const current = await this.getContentBlocks();
+    const updated = { ...current, ...newBlocks };
+    setLocal(STORAGE_KEYS.CONTENT_BLOCKS, updated);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:content-blocks-updated', { detail: { blocks: updated } }));
+    }
+
+    try {
+      const res = await appFetch('/api/content-blocks', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ blocks: newBlocks }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.blocks) {
+          setLocal(STORAGE_KEYS.CONTENT_BLOCKS, json.blocks);
+          return json.blocks;
+        }
+      }
+    } catch {
+      // Local fallback active
+    }
+    return updated;
+  },
+
   async resetContentBlock(key: string): Promise<Record<string, string>> {
     const current = await this.getContentBlocks();
     const updated = { ...current };
