@@ -1148,8 +1148,15 @@ export async function dbSaveHeroSlides(slides: any[]): Promise<boolean> {
       ['hero_slides', JSON.stringify(slides)]
     );
 
-    // 2. Upsert each slide into dedicated hero_slides table for DBeaver visibility & direct editing
+    // 2. Upsert each slide into dedicated hero_slides table & prune removed slides
     try {
+      const slideIds = slides.map((s, idx) => s.id || `slide-${idx + 1}`).filter(Boolean);
+      if (slideIds.length > 0) {
+        await p.query('DELETE FROM hero_slides WHERE id != ALL($1::text[])', [slideIds]);
+      } else {
+        await p.query('DELETE FROM hero_slides');
+      }
+
       for (let i = 0; i < slides.length; i++) {
         const s = slides[i];
         await p.query(
@@ -1192,6 +1199,32 @@ export async function dbSaveHeroSlides(slides: any[]): Promise<boolean> {
     return true;
   } catch (err: any) {
     console.error('[DB Save Hero Slides Error]', err.message);
+    return false;
+  }
+}
+
+export async function dbDeleteHeroSlide(id: string): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query('DELETE FROM hero_slides WHERE id = $1', [id]);
+    const res = await p.query('SELECT data FROM site_settings WHERE id = $1', ['hero_slides']);
+    if (res.rows.length > 0) {
+      let data = res.rows[0].data;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch {}
+      }
+      if (Array.isArray(data)) {
+        const filtered = data.filter((s: any) => s.id !== id);
+        await p.query(
+          'UPDATE site_settings SET data = $1, updated_at = NOW() WHERE id = $2',
+          [JSON.stringify(filtered), 'hero_slides']
+        );
+      }
+    }
+    return true;
+  } catch (err: any) {
+    console.error('[DB Delete Hero Slide Error]', err.message);
     return false;
   }
 }
@@ -1354,8 +1387,15 @@ export async function dbSaveGallery(gallery: any[]): Promise<boolean> {
       ['school_gallery', JSON.stringify(gallery)]
     );
 
-    // 2. Upsert into gallery_items table so DBeaver users can view and edit rows directly!
+    // 2. Upsert into gallery_items table & prune removed items
     try {
+      const galleryIds = gallery.map((item, idx) => item.id || `gal-${idx + 1}`).filter(Boolean);
+      if (galleryIds.length > 0) {
+        await p.query('DELETE FROM gallery_items WHERE id != ALL($1::text[])', [galleryIds]);
+      } else {
+        await p.query('DELETE FROM gallery_items');
+      }
+
       for (let i = 0; i < gallery.length; i++) {
         const item = gallery[i];
         await p.query(
@@ -1387,6 +1427,32 @@ export async function dbSaveGallery(gallery: any[]): Promise<boolean> {
     return true;
   } catch (err: any) {
     console.error('[DB Save Gallery Error]', err.message);
+    return false;
+  }
+}
+
+export async function dbDeleteGalleryItem(id: string): Promise<boolean> {
+  const p = getDbPool();
+  if (!p || !isConnected) return false;
+  try {
+    await p.query('DELETE FROM gallery_items WHERE id = $1', [id]);
+    const res = await p.query('SELECT data FROM site_settings WHERE id = $1', ['school_gallery']);
+    if (res.rows.length > 0) {
+      let data = res.rows[0].data;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch {}
+      }
+      if (Array.isArray(data)) {
+        const filtered = data.filter((g: any) => g.id !== id);
+        await p.query(
+          'UPDATE site_settings SET data = $1, updated_at = NOW() WHERE id = $2',
+          [JSON.stringify(filtered), 'school_gallery']
+        );
+      }
+    }
+    return true;
+  } catch (err: any) {
+    console.error('[DB Delete Gallery Item Error]', err.message);
     return false;
   }
 }

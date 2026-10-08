@@ -41,8 +41,10 @@ import {
   dbDeleteMedia,
   dbGetHeroSlides,
   dbSaveHeroSlides,
+  dbDeleteHeroSlide,
   dbGetGallery,
   dbSaveGallery,
+  dbDeleteGalleryItem,
   dbUpdateUserPassword,
   dbRepairSystemPermissions,
   dbGetGitHubConfig,
@@ -1576,7 +1578,32 @@ app.delete('/api/media/:id', async (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-// 5c. Homepage Hero Slideshow Configuration
+// 5c. Homepage Hero Slideshow Configuration with Hybrid DB & Disk Persistence
+const HERO_SLIDES_FILE_PATH = path.join(__dirname, 'data', 'hero-slides.json');
+
+function saveHeroSlidesToDisk(slides: any[]) {
+  try {
+    const dir = path.dirname(HERO_SLIDES_FILE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(HERO_SLIDES_FILE_PATH, JSON.stringify(slides, null, 2), 'utf-8');
+  } catch (err: any) {
+    console.error('[HeroSlides Disk Save Error]', err.message);
+  }
+}
+
+function loadHeroSlidesFromDisk(): any[] | null {
+  try {
+    if (fs.existsSync(HERO_SLIDES_FILE_PATH)) {
+      const data = fs.readFileSync(HERO_SLIDES_FILE_PATH, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (err: any) {
+    console.error('[HeroSlides Disk Read Error]', err.message);
+  }
+  return null;
+}
+
 let memoryHeroSlides = [
   {
     id: 'slide-1',
@@ -1636,15 +1663,22 @@ let memoryHeroSlides = [
   },
 ];
 
+// Initialize slides from disk if available
+const diskSlides = loadHeroSlidesFromDisk();
+if (diskSlides && diskSlides.length > 0) {
+  memoryHeroSlides = diskSlides;
+}
+
 app.get('/api/slides', async (req: Request, res: Response) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   if (isDbActive()) {
     try {
       const dbSlides = await dbGetHeroSlides();
-      if (dbSlides && Array.isArray(dbSlides) && dbSlides.length > 0) {
+      if (dbSlides && Array.isArray(dbSlides)) {
         memoryHeroSlides = dbSlides;
+        saveHeroSlidesToDisk(dbSlides);
         return res.json(dbSlides);
       }
     } catch (e: any) {
@@ -1655,13 +1689,14 @@ app.get('/api/slides', async (req: Request, res: Response) => {
 });
 
 app.put('/api/slides', async (req: Request, res: Response) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   const newSlides = req.body;
   if (!Array.isArray(newSlides)) {
     return res.status(400).json({ error: 'Liste de diapositives invalide' });
   }
 
   memoryHeroSlides = newSlides;
+  saveHeroSlidesToDisk(newSlides);
 
   if (isDbActive()) {
     try {
@@ -1689,7 +1724,57 @@ app.put('/api/slides', async (req: Request, res: Response) => {
   res.json(memoryHeroSlides);
 });
 
-// 5d. School Activity Gallery
+app.delete('/api/slides/:id', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  const { id } = req.params;
+  memoryHeroSlides = memoryHeroSlides.filter(s => s.id !== id);
+  saveHeroSlidesToDisk(memoryHeroSlides);
+
+  if (isDbActive()) {
+    try {
+      await dbDeleteHeroSlide(id);
+      await dbSaveHeroSlides(memoryHeroSlides);
+    } catch (e: any) {
+      console.error('[API Slide Delete DB Error]', e.message);
+    }
+  }
+
+  auditLogs.push({
+    id: `log-${Date.now()}`,
+    action: 'SLIDE_DELETED',
+    user: 'Direction (Admin)',
+    details: `Suppression diapositive ID : ${id}`,
+    timestamp: new Date().toISOString(),
+  });
+  res.json({ success: true, slides: memoryHeroSlides });
+});
+
+// 5d. School Activity Gallery with Hybrid DB & Disk Persistence
+const GALLERY_FILE_PATH = path.join(__dirname, 'data', 'gallery.json');
+
+function saveGalleryToDisk(gallery: any[]) {
+  try {
+    const dir = path.dirname(GALLERY_FILE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(GALLERY_FILE_PATH, JSON.stringify(gallery, null, 2), 'utf-8');
+  } catch (err: any) {
+    console.error('[Gallery Disk Save Error]', err.message);
+  }
+}
+
+function loadGalleryFromDisk(): any[] | null {
+  try {
+    if (fs.existsSync(GALLERY_FILE_PATH)) {
+      const data = fs.readFileSync(GALLERY_FILE_PATH, 'utf-8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (err: any) {
+    console.error('[Gallery Disk Read Error]', err.message);
+  }
+  return null;
+}
+
 let memoryGallery = [
   {
     id: 'gal-1',
@@ -1697,6 +1782,7 @@ let memoryGallery = [
     imageUrl: '/images/campus_courtyard_building_1790531780046.jpg',
     caption: 'Cour intérieure moderne et sécurisée au campus de Delmas 50',
     altText: 'Bâtiment moderne du Collège Isaac Newton avec ses galeries bleues et son terrain de basket',
+    category: 'Infrastructure',
     updatedAt: new Date().toISOString(),
   },
   {
@@ -1705,6 +1791,8 @@ let memoryGallery = [
     imageUrl: '/images/campus_facade_real_1790679454540.jpg',
     caption: 'Entrée officielle et accueil des familles à Delmas 50',
     altText: 'Façade d’accueil du Collège Isaac Newton avec son fronton et sa devise',
+    category: 'Campus',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'gal-3',
@@ -1712,6 +1800,8 @@ let memoryGallery = [
     imageUrl: '/images/graduation_promo_real_1790679465649.jpg',
     caption: 'Célébration académique des bâtisseurs de demain',
     altText: 'Lauréats et diplômés du Collège Isaac Newton en toges bleues et blanches',
+    category: 'Événements & Cérémonies',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'gal-4',
@@ -1719,6 +1809,8 @@ let memoryGallery = [
     imageUrl: '/images/computer_lab_real_1790679476180.jpg',
     caption: 'Postes connectés pour la pratique bureautique et le codage',
     altText: 'Élèves travaillant sur les postes informatiques',
+    category: 'Pôle Technologique',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'gal-5',
@@ -1726,6 +1818,8 @@ let memoryGallery = [
     imageUrl: '/images/students_assembly_1790529184364.jpg',
     caption: 'Discipline, fierté et respect des valeurs républicaines',
     altText: 'Rassemblement des élèves en uniforme bleu et blanc',
+    category: 'Vie Scolaire',
+    updatedAt: new Date().toISOString(),
   },
   {
     id: 'gal-6',
@@ -1733,18 +1827,27 @@ let memoryGallery = [
     imageUrl: '/images/campus_courtyard_building_1790531780046.jpg',
     caption: 'Un cadre structuré et serein propice à l’étude',
     altText: 'Vue d’ensemble des installations scolaires',
+    category: 'Campus',
+    updatedAt: new Date().toISOString(),
   },
 ];
 
+// Initialize gallery from disk if available
+const diskGallery = loadGalleryFromDisk();
+if (diskGallery && diskGallery.length > 0) {
+  memoryGallery = diskGallery;
+}
+
 app.get('/api/gallery', async (req: Request, res: Response) => {
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   if (isDbActive()) {
     try {
       const dbGal = await dbGetGallery();
-      if (dbGal && Array.isArray(dbGal) && dbGal.length > 0) {
+      if (dbGal && Array.isArray(dbGal)) {
         memoryGallery = dbGal;
+        saveGalleryToDisk(dbGal);
         return res.json(dbGal);
       }
     } catch (e: any) {
@@ -1755,7 +1858,8 @@ app.get('/api/gallery', async (req: Request, res: Response) => {
 });
 
 app.post('/api/gallery', async (req: Request, res: Response) => {
-  const { title, imageUrl, caption, altText } = req.body;
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+  const { title, imageUrl, caption, altText, category, highlights } = req.body;
   if (!imageUrl || !title) {
     return res.status(400).json({ error: 'Image et titre requis' });
   }
@@ -1766,9 +1870,13 @@ app.post('/api/gallery', async (req: Request, res: Response) => {
     imageUrl,
     caption: caption || '',
     altText: altText || title,
+    category: category || 'Événements & Cérémonies',
+    highlights: highlights || [],
+    updatedAt: new Date().toISOString(),
   };
 
   memoryGallery.unshift(newItem);
+  saveGalleryToDisk(memoryGallery);
 
   if (isDbActive()) {
     try {
@@ -1789,17 +1897,23 @@ app.post('/api/gallery', async (req: Request, res: Response) => {
 });
 
 app.put('/api/gallery/:id', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   const { id } = req.params;
   const idx = memoryGallery.findIndex(g => g.id === id);
+  let updatedItem;
   if (idx === -1) {
-    return res.status(404).json({ error: 'Élément introuvable' });
+    updatedItem = { id, ...req.body, updatedAt: new Date().toISOString() };
+    memoryGallery.push(updatedItem);
+  } else {
+    memoryGallery[idx] = {
+      ...memoryGallery[idx],
+      ...req.body,
+      updatedAt: new Date().toISOString(),
+    };
+    updatedItem = memoryGallery[idx];
   }
 
-  memoryGallery[idx] = {
-    ...memoryGallery[idx],
-    ...req.body,
-    updatedAt: new Date().toISOString(),
-  };
+  saveGalleryToDisk(memoryGallery);
 
   if (isDbActive()) {
     try {
@@ -1813,18 +1927,21 @@ app.put('/api/gallery/:id', async (req: Request, res: Response) => {
     id: `log-${Date.now()}`,
     action: 'GALLERY_ITEM_UPDATED',
     user: 'Direction (Admin)',
-    details: `Photo galerie mise à jour : ${memoryGallery[idx].title}`,
+    details: `Photo galerie mise à jour : ${updatedItem.title || id}`,
     timestamp: new Date().toISOString(),
   });
-  res.json(memoryGallery[idx]);
+  res.json(updatedItem);
 });
 
 app.delete('/api/gallery/:id', async (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   const { id } = req.params;
   memoryGallery = memoryGallery.filter(g => g.id !== id);
+  saveGalleryToDisk(memoryGallery);
 
   if (isDbActive()) {
     try {
+      await dbDeleteGalleryItem(id);
       await dbSaveGallery(memoryGallery);
     } catch (e: any) {
       console.error('[API Gallery Delete DB Error]', e.message);
@@ -1838,7 +1955,7 @@ app.delete('/api/gallery/:id', async (req: Request, res: Response) => {
     details: `Photo galerie supprimée ID : ${id}`,
     timestamp: new Date().toISOString(),
   });
-  res.json({ success: true });
+  res.json({ success: true, gallery: memoryGallery });
 });
 
 // Validation rigoureuse de structure binaire PDF côté serveur (Magic numbers & pdf-lib parser)

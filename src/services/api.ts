@@ -534,6 +534,9 @@ export const apiService = {
         if (Array.isArray(slides) && slides.length > 0) {
           localStorage.setItem(STORAGE_KEYS.HERO_SLIDES, JSON.stringify(slides));
           return slides;
+        } else if (Array.isArray(slides)) {
+          localStorage.setItem(STORAGE_KEYS.HERO_SLIDES, JSON.stringify(slides));
+          return slides;
         }
       }
     } catch {
@@ -587,15 +590,53 @@ export const apiService = {
     }
 
     try {
-      const res = await appFetch('/api/slides', {
+      const res = await appFetch(`/api/slides?_t=${Date.now()}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(stampedSlides),
       });
-      return res.ok;
+      if (res.ok) {
+        const serverSlides = await res.json();
+        if (Array.isArray(serverSlides)) {
+          localStorage.setItem(STORAGE_KEYS.HERO_SLIDES, JSON.stringify(serverSlides));
+        }
+        return true;
+      }
+      return false;
     } catch {
       return true; // Already saved locally
     }
+  },
+
+  async deleteHeroSlide(id: string): Promise<boolean> {
+    try {
+      await appFetch(`/api/slides/${id}?_t=${Date.now()}`, { method: 'DELETE' });
+    } catch {
+      // Local fallback
+    }
+    const current = this.getCachedHeroSlides();
+    const updated = current.filter(s => s.id !== id);
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEYS.HERO_SLIDES, JSON.stringify(updated));
+      window.dispatchEvent(new CustomEvent('cin:slides-updated', { detail: updated }));
+    }
+    return true;
+  },
+
+  async purgeImageAndSlidesCache(): Promise<{ slides: HeroSlide[]; gallery: GalleryItem[] }> {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEYS.HERO_SLIDES);
+      localStorage.removeItem(STORAGE_KEYS.GALLERY);
+    }
+    const [slides, gallery] = await Promise.all([
+      this.getHeroSlides(),
+      this.getGallery(),
+    ]);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:slides-updated', { detail: slides }));
+      window.dispatchEvent(new CustomEvent('cin:gallery-updated', { detail: gallery }));
+    }
+    return { slides, gallery };
   },
 
   async deleteAdmission(id: string): Promise<boolean> {
