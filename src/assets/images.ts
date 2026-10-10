@@ -1,13 +1,13 @@
 export const SCHOOL_IMAGES = {
-  // Real exterior facade with sign "COLLÈGE ISAAC NEWTON" & motto "Savoir aujourd'hui, Réussir demain"
-  entranceFacade: '/images/campus_facade_real_1790679454540.jpg',
-  campusRealFacade: '/images/campus_facade_real_1790679454540.jpg',
+  // Real exterior facade with sign "COLLÈGE ISAAC NEWTON"
+  entranceFacade: '/images/slide_campus_orange_entrance.webp',
+  campusRealFacade: '/images/slide_campus_orange_entrance.webp',
   
-  // Real official graduation ceremony in royal blue and white robes on stage
-  graduationPromo: '/images/graduation_promo_real_1790679465649.jpg',
+  // Real official graduation ceremony
+  graduationPromo: '/images/slide_graduation_invictus_ns4.webp',
   
-  // Real computer science laboratory with laptops, school logo and windows
-  computerLab: '/images/computer_lab_real_1790679476180.jpg',
+  // Real computer science laboratory with students and laptops
+  computerLab: '/images/slide_computer_lab_students.webp',
   
   // Campus courtyard with sports court and classrooms
   campusCourtyard: '/images/campus_courtyard_building_1790531780046.jpg',

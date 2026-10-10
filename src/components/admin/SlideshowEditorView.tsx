@@ -19,7 +19,8 @@ import {
   Columns, 
   FileText, 
   Maximize2,
-  X
+  X,
+  CloudDownload
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { HeroSlide, MediaItem, Role } from '../../types';
@@ -232,27 +233,28 @@ export const SlideshowEditorView: React.FC<SlideshowEditorViewProps> = ({
   };
 
   // Reset to school default slides
+  // Reset to authentic school default slides
   const handleResetToDefault = async () => {
-    if (!window.confirm('Rétablir les 4 diapositives officielles d’origine du Collège Isaac Newton ?')) return;
+    if (!window.confirm('Rétablir les 6 diapositives officielles d’origine du Collège Isaac Newton ?')) return;
 
     const defaultSlides: HeroSlide[] = [
       {
         id: 'slide-1',
-        image: '/images/campus_facade_real_1790679454540.jpg',
+        image: '/images/slide_campus_orange_entrance.webp',
         badge: 'Campus Principal · Delmas 50, rue Dominique #2 bis',
         title: 'Collège Isaac Newton',
         subtitle: '« Savoir aujourd’hui, réussir demain » — Notre campus moderne et sécurisé à Delmas 50, dédié à l’excellence intellectuelle et civique de vos enfants.',
         objectPosition: 'center 35%',
         ctaText: 'Formulaire de Préinscription',
         ctaTarget: 'pre-registration',
-        secondaryCtaText: 'Secrétariat (+509 3316-0934)',
+        secondaryCtaText: 'Secrétariat (+509 3316-0934 / 3721-1818)',
         secondaryCtaTarget: 'contact',
         isActive: true,
         order: 1,
       },
       {
         id: 'slide-2',
-        image: '/images/computer_lab_real_1790679476180.jpg',
+        image: '/images/slide_computer_lab_students.webp',
         badge: 'Laboratoire Informatique & Multimédia',
         title: 'La Technologie au Service de Votre Avenir',
         subtitle: 'Postes informatiques récents sous onduleurs, initiation au code, bureautique structurée et culture numérique dès le cycle fondamental.',
@@ -265,32 +267,60 @@ export const SlideshowEditorView: React.FC<SlideshowEditorViewProps> = ({
         order: 2,
       },
       {
-        id: 'slide-3',
-        image: '/images/graduation_promo_real_1790679465649.jpg',
-        badge: 'Promotion des Diplômés · Cérémonie de Graduation',
-        title: 'Former les Bâtisseurs de Demain',
-        subtitle: '100% de réussite aux examens d’État (9e AF et Baccalauréat Nouveau Secondaire). Nos bacheliers en toges académiques prêts pour l’université.',
-        objectPosition: 'center 22%',
-        ctaText: 'Cursus Nouveau Secondaire',
-        ctaTarget: 'programs',
-        secondaryCtaText: 'Palmarès d’Excellence',
-        secondaryCtaTarget: 'college',
+        id: 'slide-1791209316735',
+        image: '/images/slide_students_flag_assembly.webp',
+        badge: 'Campus Principal · Delmas 50, rue Dominique #2 bis',
+        title: "L'entrée en classe",
+        subtitle: "« Savoir aujourd’hui, réussir demain » — Un moment fort de la journée, empreint d'ordre, de discipline et de motivation pour commencer les cours.",
+        objectPosition: 'center 35%',
+        ctaText: 'Formulaire de Préinscription',
+        ctaTarget: 'pre-registration',
+        secondaryCtaText: 'Secrétariat (+509 3316-0934)',
+        secondaryCtaTarget: 'contact',
         isActive: true,
         order: 3,
       },
       {
-        id: 'slide-4',
-        image: '/images/campus_courtyard_building_1790531780046.jpg',
-        badge: 'Campus Principal · Delmas 50',
-        title: 'Un Environnement Propice à l’Excellence',
-        subtitle: 'Salles climatisées, sécurité renforcée, bibliothèque et suivi pédagogique individualisé pour chaque élève.',
-        objectPosition: 'center 40%',
-        ctaText: 'Visiter le Campus',
-        ctaTarget: 'contact',
-        secondaryCtaText: 'Préinscription 2026-2027',
-        secondaryCtaTarget: 'pre-registration',
+        id: 'slide-1791154454162',
+        image: '/images/slide_campus_courtyard_facade.webp',
+        badge: 'Campus Principal · Delmas 50, rue Dominique #2 bis',
+        title: 'Nouvelle Diapositive d’Excellence',
+        subtitle: 'Cadre moderne, discipline bienveillante et infrastructures conçues pour l’épanouissement complet de chaque élève.',
+        objectPosition: 'center 35%',
+        ctaText: 'Formulaire de Préinscription',
+        ctaTarget: 'pre-registration',
+        secondaryCtaText: 'Secrétariat (+509 3316-0934)',
+        secondaryCtaTarget: 'contact',
         isActive: true,
         order: 4,
+      },
+      {
+        id: 'slide-1791150195757',
+        image: '/images/slide_royalty_elite_promo.webp',
+        badge: 'Campus Principal · Delmas 50, rue Dominique #2 bis',
+        title: 'Promotion : Royalty Élite 2025-2026',
+        subtitle: '100% de réussite aux examens officiels d’État. Nos promotions d’excellence prêtes pour les plus grandes filières universitaires.',
+        objectPosition: 'center 35%',
+        ctaText: 'Formulaire de Préinscription',
+        ctaTarget: 'pre-registration',
+        secondaryCtaText: 'Secrétariat (+509 3316-0934)',
+        secondaryCtaTarget: 'contact',
+        isActive: true,
+        order: 5,
+      },
+      {
+        id: 'slide-1791154052006',
+        image: '/images/slide_graduation_invictus_ns4.webp',
+        badge: 'Promotion : Invictus 2024 - 2025',
+        title: 'Graduation des élèves de la classe NS4',
+        subtitle: 'Célébration officielle des lauréats du Nouveau Secondaire, couronnant des années d’efforts, de rigueur et d’ambition académique.',
+        objectPosition: 'center 35%',
+        ctaText: 'Formulaire de Préinscription',
+        ctaTarget: 'pre-registration',
+        secondaryCtaText: 'Secrétariat (+509 3316-0934)',
+        secondaryCtaTarget: 'contact',
+        isActive: true,
+        order: 6,
       },
     ];
 
@@ -299,6 +329,29 @@ export const SlideshowEditorView: React.FC<SlideshowEditorViewProps> = ({
     setFormDraft({ ...defaultSlides[0] });
     await apiService.saveHeroSlides(defaultSlides);
     toast.success('Diapositives réinitialisées avec succès');
+  };
+
+  // One-click live production sync
+  const handleSyncFromLiveServer = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('https://collegeisaacnewton.com/api/slides?_t=' + Date.now());
+      if (!res.ok) throw new Error('Impossible de contacter le serveur Live (HTTP ' + res.status + ')');
+      const liveSlides = await res.json();
+      if (!Array.isArray(liveSlides) || liveSlides.length === 0) {
+        throw new Error('Aucune diapositive renvoyée par le serveur Live');
+      }
+
+      await apiService.saveHeroSlides(liveSlides);
+      setSlides(liveSlides);
+      setSelectedSlideIndex(0);
+      setFormDraft({ ...liveSlides[0] });
+      toast.success(`${liveSlides.length} diapositives synchronisées depuis collegeisaacnewton.com !`);
+    } catch (err: any) {
+      toast.error(`Échec de la synchronisation Live: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const activeCount = slides.filter(s => s.isActive).length;
@@ -400,15 +453,28 @@ export const SlideshowEditorView: React.FC<SlideshowEditorViewProps> = ({
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleResetToDefault}
-            className="text-[10.5px] font-semibold text-slate-500 hover:text-blue-900 transition-colors flex items-center gap-1 cursor-pointer"
-            title="Restaurer les 4 diapositives officielles d'origine"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span>Valeurs d'origine</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleSyncFromLiveServer}
+              disabled={isLoading}
+              className="text-[10.5px] font-semibold text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer border border-blue-200"
+              title="Importer en 1 clic les photos et diapositives réelles depuis collegeisaacnewton.com"
+            >
+              <CloudDownload className="w-3.5 h-3.5 text-blue-700" />
+              <span>Synchroniser depuis le Live</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleResetToDefault}
+              className="text-[10.5px] font-semibold text-slate-500 hover:text-blue-900 transition-colors flex items-center gap-1 cursor-pointer"
+              title="Restaurer les 6 diapositives officielles d'origine"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Valeurs d'origine</span>
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Thumbnails Strip - Ergonomic on 14" PC & mobile */}

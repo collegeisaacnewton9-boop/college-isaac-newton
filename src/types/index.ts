@@ -138,6 +138,8 @@ export interface DocumentFile {
   targetCycle?: string;
   schoolYear: string;
   downloadCount: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ContactMessage {
