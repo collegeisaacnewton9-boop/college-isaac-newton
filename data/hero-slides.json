@@ -1,0 +1,58 @@
+[
+  {
+    "id": "slide-1",
+    "image": "/images/campus_facade_real_1790679454540.jpg",
+    "badge": "Campus Principal · Delmas 50, rue Dominique #2 bis",
+    "title": "Collège Isaac Newton",
+    "subtitle": "« Savoir aujourd’hui, réussir demain » — Notre campus moderne et sécurisé à Delmas 50, dédié à l’excellence intellectuelle et civique de vos enfants.",
+    "objectPosition": "center 35%",
+    "ctaText": "Formulaire de Préinscription",
+    "ctaTarget": "pre-registration",
+    "secondaryCtaText": "Secrétariat (+509 3316-0934)",
+    "secondaryCtaTarget": "contact",
+    "isActive": true,
+    "order": 1
+  },
+  {
+    "id": "slide-2",
+    "image": "/images/computer_lab_real_1790679476180.jpg",
+    "badge": "Laboratoire Informatique & Multimédia",
+    "title": "La Technologie au Service de Votre Avenir",
+    "subtitle": "Postes informatiques récents sous onduleurs, initiation au code, bureautique structurée et culture numérique dès le cycle fondamental.",
+    "objectPosition": "center 45%",
+    "ctaText": "Découvrir le Pôle Numérique",
+    "ctaTarget": "programs",
+    "secondaryCtaText": "Préinscrire un élève",
+    "secondaryCtaTarget": "pre-registration",
+    "isActive": true,
+    "order": 2
+  },
+  {
+    "id": "slide-3",
+    "image": "/images/graduation_promo_real_1790679465649.jpg",
+    "badge": "Promotion des Diplômés · Cérémonie de Graduation",
+    "title": "Former les Bâtisseurs de Demain",
+    "subtitle": "100% de réussite aux examens d’État (9e AF et Baccalauréat Nouveau Secondaire). Nos bacheliers en toges académiques prêts pour l’université.",
+    "objectPosition": "center 22%",
+    "ctaText": "Cursus Nouveau Secondaire",
+    "ctaTarget": "programs",
+    "secondaryCtaText": "Palmarès d’Excellence",
+    "secondaryCtaTarget": "college",
+    "isActive": true,
+    "order": 3
+  },
+  {
+    "id": "slide-4",
+    "image": "/images/campus_courtyard_building_1790531780046.jpg",
+    "badge": "Campus Principal · Delmas 50",
+    "title": "Un Environnement Propice à l’Excellence",
+    "subtitle": "Bâtiment aéré à galeries bleues, cour spacieuse, terrain multisports et encadrement pédagogique rigoureux.",
+    "objectPosition": "center 28%",
+    "ctaText": "Visiter le Campus",
+    "ctaTarget": "college",
+    "secondaryCtaText": "Préinscription 2026-2027",
+    "secondaryCtaTarget": "pre-registration",
+    "isActive": true,
+    "order": 4
+  }
+]
