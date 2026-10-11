@@ -9,11 +9,15 @@ import {
   ArrowDownRight,
   Sparkles,
   ExternalLink,
-  SlidersHorizontal
+  SlidersHorizontal,
+  AlertCircle,
+  CheckCircle2,
+  AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { compressImage, formatBytes, CompressedImageResult } from '../../utils/imageCompressor';
 import { enforce169AspectRatio } from '../../hooks/useImageAspectRatioController';
+import { apiService } from '../../services/apiService';
 import { SCHOOL_IMAGES } from '../../assets/images';
 
 interface ImageUploadCompressorProps {
@@ -45,6 +49,12 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [showPresets, setShowPresets] = useState<boolean>(!currentImageUrl);
   const [selectedPreset, setSelectedPreset] = useState<'ultra' | 'balanced' | 'speed'>('balanced');
+  const [selectedFileInfo, setSelectedFileInfo] = useState<{
+    fileName: string;
+    originalBytes: number;
+    formattedSize: string;
+    isOver500Ko: boolean;
+  } | null>(null);
   const [compressionStats, setCompressionStats] = useState<{
     originalSize: number;
     compressedSize: number;
@@ -67,23 +77,60 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
       return;
     }
 
+    // Dynamic file size inspection: alert if > 500 Ko
+    const isOver500Ko = file.size > 500 * 1024;
+    setSelectedFileInfo({
+      fileName: file.name,
+      originalBytes: file.size,
+      formattedSize: formatBytes(file.size),
+      isOver500Ko,
+    });
+
+    if (isOver500Ko) {
+      toast.warning('Fichier supérieur à 500 Ko', {
+        description: `Poids détecté : ${formatBytes(file.size)}. Compression Canvas HTML5 en WebP (qualité 0.8) appliquée automatiquement.`,
+      });
+    }
+
+    // Size check before compression: reject files exceeding 15MB to avoid browser crash
+    const MAX_INPUT_FILE_SIZE = 15 * 1024 * 1024; // 15 Mo
+    if (file.size > MAX_INPUT_FILE_SIZE) {
+      toast.error('Fichier trop lourd', {
+        description: `L'image originale fait ${formatBytes(file.size)}. La taille maximale acceptée pour optimisation est de 15 Mo.`,
+      });
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
     setIsCompressing(true);
     try {
       let result: CompressedImageResult;
+
+      // Production-grade compression target: max 600KB output
+      const targetMaxSizeBytes = 600 * 1024;
 
       if (is169Locked) {
         // Automatically enforce 16:9 aspect ratio and compress via ImageCompressor
         result = await enforce169AspectRatio(file, {
           preset: selectedPreset,
-          maxWidth: 1200,
-          quality: selectedPreset === 'ultra' ? 0.88 : selectedPreset === 'speed' ? 0.75 : 0.8,
+          maxWidth: selectedPreset === 'ultra' ? 1440 : 1200,
+          quality: selectedPreset === 'ultra' ? 0.85 : selectedPreset === 'speed' ? 0.72 : 0.8,
           mimeType: 'image/webp',
+          targetMaxSizeBytes,
         });
       } else {
         // Compress client-side with chosen preset to guarantee sharp quality and lightweight payload
         result = await compressImage(file, {
           preset: selectedPreset,
           mimeType: 'image/webp',
+          targetMaxSizeBytes,
+        });
+      }
+
+      // Check if resulting compressed size is strictly under 1MB
+      if (result.compressedSize > 1.2 * 1024 * 1024) {
+        toast.warning('Taille optimisée supérieure à 1 Mo', {
+          description: `Taille compressée : ${formatBytes(result.compressedSize)}. Nous recommandons de réduire la résolution.`,
         });
       }
 
@@ -101,8 +148,8 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
         reduction: result.reductionPercent,
       });
 
-      toast.success('Image optimisée & compressée en WebP !', {
-        description: `${formatBytes(result.originalSize)} ➔ ${formatBytes(result.compressedSize)} (-${result.reductionPercent}%) · Vitesse PageSpeed garantie`,
+      toast.success('Image vérifiée & compressée en WebP !', {
+        description: `${formatBytes(result.originalSize)} ➔ ${formatBytes(result.compressedSize)} (-${result.reductionPercent}%) · Vitesse PageSpeed & serveur allégé`,
       });
     } catch (err: any) {
       toast.error('Erreur de compression', {
@@ -117,6 +164,7 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
   const handleSelectPreset = (url: string) => {
     setPreviewUrl(url);
     setCompressionStats(null);
+    setSelectedFileInfo(null);
     onImageReady(url);
     toast.info('Image prédéfinie du campus sélectionnée');
   };
@@ -124,7 +172,9 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
   const handleClear = () => {
     setPreviewUrl('');
     setCompressionStats(null);
+    setSelectedFileInfo(null);
     onImageReady('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -260,10 +310,14 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
             </div>
 
             <p className="font-bold text-slate-800 text-xs">
-              {isCompressing ? 'Compression en cours...' : 'Cliquez ou glissez une photo ici'}
+              {isCompressing ? 'Vérification de taille & compression en cours...' : 'Cliquez ou glissez une photo ici'}
             </p>
-            <p className="text-[10.5px] text-slate-500 mt-0.5">
-              Compression WebP 1280px automatique
+            <p className="text-[10px] text-slate-500 mt-0.5 flex items-center justify-center gap-1">
+              <span className="font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                ✓ Compression WebP automatique
+              </span>
+              <span className="text-slate-400">·</span>
+              <span>Max 15 Mo vérifié</span>
             </p>
           </div>
         )}
@@ -276,6 +330,85 @@ export const ImageUploadCompressor: React.FC<ImageUploadCompressorProps> = ({
           className="hidden"
         />
       </div>
+
+      {/* Dynamic File Weight Badge & >500Ko Alert directly under input file */}
+      {selectedFileInfo ? (
+        <div
+          className={`p-2.5 rounded-xl text-xs transition-all duration-200 border flex flex-col gap-1.5 shadow-xs ${
+            selectedFileInfo.isOver500Ko
+              ? 'bg-amber-50/90 border-amber-300 text-amber-950'
+              : 'bg-emerald-50/90 border-emerald-300 text-emerald-950'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 min-w-0">
+              {selectedFileInfo.isOver500Ko ? (
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              ) : (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              )}
+              <span className="font-semibold truncate max-w-[220px]">
+                {selectedFileInfo.fileName}
+              </span>
+            </div>
+
+            {/* Dynamic Weight Badge */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="text-[11px] text-slate-600 font-medium">Poids actuel :</span>
+              <span
+                className={`font-mono font-bold text-xs px-2 py-0.5 rounded-lg border ${
+                  selectedFileInfo.isOver500Ko
+                    ? 'bg-amber-200/90 border-amber-400 text-amber-950 font-black'
+                    : 'bg-emerald-200/80 border-emerald-400 text-emerald-950'
+                }`}
+              >
+                {selectedFileInfo.formattedSize}
+              </span>
+
+              {selectedFileInfo.isOver500Ko ? (
+                <span className="text-[10px] font-black tracking-wide text-amber-900 bg-amber-200/80 px-2 py-0.5 rounded-full border border-amber-400 animate-pulse">
+                  ⚠️ Dépasse 500 Ko
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
+                  ✓ Léger (≤ 500 Ko)
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Alert or Validation Notice */}
+          {selectedFileInfo.isOver500Ko ? (
+            <p className="text-[11px] text-amber-800 leading-snug">
+              <strong className="text-amber-950">Alerte performance :</strong> Cette image sélectionnée dépasse 500 Ko ({selectedFileInfo.formattedSize}). Un redimensionnement Canvas et une compression WebP (qualité 0.8) ont été appliqués automatiquement pour préserver les performances du serveur.
+            </p>
+          ) : (
+            <p className="text-[10.5px] text-emerald-800 leading-snug">
+              Poids conforme aux critères d’optimisation rapide. Traitement Canvas WebP 0.8 actif.
+            </p>
+          )}
+
+          {/* Final Compressed Server Payload Size */}
+          {compressionStats && (
+            <div className="pt-1.5 border-t border-slate-200/70 flex items-center justify-between text-[11px] text-slate-700">
+              <span className="font-medium text-slate-600">Poids optimisé envoyé au serveur :</span>
+              <span className="font-mono font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                {formatBytes(compressionStats.compressedSize)} (-{compressionStats.reductionPercent}%)
+              </span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex items-center justify-between text-[10.5px] text-slate-500 px-1 py-0.5 bg-slate-50 rounded-lg border border-slate-200/60">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-blue-900 inline-block animate-pulse"></span>
+            <span>Contrôle de poids actif sous l'input file</span>
+          </span>
+          <span className="text-slate-600 font-medium">
+            Alerte si &gt; <strong className="text-slate-800 font-bold">500 Ko</strong> · WebP 0.8
+          </span>
+        </div>
+      )}
 
       {/* Preset Campus Photos Picker */}
       <div className="space-y-1.5 pt-0.5">

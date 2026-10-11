@@ -1273,6 +1273,19 @@ app.get('/api/news', async (req: Request, res: Response) => {
 });
 
 app.post('/api/news', async (req: Request, res: Response) => {
+  // Vérification de la taille de l'image de couverture
+  if (req.body.coverImage) {
+    const imgCheck = validateServerImagePayload(req.body.coverImage);
+    if (!imgCheck.isValid) {
+      console.warn('[Server Image Rejected] /api/news POST:', imgCheck.error);
+      return res.status(413).json({
+        error: imgCheck.error,
+        code: 'IMAGE_PAYLOAD_TOO_LARGE',
+        sizeBytes: imgCheck.sizeBytes
+      });
+    }
+  }
+
   const newArt = {
     ...req.body,
     id: `news-${Date.now()}`,
@@ -1315,6 +1328,19 @@ app.put('/api/news/:id', async (req: Request, res: Response) => {
   const index = newsArticles.findIndex(a => a.id === id);
   if (index === -1) {
     return res.status(404).json({ error: 'Article introuvable' });
+  }
+
+  // Vérification de la taille de l'image de couverture
+  if (req.body.coverImage) {
+    const imgCheck = validateServerImagePayload(req.body.coverImage);
+    if (!imgCheck.isValid) {
+      console.warn('[Server Image Rejected] /api/news PUT:', imgCheck.error);
+      return res.status(413).json({
+        error: imgCheck.error,
+        code: 'IMAGE_PAYLOAD_TOO_LARGE',
+        sizeBytes: imgCheck.sizeBytes
+      });
+    }
   }
 
   if (isDbActive()) {
@@ -1558,6 +1584,17 @@ app.post('/api/media', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'URL et titre requis' });
   }
 
+  // Vérification de la taille et compression de l'image
+  const imgCheck = validateServerImagePayload(url);
+  if (!imgCheck.isValid) {
+    console.warn('[Server Image Rejected] /api/media:', imgCheck.error);
+    return res.status(413).json({
+      error: imgCheck.error,
+      code: 'IMAGE_PAYLOAD_TOO_LARGE',
+      sizeBytes: imgCheck.sizeBytes
+    });
+  }
+
   const newItem = {
     id: `med-${Date.now()}`,
     url,
@@ -1607,6 +1644,18 @@ app.put('/api/media/:id', async (req: Request, res: Response) => {
 
   if (!title) {
     return res.status(400).json({ error: 'Le titre de l’image est obligatoire' });
+  }
+
+  if (url) {
+    const imgCheck = validateServerImagePayload(url);
+    if (!imgCheck.isValid) {
+      console.warn('[Server Image Rejected] /api/media PUT:', imgCheck.error);
+      return res.status(413).json({
+        error: imgCheck.error,
+        code: 'IMAGE_PAYLOAD_TOO_LARGE',
+        sizeBytes: imgCheck.sizeBytes
+      });
+    }
   }
 
   const existingIndex = memoryMediaItems.findIndex(m => m.id === id);
@@ -1836,6 +1885,21 @@ app.put('/api/slides', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Liste de diapositives invalide' });
   }
 
+  // Vérification de la taille de chaque diapositive
+  for (const slide of newSlides) {
+    if (slide && slide.image) {
+      const imgCheck = validateServerImagePayload(slide.image);
+      if (!imgCheck.isValid) {
+        console.warn('[Server Image Rejected] /api/slides:', imgCheck.error);
+        return res.status(413).json({
+          error: `Diapositive "${slide.title || 'Sans titre'}" : ${imgCheck.error}`,
+          code: 'IMAGE_PAYLOAD_TOO_LARGE',
+          sizeBytes: imgCheck.sizeBytes
+        });
+      }
+    }
+  }
+
   memoryHeroSlides = newSlides;
   saveHeroSlidesToDisk(newSlides);
 
@@ -2009,6 +2073,17 @@ app.post('/api/gallery', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Image et titre requis' });
   }
 
+  // Vérification de la taille et de la compression de l'image
+  const imgCheck = validateServerImagePayload(imageUrl);
+  if (!imgCheck.isValid) {
+    console.warn('[Server Image Rejected] /api/gallery POST:', imgCheck.error);
+    return res.status(413).json({
+      error: imgCheck.error,
+      code: 'IMAGE_PAYLOAD_TOO_LARGE',
+      sizeBytes: imgCheck.sizeBytes
+    });
+  }
+
   const newItem = {
     id: `gal-${Date.now()}`,
     title: title.trim(),
@@ -2044,6 +2119,19 @@ app.post('/api/gallery', async (req: Request, res: Response) => {
 app.put('/api/gallery/:id', async (req: Request, res: Response) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
   const { id } = req.params;
+
+  if (req.body.imageUrl) {
+    const imgCheck = validateServerImagePayload(req.body.imageUrl);
+    if (!imgCheck.isValid) {
+      console.warn('[Server Image Rejected] /api/gallery PUT:', imgCheck.error);
+      return res.status(413).json({
+        error: imgCheck.error,
+        code: 'IMAGE_PAYLOAD_TOO_LARGE',
+        sizeBytes: imgCheck.sizeBytes
+      });
+    }
+  }
+
   const idx = memoryGallery.findIndex(g => g.id === id);
   let updatedItem;
   if (idx === -1) {
@@ -2102,6 +2190,48 @@ app.delete('/api/gallery/:id', async (req: Request, res: Response) => {
   });
   res.json({ success: true, gallery: memoryGallery });
 });
+
+// Validation rigoureuse de la taille et du format des images envoyées au serveur (Protection Production & Allègement BDD)
+const MAX_SERVER_IMAGE_BYTES = 2.5 * 1024 * 1024; // 2.5 Mo maximum absolu pour une image encodée en base64
+
+function validateServerImagePayload(imageUrlOrBase64?: string): {
+  isValid: boolean;
+  error?: string;
+  sizeBytes?: number;
+  format?: string;
+} {
+  if (!imageUrlOrBase64 || typeof imageUrlOrBase64 !== 'string') {
+    return { isValid: true }; // URLs externes ou locales déjà existantes sans payload base64 lourd
+  }
+
+  // Si c'est une image DataURL (base64)
+  if (imageUrlOrBase64.startsWith('data:image/')) {
+    const mimeMatch = imageUrlOrBase64.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
+    const mime = mimeMatch ? mimeMatch[1].toLowerCase() : 'image/unknown';
+
+    // Calcul de la taille réelle binaire depuis la chaîne Base64
+    const base64Content = imageUrlOrBase64.replace(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, '');
+    const approximateSizeBytes = Math.round((base64Content.length * 3) / 4);
+
+    if (approximateSizeBytes > MAX_SERVER_IMAGE_BYTES) {
+      const sizeMo = (approximateSizeBytes / (1024 * 1024)).toFixed(2);
+      return {
+        isValid: false,
+        sizeBytes: approximateSizeBytes,
+        format: mime,
+        error: `Image trop volumineuse (${sizeMo} Mo). La compression client-side en WebP (max 2 Mo) est obligatoire pour soulager le serveur et la production.`
+      };
+    }
+
+    return {
+      isValid: true,
+      sizeBytes: approximateSizeBytes,
+      format: mime
+    };
+  }
+
+  return { isValid: true };
+}
 
 // Validation rigoureuse de structure binaire PDF côté serveur (Magic numbers & pdf-lib parser)
 async function validateServerPdfBuffer(buffer: Buffer): Promise<{
@@ -3651,8 +3781,29 @@ async function startServer() {
   app.use('/src/assets/images', express.static(path.join(__dirname, 'public', 'images'), { setHeaders: noCacheHeaders }));
   app.use('/src/assets/images', express.static(path.join(__dirname, 'src', 'assets', 'images'), { setHeaders: noCacheHeaders }));
   app.use('/assets/images', express.static(path.join(__dirname, 'public', 'images'), { setHeaders: noCacheHeaders }));
-  app.use('/assets/images', express.static(path.join(__dirname, 'src', 'assets', 'images'), { setHeaders: noCacheHeaders }));
+  // Explicit route for PWA Service Worker with required caching headers and root scope
+  app.get('/sw.js', (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Service-Worker-Allowed', '/');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    const swPath = fs.existsSync(path.join(__dirname, 'public', 'sw.js'))
+      ? path.join(__dirname, 'public', 'sw.js')
+      : path.join(__dirname, 'dist', 'sw.js');
+    res.sendFile(swPath);
+  });
+
+  // Explicit route for PWA Web App Manifest
+  app.get(['/manifest.json', '/manifest.webmanifest'], (req: Request, res: Response) => {
+    res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    const manifestPath = fs.existsSync(path.join(__dirname, 'public', 'manifest.json'))
+      ? path.join(__dirname, 'public', 'manifest.json')
+      : path.join(__dirname, 'dist', 'manifest.json');
+    res.sendFile(manifestPath);
+  });
+
   app.use(express.static(path.join(__dirname, 'public'), { setHeaders: noCacheHeaders }));
+
 
   if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, 'dist')));

@@ -37,6 +37,7 @@ import { EventLastMinuteModal } from './components/events/EventLastMinuteModal';
 import { Toaster } from 'sonner';
 import { ContentBlockProvider } from './context/ContentBlockContext';
 import { FloatingEditorToolbar } from './components/common/FloatingEditorToolbar';
+import { OfflineStatusBanner } from './components/common/OfflineStatusBanner';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<string>('home');
@@ -172,6 +173,9 @@ export default function App() {
 
       {/* Global Top Viewport Loading Bar (Page transitions & API requests) */}
       <GlobalTopLoadingBar />
+
+      {/* Port-au-Prince Offline & Network Instability Banner */}
+      <OfflineStatusBanner />
       
       {/* Multilingual Notice Ribbon (when switching to Creole or English) */}
       {langNotice && (

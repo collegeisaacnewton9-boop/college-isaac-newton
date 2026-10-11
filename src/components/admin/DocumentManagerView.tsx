@@ -557,7 +557,16 @@ export const DocumentManagerView: React.FC<DocumentManagerViewProps> = ({
                     onChange={handleFileChange}
                   />
                 </div>
-                <p className="text-2xs text-slate-400 mt-1">Format recommandé : PDF certifié (Max 25 Mo).</p>
+                {formFileSize ? (
+                  <div className="mt-1.5 p-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center justify-between">
+                    <span className="text-[11px] font-medium">Poids du document PDF sélectionné :</span>
+                    <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-blue-300">
+                      {formFileSize}
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-2xs text-slate-400 mt-1">Format recommandé : PDF certifié (Max 25 Mo).</p>
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">

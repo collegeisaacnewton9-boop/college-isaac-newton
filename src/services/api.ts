@@ -121,6 +121,197 @@ function setLocal<T>(key: string, val: T): void {
 }
 
 export const apiService = {
+  // --- IMAGE PROCESSING UTILITY (HTML5 CANVAS) ---
+  /**
+   * Utilitaire de traitement d'images utilisant un Canvas HTML5
+   * Redimensionne et compresse les images au format WebP (qualité 0.8) avant l'envoi vers le serveur,
+   * afin d'optimiser les performances et la bande passante.
+   * Vérifie également si le fichier d'origine dépasse le seuil critique de 500 Ko.
+   */
+  async processImage(
+    file: File,
+    options?: {
+      maxWidth?: number;
+      maxHeight?: number;
+      quality?: number; // Défaut: 0.8
+      format?: string; // Défaut: 'image/webp'
+    }
+  ): Promise<{
+    file: File;
+    blob: Blob;
+    dataUrl: string;
+    originalSize: number;
+    compressedSize: number;
+    reductionPercent: number;
+    width: number;
+    height: number;
+    mimeType: string;
+    fileName: string;
+    isOver500Kb: boolean;
+  }> {
+    const quality = options?.quality ?? 0.8;
+    const maxWidth = options?.maxWidth ?? 1280;
+    const maxHeight = options?.maxHeight ?? 1280;
+    const mimeType = options?.format ?? 'image/webp';
+    const originalSize = file.size;
+
+    return new Promise((resolve, reject) => {
+      if (!file.type.startsWith('image/')) {
+        return reject(new Error("Le fichier sélectionné n'est pas une image valide."));
+      }
+
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("Erreur lors de la lecture du fichier image"));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error("Format d'image non supporté ou fichier corrompu"));
+        img.onload = () => {
+          try {
+            let width = img.naturalWidth || img.width;
+            let height = img.naturalHeight || img.height;
+
+            // Redimensionnement en préservant le ratio d'aspect
+            if (width > maxWidth || height > maxHeight) {
+              const ratio = Math.min(maxWidth / width, maxHeight / height);
+              width = Math.round(width * ratio);
+              height = Math.round(height * ratio);
+            }
+
+            // Création du canvas HTML5
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              return reject(new Error("Impossible d'initialiser le contexte Canvas HTML5 2D"));
+            }
+
+            // Rendu avec lissage haute qualité
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Compression au format WebP avec qualité 0.8
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) {
+                  const fallbackDataUrl = canvas.toDataURL(mimeType, quality);
+                  const approxBytes = Math.round(fallbackDataUrl.length * 0.75);
+                  return resolve({
+                    file,
+                    blob: new Blob([], { type: mimeType }),
+                    dataUrl: fallbackDataUrl,
+                    originalSize,
+                    compressedSize: approxBytes,
+                    reductionPercent: Math.max(0, Math.round(((originalSize - approxBytes) / originalSize) * 100)),
+                    width,
+                    height,
+                    mimeType,
+                    fileName: file.name,
+                    isOver500Kb: originalSize > 500 * 1024,
+                  });
+                }
+
+                const compressedSize = blob.size;
+                const reductionPercent = Math.max(
+                  0,
+                  Math.round(((originalSize - compressedSize) / originalSize) * 100)
+                );
+
+                const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || 'image';
+                const cleanFileName = `${baseName}.webp`;
+                const compressedFile = new File([blob], cleanFileName, {
+                  type: mimeType,
+                  lastModified: Date.now(),
+                });
+
+                const blobReader = new FileReader();
+                blobReader.onloadend = () => {
+                  const dataUrl = (blobReader.result as string) || canvas.toDataURL(mimeType, quality);
+                  resolve({
+                    file: compressedFile,
+                    blob,
+                    dataUrl,
+                    originalSize,
+                    compressedSize,
+                    reductionPercent,
+                    width,
+                    height,
+                    mimeType,
+                    fileName: cleanFileName,
+                    isOver500Kb: originalSize > 500 * 1024,
+                  });
+                };
+                blobReader.onerror = () => {
+                  resolve({
+                    file: compressedFile,
+                    blob,
+                    dataUrl: canvas.toDataURL(mimeType, quality),
+                    originalSize,
+                    compressedSize,
+                    reductionPercent,
+                    width,
+                    height,
+                    mimeType,
+                    fileName: cleanFileName,
+                    isOver500Kb: originalSize > 500 * 1024,
+                  });
+                };
+                blobReader.readAsDataURL(blob);
+              },
+              mimeType,
+              quality
+            );
+          } catch (canvasErr) {
+            reject(canvasErr);
+          }
+        };
+
+        if (typeof e.target?.result === 'string') {
+          img.src = e.target.result;
+        } else {
+          reject(new Error("Erreur de décodage du fichier image"));
+        }
+      };
+
+      reader.readAsDataURL(file);
+    });
+  },
+
+  /**
+   * Alias pratique pour compressImage dans apiService
+   */
+  async compressImage(
+    file: File,
+    options?: {
+      maxWidth?: number;
+      maxHeight?: number;
+      quality?: number;
+      format?: string;
+    }
+  ) {
+    return this.processImage(file, options);
+  },
+
+  /**
+   * Vérifie si un fichier ou une taille en octets dépasse le seuil critique de 500 Ko
+   */
+  isImageOver500Kb(sizeOrFile: number | File): boolean {
+    const size = typeof sizeOrFile === 'number' ? sizeOrFile : sizeOrFile.size;
+    return size > 500 * 1024;
+  },
+
+  /**
+   * Formate une taille en octets en chaîne lisible (ex: 450 Ko, 1.2 Mo)
+   */
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 octet';
+    const k = 1024;
+    const sizes = ['octets', 'Ko', 'Mo', 'Go'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+  },
+
   // --- ADMISSIONS ---
   async getAdmissions(): Promise<AdmissionApplication[]> {
     try {
@@ -1605,4 +1796,7 @@ export const apiService = {
     return await res.json();
   },
 };
+
+export const { processImage, compressImage, isImageOver500Kb, formatFileSize } = apiService;
+export default apiService;
 
