@@ -32,17 +32,20 @@ import { apiService } from '../../services/api';
 import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
 import { SCHOOL_IMAGES } from '../../assets/images';
 import { DocumentManagerView } from './DocumentManagerView';
+import { SiteImagesManagerView } from './SiteImagesManagerView';
 
 interface MediaLibraryViewProps {
   onSelectImageForTarget?: (url: string) => void;
-  initialSubTab?: 'documents' | 'slideshow' | 'gallery' | 'media';
+  initialSubTab?: 'documents' | 'slideshow' | 'gallery' | 'media' | 'site-images';
+  onNavigate?: (page: string, subSection?: string) => void;
 }
 
 export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
   onSelectImageForTarget,
-  initialSubTab = 'documents'
+  initialSubTab = 'documents',
+  onNavigate
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'documents' | 'slideshow' | 'gallery' | 'media'>(initialSubTab);
+  const [activeSubTab, setActiveSubTab] = useState<'documents' | 'slideshow' | 'gallery' | 'media' | 'site-images'>(initialSubTab);
   
   // Media items state
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
@@ -405,6 +408,18 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
               }`}
             >
               Médiathèque ({mediaItems.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveSubTab('site-images')}
+              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                activeSubTab === 'site-images'
+                  ? 'bg-amber-400 text-slate-950 shadow-xs ring-1 ring-amber-300'
+                  : 'text-amber-700 bg-amber-50 hover:bg-amber-100/80 border border-amber-200/60'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+              <span>Photos Pages Clés (Histoire, Campus...)</span>
             </button>
           </div>
 
@@ -775,6 +790,13 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
           </div>
 
         </div>
+      )}
+
+      {/* =========================================================================
+          SUB-TAB 4 : PHOTOS DES PAGES CLÉS DU SITE (NOTRE HISTOIRE, CAMPUS, LABO...)
+      ========================================================================= */}
+      {activeSubTab === 'site-images' && (
+        <SiteImagesManagerView onNavigate={onNavigate} />
       )}
 
       {/* =========================================================================

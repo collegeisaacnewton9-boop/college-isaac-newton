@@ -95,6 +95,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'slideshow' | 'menus' | 'admissions' | 'news' | 'events' | 'media' | 'messages' | 'cms' | 'users'>('overview');
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>('profile');
+  const [mediaInitialSubTab, setMediaInitialSubTab] = useState<'documents' | 'slideshow' | 'gallery' | 'media' | 'site-images'>('documents');
   
   // Dashboard Navigation State & Refs
   const navScrollContainerRef = useRef<HTMLDivElement>(null);
@@ -1530,6 +1531,21 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
                 <button
                   type="button"
+                  onClick={() => {
+                    setMediaInitialSubTab('site-images');
+                    setActiveTab('media');
+                  }}
+                  className="p-2 rounded-lg border border-amber-300/60 hover:border-amber-500 bg-amber-50/60 hover:bg-amber-100/50 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-6 h-6 rounded-md bg-amber-400 text-slate-950 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform font-bold">
+                    <ImageIcon className="w-3 h-3 text-slate-950" />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-xs">Photos Pages Clés</h4>
+                  <p className="text-[9.5px] text-slate-600 line-clamp-1">Histoire, Campus & Labo</p>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setActiveTab('admissions')}
                   className="p-2 rounded-lg border border-slate-200 hover:border-amber-600/40 bg-slate-50/50 hover:bg-amber-50/50 text-left transition-all group cursor-pointer"
                 >
@@ -2350,7 +2366,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             TAB 4.5: MÉDIATHÈQUE & DIAPORAMA D'ACCUEIL (SUPER ADMIN)
         ========================================================================= */}
         {activeTab === 'media' && (
-          <MediaLibraryView />
+          <MediaLibraryView initialSubTab={mediaInitialSubTab} onNavigate={onNavigate} />
         )}
 
         {/* =========================================================================
