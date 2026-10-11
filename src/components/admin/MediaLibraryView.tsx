@@ -23,7 +23,8 @@ import {
   Camera,
   Laptop,
   Smartphone,
-  Monitor
+  Monitor,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { MediaItem, HeroSlide, GalleryItem } from '../../types';
@@ -33,6 +34,7 @@ import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
 import { SCHOOL_IMAGES } from '../../assets/images';
 import { DocumentManagerView } from './DocumentManagerView';
 import { SiteImagesManagerView } from './SiteImagesManagerView';
+import { downloadImageFile } from '../../utils/downloadHelper';
 
 interface MediaLibraryViewProps {
   onSelectImageForTarget?: (url: string) => void;
@@ -745,15 +747,26 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                 </div>
 
                 <div className="p-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => handleCopyUrl(media.url)}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 text-xs flex items-center gap-1 transition-colors cursor-pointer"
-                    title="Copier l'URL"
-                  >
-                    <Copy className="w-3.5 h-3.5" />
-                    <span className="text-[10px]">Copier</span>
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleCopyUrl(media.url)}
+                      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                      title="Copier l'URL"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span className="text-[10px]">Copier</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => downloadImageFile(media.url, `${(media.title || 'media').toLowerCase().replace(/[^a-z0-9]/g, '_')}.jpg`)}
+                      className="p-1.5 rounded-lg text-slate-500 hover:text-blue-900 hover:bg-blue-50 text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                      title="Télécharger l'image sur mon poste local"
+                    >
+                      <Download className="w-3.5 h-3.5 text-blue-900" />
+                      <span className="text-[10px]">Télécharger</span>
+                    </button>
+                  </div>
 
                   <div className="flex items-center gap-1">
                     <button

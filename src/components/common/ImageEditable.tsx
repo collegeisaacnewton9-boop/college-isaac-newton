@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Camera, Upload, Trash2, X, Check, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Camera, Upload, Trash2, X, Check, Image as ImageIcon, Sparkles, Download } from 'lucide-react';
 import { useContentBlocks } from '../../context/ContentBlockContext';
 import { User } from '../../types';
 import { ImageUploadCompressor } from './ImageUploadCompressor';
 import { toast } from 'sonner';
+import { downloadImageFile } from '../../utils/downloadHelper';
+import { getCacheBustedImageUrl } from '../../utils/cacheBuster';
 
 export interface ImageEditableProps {
   contentKey: string;
@@ -66,7 +68,7 @@ export const ImageEditable: React.FC<ImageEditableProps> = ({
   return (
     <div className={`group relative ${containerClassName}`}>
       <img
-        src={currentImageUrl}
+        src={getCacheBustedImageUrl(currentImageUrl)}
         alt={alt}
         referrerPolicy="no-referrer"
         className={className}
@@ -82,18 +84,32 @@ export const ImageEditable: React.FC<ImageEditableProps> = ({
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleOpenModal}
-            className="absolute top-2.5 right-2.5 z-20 px-2.5 py-1.5 rounded-xl bg-slate-950/85 hover:bg-slate-950 text-white font-bold text-[11px] shadow-lg border border-white/20 backdrop-blur-xs flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
-            title="Modifier ou téléverser votre photo réelle"
-          >
-            <Camera className="w-3.5 h-3.5 text-amber-400" />
-            <span>Changer la photo</span>
-            {isCustomized && (
-              <span className="w-2 h-2 rounded-full bg-emerald-400" title="Photo personnalisée active" />
-            )}
-          </button>
+          <div className="absolute top-2.5 right-2.5 z-20 flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadImageFile(currentImageUrl, `${contentKey.replace(/\./g, '_')}_photo.jpg`);
+              }}
+              className="p-1.5 rounded-xl bg-slate-950/85 hover:bg-slate-950 text-white shadow-lg border border-white/20 backdrop-blur-xs transition-all cursor-pointer hover:scale-105"
+              title="Télécharger l'image sur mon poste local"
+            >
+              <Download className="w-3.5 h-3.5 text-amber-400" />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleOpenModal}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-950/85 hover:bg-slate-950 text-white font-bold text-[11px] shadow-lg border border-white/20 backdrop-blur-xs flex items-center gap-1.5 transition-all cursor-pointer hover:scale-105"
+              title="Modifier ou téléverser votre photo réelle"
+            >
+              <Camera className="w-3.5 h-3.5 text-amber-400" />
+              <span>Changer la photo</span>
+              {isCustomized && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400" title="Photo personnalisée active" />
+              )}
+            </button>
+          </div>
         </>
       )}
 
@@ -126,6 +142,27 @@ export const ImageEditable: React.FC<ImageEditableProps> = ({
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Download Original Image Helper Banner */}
+            <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50/90 border border-blue-200/80 text-xs text-blue-900">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                  <Download className="w-3.5 h-3.5 text-blue-900" />
+                </div>
+                <div>
+                  <span className="font-bold block text-[11.5px]">Télécharger l'image sur votre poste local</span>
+                  <span className="text-[10px] text-blue-700">Récupérez le fichier actuel ({isCustomized ? 'personnalisé' : 'original'}) pour l'éditer</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => downloadImageFile(currentImageUrl, `${contentKey.replace(/\./g, '_')}_actuelle.jpg`)}
+                className="px-2.5 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-bold text-[11px] flex items-center gap-1.5 shrink-0 transition-colors shadow-2xs cursor-pointer"
+              >
+                <Download className="w-3 h-3 text-amber-400" />
+                <span>Télécharger</span>
               </button>
             </div>
 

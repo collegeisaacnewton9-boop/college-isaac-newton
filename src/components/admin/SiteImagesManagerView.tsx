@@ -29,13 +29,16 @@ import {
   Search,
   Star,
   Quote,
-  Compass
+  Compass,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useContentBlocks } from '../../context/ContentBlockContext';
 import { apiService } from '../../services/api';
 import { SCHOOL_IMAGES } from '../../assets/images';
 import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
+import { downloadImageFile } from '../../utils/downloadHelper';
+import { getCacheBustedImageUrl } from '../../utils/cacheBuster';
 import { SlideshowEditorView } from './SlideshowEditorView';
 import { HeroSlide, Role, SiteSettings } from '../../types';
 
@@ -781,6 +784,15 @@ export const SiteImagesManagerView: React.FC<SiteImagesManagerViewProps> = ({
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
+                        onClick={() => downloadImageFile(currentImageUrl, `${config.id}_image_originale.jpg`)}
+                        className="p-1.5 rounded-xl border border-slate-300 hover:bg-slate-200/60 text-slate-700 transition-colors cursor-pointer"
+                        title="Télécharger l'image sur mon poste local"
+                      >
+                        <Download className="w-3.5 h-3.5 text-blue-900" />
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => handleOpenKeyImageModal(config, 'texts')}
                         className="px-2.5 py-1.5 rounded-xl border border-slate-300 hover:bg-slate-200/60 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
                         title="Modifier le titre, la légende et les descriptions"
@@ -1174,6 +1186,27 @@ export const SiteImagesManagerView: React.FC<SiteImagesManagerViewProps> = ({
             {/* Subtab 1: Photo & Image Compressor */}
             {modalTab === 'photo' && (
               <div className="space-y-3">
+                {/* Download Original File Banner */}
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50/90 border border-blue-200/90 text-xs text-blue-900">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                      <Download className="w-3.5 h-3.5 text-blue-900" />
+                    </div>
+                    <div>
+                      <span className="font-bold block text-[11.5px]">Télécharger l'image sur votre poste local</span>
+                      <span className="text-[10px] text-blue-700">Récupérez le fichier actuel pour le retoucher ou l'enregistrer</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => downloadImageFile(activeModalImage.defaultImage, `${activeModalImage.id}_originale.jpg`)}
+                    className="px-2.5 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-bold text-[11px] flex items-center gap-1.5 shrink-0 transition-colors shadow-2xs cursor-pointer"
+                  >
+                    <Download className="w-3 h-3 text-amber-400" />
+                    <span>Télécharger</span>
+                  </button>
+                </div>
+
                 <div className="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-200">
                   <ImageUploadCompressor
                     currentImageUrl={tempCompressedUrl || activeModalImage.defaultImage}

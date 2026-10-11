@@ -8,12 +8,14 @@ import {
   Cpu, 
   BookOpen, 
   Compass,
-  ArrowRight
+  ArrowRight,
+  Download
 } from 'lucide-react';
 import { SCHOOL_IMAGES } from '../assets/images';
 import { SCHOOL_INFO } from '../data/mockData';
 import { ContentEditable } from '../components/common/ContentEditable';
 import { ImageEditable } from '../components/common/ImageEditable';
+import { downloadImageFile } from '../utils/downloadHelper';
 import { User } from '../types';
 
 interface AboutPageProps {
@@ -138,23 +140,34 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate, currentUser })
                 label="Modifier la photo Notre Histoire & Fondation"
                 recommendedAspect="Format 16:9 recommandé (Résolution max 1280px)"
               />
-              <div className="p-4 bg-slate-900 text-white text-xs">
-                <ContentEditable
-                  contentKey="about.campus.caption"
-                  defaultContent="Campus Principal du Collège Isaac Newton (Delmas 50, Haïti)"
-                  as="p"
-                  className="font-semibold text-amber-300"
-                  currentUser={currentUser}
-                  multiline={false}
-                />
-                <ContentEditable
-                  contentKey="about.campus.subcaption"
-                  defaultContent="Un cadre d'étude moderne, sécurisé et aéré propice à la sérénité des apprentissages"
-                  as="p"
-                  className="text-slate-300 text-[11px]"
-                  currentUser={currentUser}
-                  multiline={false}
-                />
+              <div className="p-4 bg-slate-900 text-white text-xs flex items-center justify-between gap-3">
+                <div className="space-y-0.5 min-w-0">
+                  <ContentEditable
+                    contentKey="about.campus.caption"
+                    defaultContent="Campus Principal du Collège Isaac Newton (Delmas 50, Haïti)"
+                    as="p"
+                    className="font-semibold text-amber-300 truncate"
+                    currentUser={currentUser}
+                    multiline={false}
+                  />
+                  <ContentEditable
+                    contentKey="about.campus.subcaption"
+                    defaultContent="Un cadre d'étude moderne, sécurisé et aéré propice à la sérénité des apprentissages"
+                    as="p"
+                    className="text-slate-300 text-[11px] line-clamp-1"
+                    currentUser={currentUser}
+                    multiline={false}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => downloadImageFile(SCHOOL_IMAGES.heroCampus, 'college_isaac_newton_histoire_campus.jpg')}
+                  className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white text-[11px] font-semibold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer border border-white/15"
+                  title="Télécharger l'image originale sur votre poste local"
+                >
+                  <Download className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">Télécharger</span>
+                </button>
               </div>
             </div>
           </div>
