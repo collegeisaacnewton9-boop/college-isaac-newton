@@ -58,6 +58,7 @@ import { AccessControlView } from './AccessControlView';
 import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
 import { GitHubSyncModal } from './GitHubSyncModal';
 import { MenuEditorView } from './MenuEditorView';
+import { isProductionEnvironment, shouldProposeGitHubOption } from '../../utils/environment';
 
 interface SettingsViewProps {
   initialSettings?: SiteSettings | null;
@@ -87,6 +88,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   useEffect(() => {
     if (!isSuperAdmin && (activeTab === 'backup' || activeTab === 'audit')) {
+      setActiveTab('profile');
+    }
+    // Sur le serveur de Production en direct, l'onglet audit comparatif n'a aucun sens : rediriger vers profile
+    if (isProductionEnvironment() && activeTab === 'audit') {
       setActiveTab('profile');
     }
   }, [isSuperAdmin, activeTab]);
@@ -1084,8 +1089,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </button>
             )}
 
-            {/* Audit Production & Live (Super Admin Only) */}
-            {isSuperAdmin && (
+            {/* Audit Production & Live (Super Admin en Dev Uniquement - Masqué en Production) */}
+            {isSuperAdmin && !isProductionEnvironment() && (
               <button
                 type="button"
                 onClick={() => setActiveTab('audit')}
@@ -1139,7 +1144,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
 
           {/* DÉPÔT GITHUB MINI CARD (BOTTOM OF SIDEBAR - DEV ONLY) */}
-          {import.meta.env.DEV && (
+          {shouldProposeGitHubOption() && (
             <div className="bg-slate-950 text-white rounded-2xl p-3 border border-slate-800 shadow-md space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -2936,62 +2941,102 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </button>
                 </div>
 
-                {/* CARD 3: ALIGNER AVEC LE LIVE (1-CLIC PROD) */}
-                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                          <RefreshCw className="w-4 h-4" />
+                {/* CARD 3: ALIGNER AVEC LE LIVE (DEV ONLY) OU STATUT SERVEUR EN DIRECT (PROD) */}
+                {!isProductionEnvironment() ? (
+                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <RefreshCw className="w-4 h-4" />
+                          </div>
+                          <h3 className="font-bold text-sm text-slate-900">Aligner avec le Live</h3>
                         </div>
-                        <h3 className="font-bold text-sm text-slate-900">Aligner avec le Live</h3>
+                        <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold">
+                          1-Clic Prod
+                        </span>
                       </div>
-                      <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold">
-                        1-Clic Prod
-                      </span>
+
+                      <p className="text-xs text-slate-600">
+                        Rapatrie en direct toutes les diapositives, articles, événements et médias créés sur le serveur de Production en ligne.
+                      </p>
+
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1 font-mono text-[11px]">
+                        <div className="flex justify-between text-slate-500">
+                          <span>Serveur cible :</span>
+                          <span className="text-blue-700 font-bold">collegeisaacnewton.com</span>
+                        </div>
+                        <div className="flex justify-between text-slate-500">
+                          <span>Protocole :</span>
+                          <span className="text-slate-700 font-semibold">HTTPS API REST</span>
+                        </div>
+                      </div>
                     </div>
 
-                    <p className="text-xs text-slate-600">
-                      Rapatrie en direct toutes les diapositives, articles, événements et médias créés sur le serveur de Production en ligne.
-                    </p>
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        onClick={handlePullFromProduction}
+                        disabled={isAligningLive}
+                        className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                      >
+                        {isAligningLive ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        ) : (
+                          <CloudDownload className="w-4 h-4" />
+                        )}
+                        <span>Rapatrier depuis la Production</span>
+                      </button>
 
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1 font-mono text-[11px]">
-                      <div className="flex justify-between text-slate-500">
-                        <span>Serveur cible :</span>
-                        <span className="text-blue-700 font-bold">collegeisaacnewton.com</span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('audit')}
+                        className="w-full py-2 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Activity className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Ouvrir l'Outil d'Audit Comparatif (Diff)</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-2xl border border-emerald-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-sm text-slate-900">
+                              Serveur de Production en Direct
+                            </h3>
+                            <p className="text-[11px] text-slate-500">
+                              collegeisaacnewton.com
+                            </p>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
+                          En Ligne
+                        </span>
                       </div>
-                      <div className="flex justify-between text-slate-500">
-                        <span>Protocole :</span>
-                        <span className="text-slate-700 font-semibold">HTTPS API REST</span>
+
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        Vous êtes actuellement connecté sur le serveur de production officiel. Toutes vos opérations de sauvegarde, restauration et modifications sont immédiatement effectives dans la base de données PostgreSQL en direct.
+                      </p>
+
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1 font-mono text-[11px]">
+                        <div className="flex justify-between text-slate-500">
+                          <span>Statut serveur :</span>
+                          <span className="text-emerald-700 font-bold">Opérationnel (200 OK)</span>
+                        </div>
+                        <div className="flex justify-between text-slate-500">
+                          <span>Base active :</span>
+                          <span className="text-slate-800 font-semibold">PostgreSQL Cloud</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={handlePullFromProduction}
-                      disabled={isAligningLive}
-                      className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
-                    >
-                      {isAligningLive ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-white" />
-                      ) : (
-                        <CloudDownload className="w-4 h-4" />
-                      )}
-                      <span>Rapatrier depuis la Production</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('audit')}
-                      className="w-full py-2 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <Activity className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Ouvrir l'Outil d'Audit Comparatif (Diff)</span>
-                    </button>
-                  </div>
-                </div>
+                )}
 
               </div>
 
@@ -2999,9 +3044,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
 
           {/* =========================================================================
-              TAB: AUDIT DE L'ÉTAT DE PRODUCTION & MONITEUR LIVE
+              TAB: AUDIT DE L'ÉTAT DE PRODUCTION & MONITEUR LIVE (DEV UNIQUEMENT)
           ========================================================================= */}
-          {activeTab === 'audit' && isSuperAdmin && (
+          {activeTab === 'audit' && isSuperAdmin && !isProductionEnvironment() && (
             <div className="space-y-6 animate-fade-in">
 
               {/* HERO BANNER */}

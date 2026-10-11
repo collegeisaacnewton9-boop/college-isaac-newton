@@ -76,6 +76,7 @@ import { eventNotificationService, ImminentEventAlert } from '../services/eventN
 import { ROLE_PERMISSIONS } from '../data/rolePermissions';
 import { appFetch } from '../services/loadingService';
 import { ImageUploadCompressor } from '../components/common/ImageUploadCompressor';
+import { isProductionEnvironment, shouldProposeGitHubOption } from '../utils/environment';
 import { toast } from 'sonner';
 
 interface AdminDashboardPageProps {
@@ -820,8 +821,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <span className="hidden md:inline">Actualiser</span>
               </button>
 
-              {/* GitHub Synchronizer Button for Super Admin */}
-              {currentUser.role === 'ADMIN' && (
+              {/* GitHub Synchronizer Button (En Développement Uniquement - Masqué sur le site en Production) */}
+              {currentUser.role === 'ADMIN' && shouldProposeGitHubOption() && (
                 <button
                   type="button"
                   onClick={() => setShowGitHubModal(true)}
@@ -850,8 +851,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </button>
               )}
 
-              {/* Audit Production & Live (Super Admin Uniquement) */}
-              {currentUser.role === 'ADMIN' && (
+              {/* Audit Production & Live (Super Admin en Dev Uniquement - Masqué sur le site en Production) */}
+              {currentUser.role === 'ADMIN' && !isProductionEnvironment() && (
                 <button
                   type="button"
                   onClick={() => {
@@ -1086,7 +1087,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
                 }`}
               >
-                {import.meta.env.DEV ? (
+                {!isProductionEnvironment() ? (
                   <>
                     <Github className="w-3.5 h-3.5 text-amber-400" />
                     <span>Paramètres & Sauvegarde JSON</span>
@@ -1577,10 +1578,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     <Sliders className="w-3 h-3" />
                   </div>
                   <h4 className="font-semibold text-slate-900 text-xs">
-                    {import.meta.env.DEV ? 'Paramètres & GitHub' : 'Configuration Système'}
+                    {!isProductionEnvironment() ? 'Paramètres & GitHub' : 'Configuration Système'}
                   </h4>
                   <p className="text-[9.5px] text-slate-500 line-clamp-1">
-                    {import.meta.env.DEV ? 'Alertes & Export REST' : 'Alertes & Paramètres Généraux'}
+                    {!isProductionEnvironment() ? 'Alertes & Export REST' : 'Alertes & Paramètres Généraux'}
                   </p>
                 </button>
 
