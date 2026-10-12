@@ -259,9 +259,9 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
               </span>
             </div>
 
-            {/* Slide Title - Single line responsive */}
+            {/* Slide Title - Single line responsive on mobile, tablet & desktop */}
             <h1 
-              className="font-serif text-[clamp(1.1rem,3.2vw,2.85rem)] font-bold tracking-tight text-white leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full drop-shadow-md"
+              className="font-serif text-[clamp(1rem,3.4vw,2.75rem)] font-bold tracking-tight text-white leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full drop-shadow-md"
               title={active.title}
             >
               {active.title}

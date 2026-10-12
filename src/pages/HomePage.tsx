@@ -106,7 +106,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
               contentKey="home.news.title"
               defaultContent="Actualités & Événements"
               as="h2"
-              className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+              className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis"
               currentUser={currentUser}
               multiline={false}
             />
@@ -166,7 +166,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                 </div>
 
                 <div className="p-4 space-y-2">
-                  <h3 className="font-serif font-bold text-base sm:text-lg text-slate-900 group-hover:text-blue-900 transition-colors leading-snug">
+                  <h3 
+                    className="font-serif font-bold text-base sm:text-lg text-slate-900 group-hover:text-blue-900 transition-colors leading-snug whitespace-nowrap overflow-hidden text-ellipsis"
+                    title={featuredArticle.title}
+                  >
                     {featuredArticle.title}
                   </h3>
                   <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed">
@@ -229,7 +232,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                         year: 'numeric'
                       })}
                     </span>
-                    <h4 className="font-serif font-bold text-xs sm:text-sm text-slate-900 group-hover:text-blue-900 transition-colors line-clamp-2 leading-snug">
+                    <h4 
+                      className="font-serif font-bold text-xs sm:text-sm text-slate-900 group-hover:text-blue-900 transition-colors whitespace-nowrap overflow-hidden text-ellipsis leading-snug"
+                      title={art.title}
+                    >
                       {art.title}
                     </h4>
                     <p className="text-[11px] text-slate-500 line-clamp-1 leading-normal">
@@ -357,7 +363,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
               contentKey="home.pillars.title"
               defaultContent="Les 4 Piliers du Collège Isaac Newton"
               as="h2"
-              className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
+              className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis"
               currentUser={currentUser}
               multiline={false}
             />
@@ -451,7 +457,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                 contentKey="home.cycles.title"
                 defaultContent="Nos Cycles d’Enseignement"
                 as="h2"
-                className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight"
+                className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight whitespace-nowrap overflow-hidden text-ellipsis"
                 currentUser={currentUser}
                 multiline={false}
               />
@@ -526,7 +532,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
                     </span>
                   </div>
 
-                  <h3 className="font-serif text-xl sm:text-2xl lg:text-[26px] font-bold text-slate-900 tracking-tight leading-snug">
+                  <h3 
+                    className="font-serif text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 tracking-tight leading-snug whitespace-nowrap overflow-hidden text-ellipsis"
+                    title={selectedCycle.title}
+                  >
                     {selectedCycle.title}
                   </h3>
 
