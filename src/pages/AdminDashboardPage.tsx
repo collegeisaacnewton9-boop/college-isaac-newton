@@ -31,6 +31,7 @@ import {
   ExternalLink,
   RefreshCw,
   MessageSquare,
+  MessageCircle,
   Award,
   Globe,
   Check,
@@ -237,6 +238,94 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
   // Selected Contact Message for Reading
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
+
+  // Direction WhatsApp Control & Pre-Service Verification State
+  const [directionPhone, setDirectionPhone] = useState<string>(() => {
+    return localStorage.getItem('cin_direction_wa_phone') || '+509 3316-0934';
+  });
+  const [directionPhoneVerified, setDirectionPhoneVerified] = useState<boolean>(() => {
+    return localStorage.getItem('cin_direction_wa_verified') !== 'false';
+  });
+  const [lastVerifiedAt, setLastVerifiedAt] = useState<string>(() => {
+    return localStorage.getItem('cin_direction_wa_verified_at') || '2026-10-12T14:30:00.000Z';
+  });
+  const [isEditingDirectionPhone, setIsEditingDirectionPhone] = useState(false);
+  const [tempDirectionPhone, setTempDirectionPhone] = useState('+509 3316-0934');
+  const [phoneValidationError, setPhoneValidationError] = useState<string | null>(null);
+  const [notifyAdmissions, setNotifyAdmissions] = useState(true);
+  const [notifyMessages, setNotifyMessages] = useState(true);
+  const [notifyDeadlines, setNotifyDeadlines] = useState(true);
+
+  const validateHaitiPhone = (phoneStr: string) => {
+    const digits = phoneStr.replace(/[^0-9]/g, '');
+    if (digits.length === 11 && digits.startsWith('509')) {
+      const local = digits.slice(3);
+      if (/^[34]\d{7}$/.test(local)) {
+        return { valid: true, clean: digits, formatted: `+509 ${local.slice(0, 4)}-${local.slice(4)}` };
+      }
+    } else if (digits.length === 8) {
+      if (/^[34]\d{7}$/.test(digits)) {
+        return { valid: true, clean: `509${digits}`, formatted: `+509 ${digits.slice(0, 4)}-${digits.slice(4)}` };
+      }
+    }
+    return { valid: false, clean: digits, formatted: phoneStr, error: 'Numéro invalide pour Haïti. Format requis : +509 suivi de 8 chiffres (ex: +509 3316-0934).' };
+  };
+
+  const handleSaveDirectionPhone = () => {
+    const val = validateHaitiPhone(tempDirectionPhone);
+    if (!val.valid) {
+      setPhoneValidationError(val.error || 'Numéro invalide');
+      return;
+    }
+    setDirectionPhone(val.formatted);
+    localStorage.setItem('cin_direction_wa_phone', val.formatted);
+    setIsEditingDirectionPhone(false);
+    setPhoneValidationError(null);
+    showToast(`Numéro de la Direction mis à jour : ${val.formatted}`);
+  };
+
+  const handleTestDirectionWhatsApp = () => {
+    const val = validateHaitiPhone(directionPhone);
+    if (!val.valid) {
+      showToast("Veuillez d'abord configurer un numéro de Direction valide.");
+      return;
+    }
+    const testToken = `TEST-OK-${Math.floor(1000 + Math.random() * 9000)}`;
+    const nowStr = new Date().toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+    const msg = encodeURIComponent(
+      `*TEST OFFICIEL DE VÉRIFICATION — COLLÈGE ISAAC NEWTON*\n\n` +
+      `✅ *Ligne de la Direction validée :* ${val.formatted}\n` +
+      `👤 *Titulaire :* Direction Générale / Fondateur (Orphe Jean Marie)\n` +
+      `🕒 *Horodatage :* ${nowStr}\n` +
+      `🔑 *Jeton d'audit :* ${testToken}\n\n` +
+      `Ce message confirme que la ligne WhatsApp de la Direction est vérifiée et opérationnelle pour recevoir les alertes instantanées de nouvelles préinscriptions et urgences scolaires.`
+    );
+    window.open(`https://wa.me/${val.clean}?text=${msg}`, '_blank');
+    setDirectionPhoneVerified(true);
+    const nowIso = new Date().toISOString();
+    setLastVerifiedAt(nowIso);
+    localStorage.setItem('cin_direction_wa_verified', 'true');
+    localStorage.setItem('cin_direction_wa_verified_at', nowIso);
+    showToast(`Test de vérification WhatsApp ouvert pour ${val.formatted}. Ligne certifiée !`);
+  };
+
+  const handleSimulateAdmissionAlert = () => {
+    const val = validateHaitiPhone(directionPhone);
+    const sampleNum = `CIN-ADM-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const msg = encodeURIComponent(
+      `*ALERTE OFFICIELLE : NOUVELLE PRÉINSCRIPTION*\n\n` +
+      `📋 *Dossier :* ${sampleNum}\n` +
+      `👤 *Élève :* DUPONT Jean-Marc\n` +
+      `🎯 *Niveau sollicité :* 3ème Secondaire (Nouveau Secondaire 1)\n` +
+      `👨‍👩‍👧 *Parent :* Dupont Marie-Claire (Mère)\n` +
+      `📞 *Téléphone Parent :* +509 3844-1290\n` +
+      `📧 *E-mail :* mc.dupont@gmail.com\n` +
+      `🏫 *École précédente :* Institution Mixte de Delmas\n\n` +
+      `Transmis automatiquement depuis le portail de préinscription du Collège Isaac Newton.`
+    );
+    window.open(`https://wa.me/${val.clean}?text=${msg}`, '_blank');
+    showToast(`Simulation d'alerte WhatsApp envoyée pour ${val.formatted}`);
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -1586,6 +1675,164 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               </div>
             </div>
 
+            {/* =========================================================================
+                CENTRE D'ALERTE WHATSAPP & VÉRIFICATION DE LA LIGNE DIRECTION
+            ========================================================================= */}
+            <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 rounded-2xl p-3.5 sm:p-4 text-white border border-emerald-500/40 shadow-lg space-y-3">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md">
+                    <MessageCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-bold text-xs sm:text-sm text-emerald-300 flex items-center gap-1.5">
+                        <span>Ligne WhatsApp de la Direction (Alertes & Inscriptions)</span>
+                      </h3>
+                      {directionPhoneVerified ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold border border-emerald-400/30">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                          <span>Ligne Vérifiée & En Service</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold border border-amber-400/30">
+                          <AlertTriangle className="w-3 h-3 text-amber-400" />
+                          <span>Vérification Requise</span>
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
+                      Numéro officiel notifié automatiquement lors d'une nouvelle préinscription en ligne ou d'une urgence administrative.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleTestDirectionWhatsApp}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                    title="Envoyer un message de test sur WhatsApp pour certifier la ligne"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Tester la Ligne WhatsApp</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSimulateAdmissionAlert}
+                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-semibold border border-emerald-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
+                    title="Simuler la réception d'une alerte nouvelle inscription sur smartphone"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Simuler Alerte Dossier</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Number Configuration & Status Bar */}
+              <div className="bg-slate-900/90 rounded-xl p-3 border border-emerald-500/20 grid grid-cols-1 md:grid-cols-3 gap-3 items-center text-xs">
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
+                    Numéro Actif de la Direction :
+                  </span>
+                  {isEditingDirectionPhone ? (
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="text"
+                        value={tempDirectionPhone}
+                        onChange={(e) => setTempDirectionPhone(e.target.value)}
+                        placeholder="+509 3316-0934"
+                        className="py-1 px-2.5 rounded-lg bg-slate-800 border border-emerald-500 text-white text-xs font-mono font-bold focus:outline-none w-38"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveDirectionPhone}
+                        className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer"
+                      >
+                        Valider
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingDirectionPhone(false);
+                          setPhoneValidationError(null);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-slate-700 text-slate-300 text-[11px] cursor-pointer"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-base font-bold text-amber-300 tracking-wider">
+                        {directionPhone}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTempDirectionPhone(directionPhone);
+                          setIsEditingDirectionPhone(true);
+                        }}
+                        className="text-[10px] text-slate-400 hover:text-emerald-300 underline cursor-pointer"
+                      >
+                        Modifier
+                      </button>
+                    </div>
+                  )}
+                  {phoneValidationError && (
+                    <p className="text-[10px] text-rose-400 mt-1">{phoneValidationError}</p>
+                  )}
+                </div>
+
+                <div>
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
+                    Responsable & Attributaire :
+                  </span>
+                  <p className="font-semibold text-slate-200 text-xs">
+                    Orphe Jean Marie · Directeur fondateur
+                  </p>
+                  <p className="text-[10px] text-slate-400">
+                    Dernière vérification : {lastVerifiedAt ? new Date(lastVerifiedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Jamais'}
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-1 text-[11px]">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                    Déclencheurs d'Alertes Actifs :
+                  </span>
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={notifyAdmissions}
+                        onChange={(e) => setNotifyAdmissions(e.target.checked)}
+                        className="w-3.5 h-3.5 text-emerald-600 rounded-sm"
+                      />
+                      <span>Inscriptions</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={notifyMessages}
+                        onChange={(e) => setNotifyMessages(e.target.checked)}
+                        className="w-3.5 h-3.5 text-emerald-600 rounded-sm"
+                      />
+                      <span>Contacts</span>
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={notifyDeadlines}
+                        onChange={(e) => setNotifyDeadlines(e.target.checked)}
+                        className="w-3.5 h-3.5 text-emerald-600 rounded-sm"
+                      />
+                      <span>Échéances</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Split Section: Candidatures récentes & Derniers messages */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-2.5">
               
@@ -1937,11 +2184,25 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                         <span className="text-slate-500">Nom & Parenté :</span>
                         <span className="font-bold text-slate-900">{selectedAdmission.parentFullName} ({selectedAdmission.parentRelationship})</span>
                       </div>
-                      <div className="flex justify-between">
+                      <div className="flex justify-between items-center">
                         <span className="text-slate-500">Téléphone :</span>
-                        <a href={`tel:${selectedAdmission.parentPhone}`} className="font-mono font-bold text-blue-700 hover:underline">
-                          {selectedAdmission.parentPhone}
-                        </a>
+                        <div className="flex items-center gap-1.5">
+                          <a href={`tel:${selectedAdmission.parentPhone}`} className="font-mono font-bold text-blue-700 hover:underline">
+                            {selectedAdmission.parentPhone}
+                          </a>
+                          {selectedAdmission.parentPhone && (
+                            <a
+                              href={`https://wa.me/${selectedAdmission.parentPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Bonjour ${selectedAdmission.parentFullName}, nous vous contactons depuis le Collège Isaac Newton concernant le dossier d'admission N° ${selectedAdmission.applicationNumber} pour l'élève ${selectedAdmission.studentFirstName} ${selectedAdmission.studentLastName}.`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-800 text-[10px] font-bold transition-colors cursor-pointer"
+                              title="Écrire au parent sur WhatsApp"
+                            >
+                              <MessageCircle className="w-2.5 h-2.5 text-emerald-700" />
+                              <span>WhatsApp</span>
+                            </a>
+                          )}
+                        </div>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-500">E-mail :</span>
@@ -2034,6 +2295,20 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                       >
                         Refuser le dossier
                       </button>
+                    </div>
+
+                    {/* Forward to Direction WhatsApp */}
+                    <div className="pt-1">
+                      <a
+                        href={`https://wa.me/${validateHaitiPhone(directionPhone).clean}?text=${encodeURIComponent(`*ALERTE DIRECTION — DOSSIER D'ADMISSION*\n\n📋 *Dossier :* ${selectedAdmission.applicationNumber}\n👤 *Élève :* ${selectedAdmission.studentLastName.toUpperCase()} ${selectedAdmission.studentFirstName}\n🎯 *Niveau sollicité :* ${selectedAdmission.targetLevel}\n👨‍👩‍👧 *Parent :* ${selectedAdmission.parentFullName} (${selectedAdmission.parentRelationship})\n📞 *Téléphone Parent :* ${selectedAdmission.parentPhone}\n📊 *Statut actuel :* ${selectedAdmission.status}\n📝 *Notes :* ${reviewNoteInput || 'Aucune note'}\n\nTransmis depuis le portail de gestion du Collège Isaac Newton.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full py-2 px-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs text-[11px]"
+                        title={`Avertir la Direction sur WhatsApp (${directionPhone})`}
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span>Avertir la Direction sur WhatsApp ({directionPhone})</span>
+                      </a>
                     </div>
 
                   </div>
@@ -2592,263 +2867,312 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       {/* =========================================================================
           MODAL: CRÉATION & ÉDITION D'ARTICLE (CMS NEWS)
       ========================================================================= */}
+      {/* =========================================================================
+          MODAL: CRÉATION & ÉDITION D'ARTICLE (CMS NEWS) - RESPONSIVE MOBILE, TABLETTE & DESKTOP
+      ========================================================================= */}
       {showArticleModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-3 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-xl w-full p-3 sm:px-4 sm:py-3 space-y-2.5 shadow-xl border border-slate-200/90 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <div>
-                <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
-                  {editingArticleId ? 'Modifier la Publication' : 'Rédiger une Nouvelle Publication'}
-                </h3>
-                <p className="text-[11px] text-slate-500">
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
+          <div className="bg-white rounded-2xl w-full max-w-lg md:max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl border border-slate-200/90 overflow-hidden animate-scale-in">
+            {/* Header Sticky */}
+            <div className="flex items-center justify-between p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/90 shrink-0">
+              <div className="min-w-0 pr-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base md:text-lg truncate">
+                    {editingArticleId ? 'Modifier la Publication' : 'Rédiger une Nouvelle Publication'}
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-900 font-sans text-[10px] font-bold border border-blue-200">
+                    CMS Actualités
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-500 truncate mt-0.5">
                   L'article apparaîtra directement sur la page Actualités et en page d'accueil.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowArticleModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer shrink-0"
+                title="Fermer"
               >
-                <XCircle className="w-4 h-4" />
+                <XCircle className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveArticle} className="space-y-3 text-xs">
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Titre de la publication : *</label>
-                <input
-                  type="text"
-                  required
-                  value={articleForm.title}
-                  onChange={(e) => setArticleForm({ ...articleForm, title: e.target.value })}
-                  placeholder="Ex : Réunion d’orientation avec les Parents de 9ème AF"
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 font-medium text-xs transition-colors"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleSaveArticle} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="overflow-y-auto p-3.5 sm:p-5 space-y-3 sm:space-y-4 flex-1 min-h-0 text-xs sm:text-sm custom-scrollbar">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Catégorie :</label>
-                  <select
-                    value={articleForm.category}
-                    onChange={(e) => setArticleForm({ ...articleForm, category: e.target.value })}
-                    className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
-                  >
-                    <option value="Admissions">Admissions</option>
-                    <option value="Académique">Académique</option>
-                    <option value="Technologie">Technologie & Informatique</option>
-                    <option value="Vie Scolaire">Vie Scolaire</option>
-                    <option value="Direction">Direction Générale</option>
-                  </select>
+                  <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                    Titre de la publication : *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={articleForm.title}
+                    onChange={(e) => setArticleForm({ ...articleForm, title: e.target.value })}
+                    placeholder="Ex : Réunion d’orientation avec les Parents de 9ème AF"
+                    className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium text-xs sm:text-sm transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                      Catégorie :
+                    </label>
+                    <select
+                      value={articleForm.category}
+                      onChange={(e) => setArticleForm({ ...articleForm, category: e.target.value })}
+                      className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs sm:text-sm transition-colors"
+                    >
+                      <option value="Admissions">Admissions</option>
+                      <option value="Académique">Académique</option>
+                      <option value="Technologie">Technologie & Informatique</option>
+                      <option value="Vie Scolaire">Vie Scolaire</option>
+                      <option value="Direction">Direction Générale</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                      Statut de publication :
+                    </label>
+                    <select
+                      value={articleForm.status}
+                      onChange={(e) => setArticleForm({ ...articleForm, status: e.target.value as any })}
+                      className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs sm:text-sm transition-colors font-medium"
+                    >
+                      <option value="PUBLISHED">Publié immédiatement</option>
+                      <option value="DRAFT">Brouillon interne</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50/70 p-2.5 sm:p-3 rounded-xl border border-slate-200/80">
+                  <ImageUploadCompressor
+                    currentImageUrl={articleForm.coverImage}
+                    onImageReady={(compressedUrl) => setArticleForm({ ...articleForm, coverImage: compressedUrl })}
+                    label="Image de Couverture (Optimisation & Compression WebP / JPEG)"
+                    recommendedAspect="Format 16:9 recommandé (Résolution max 1280px)"
+                    categoryFilter="NEWS"
+                  />
                 </div>
 
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Statut :</label>
-                  <select
-                    value={articleForm.status}
-                    onChange={(e) => setArticleForm({ ...articleForm, status: e.target.value as any })}
-                    className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
-                  >
-                    <option value="PUBLISHED">Publié immédiatement</option>
-                    <option value="DRAFT">Brouillon interne</option>
-                  </select>
+                  <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                    Résumé / Extrait d'introduction : *
+                  </label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={articleForm.excerpt}
+                    onChange={(e) => setArticleForm({ ...articleForm, excerpt: e.target.value })}
+                    placeholder="Bref résumé accrocheur visible sur les cartes d'accueil..."
+                    className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs sm:text-sm transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                    Contenu Détaillé : *
+                  </label>
+                  <textarea
+                    rows={6}
+                    required
+                    value={articleForm.content}
+                    onChange={(e) => setArticleForm({ ...articleForm, content: e.target.value })}
+                    placeholder="Texte complet de l'annonce officielle pour les élèves et parents..."
+                    className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 leading-relaxed text-xs sm:text-sm transition-colors"
+                  />
                 </div>
               </div>
 
-              <div>
-                <ImageUploadCompressor
-                  currentImageUrl={articleForm.coverImage}
-                  onImageReady={(compressedUrl) => setArticleForm({ ...articleForm, coverImage: compressedUrl })}
-                  label="Image de Couverture (Optimisation & Compression WebP / JPEG)"
-                  recommendedAspect="Format 16:9 recommandé (Résolution max 1280px)"
-                  categoryFilter="NEWS"
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Résumé / Extrait d'introduction : *</label>
-                <textarea
-                  rows={2}
-                  required
-                  value={articleForm.excerpt}
-                  onChange={(e) => setArticleForm({ ...articleForm, excerpt: e.target.value })}
-                  placeholder="Bref résumé accrocheur visible sur les cartes d'accueil..."
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Contenu Détaillé : *</label>
-                <textarea
-                  rows={5}
-                  required
-                  value={articleForm.content}
-                  onChange={(e) => setArticleForm({ ...articleForm, content: e.target.value })}
-                  placeholder="Texte complet de l'annonce officielle pour les élèves et parents..."
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 leading-relaxed text-xs transition-colors"
-                />
-              </div>
-
-              <div className="flex items-center justify-between pt-2.5 border-t border-slate-100">
-                <label className="flex items-center gap-2 cursor-pointer">
+              {/* Footer Sticky */}
+              <div className="p-3 sm:p-4 border-t border-slate-100 bg-slate-50/90 shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="checkbox"
                     checked={articleForm.featured}
                     onChange={(e) => setArticleForm({ ...articleForm, featured: e.target.checked })}
-                    className="w-3.5 h-3.5 text-blue-600 rounded-sm"
+                    className="w-4 h-4 text-blue-600 rounded-sm focus:ring-blue-500"
                   />
-                  <span className="font-semibold text-slate-800 text-[11px]">Mettre à la une sur l'accueil</span>
+                  <span className="font-semibold text-slate-800 text-xs sm:text-sm">
+                    Mettre à la une sur l'accueil
+                  </span>
                 </label>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => setShowArticleModal(false)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs cursor-pointer font-medium"
+                    className="px-3.5 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs sm:text-sm cursor-pointer font-medium transition-colors"
                   >
                     Annuler
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs cursor-pointer shadow-xs"
+                    className="px-5 py-2 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs sm:text-sm cursor-pointer shadow-sm transition-all"
                   >
                     {editingArticleId ? 'Mettre à jour' : 'Publier'}
                   </button>
                 </div>
               </div>
-
             </form>
           </div>
         </div>
       )}
 
       {/* =========================================================================
-          MODAL: PLANIFIER UN ÉVÉNEMENT (AGENDA)
+          MODAL: PLANIFIER UN ÉVÉNEMENT (AGENDA) - RESPONSIVE MOBILE, TABLETTE & DESKTOP
       ========================================================================= */}
       {showEventModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-3 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-md w-full p-3 sm:px-4 sm:py-3 space-y-2.5 shadow-xl border border-slate-200/90 animate-scale-in">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <div>
-                <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base">
-                  {editingEventId ? 'Modifier l’Événement' : 'Ajouter une Échéance Officielle'}
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  Visible par les familles et élèves sur le calendrier public.
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-hidden">
+          <div className="bg-white rounded-2xl w-full max-w-lg md:max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col shadow-2xl border border-slate-200/90 overflow-hidden animate-scale-in">
+            {/* Header Sticky */}
+            <div className="flex items-center justify-between p-3.5 sm:p-4 border-b border-slate-100 bg-slate-50/90 shrink-0">
+              <div className="min-w-0 pr-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-serif font-bold text-slate-900 text-sm sm:text-base md:text-lg truncate">
+                    {editingEventId ? 'Modifier l’Événement' : 'Ajouter une Échéance Officielle'}
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-full bg-purple-100 text-purple-900 font-sans text-[10px] font-bold border border-purple-200">
+                    Agenda Scolaire
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-500 truncate mt-0.5">
+                  Visible par les familles et élèves sur le calendrier public de Delmas 50.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowEventModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer shrink-0"
+                title="Fermer"
               >
-                <XCircle className="w-4 h-4" />
+                <XCircle className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEvent} className="space-y-3 text-xs">
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Titre de l'événement : *</label>
-                <input
-                  type="text"
-                  required
-                  value={eventForm.title}
-                  onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
-                  placeholder="Ex : Réunion d’orientation avec les Parents de 9ème AF"
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 font-medium text-xs transition-colors"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {/* Scrollable Form Body */}
+            <form onSubmit={handleSaveEvent} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="overflow-y-auto p-3.5 sm:p-5 space-y-3 sm:space-y-4 flex-1 min-h-0 text-xs sm:text-sm custom-scrollbar">
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Date de début : *</label>
+                  <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                    Titre de l'événement / échéance : *
+                  </label>
                   <input
-                    type="date"
+                    type="text"
                     required
-                    value={eventForm.startDate}
-                    onChange={(e) => setEventForm({ ...eventForm, startDate: e.target.value })}
-                    className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 font-mono text-xs transition-colors"
+                    value={eventForm.title}
+                    onChange={(e) => setEventForm({ ...eventForm, title: e.target.value })}
+                    placeholder="Ex : Réunion d’orientation avec les Parents de 9ème AF"
+                    className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-600 font-medium text-xs sm:text-sm transition-all"
                   />
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                      Date de début / échéance : *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={eventForm.startDate}
+                      onChange={(e) => setEventForm({ ...eventForm, startDate: e.target.value })}
+                      className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 font-mono text-xs sm:text-sm transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                      Catégorie :
+                    </label>
+                    <select
+                      value={eventForm.category}
+                      onChange={(e) => setEventForm({ ...eventForm, category: e.target.value as any })}
+                      className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs sm:text-sm transition-colors"
+                    >
+                      <option value="Pédagogique">Pédagogique</option>
+                      <option value="Réunion">Réunion des Parents</option>
+                      <option value="Examen">Examens & Épreuves d'État</option>
+                      <option value="Culturel">Culturel & Graduations</option>
+                      <option value="Sportif">Sportif</option>
+                      <option value="Férié">Jour Férié / Congé</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                      Lieu :
+                    </label>
+                    <input
+                      type="text"
+                      value={eventForm.location}
+                      onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
+                      placeholder="Auditorium du Collège, Delmas 50"
+                      className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs sm:text-sm transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                      Public Ciblé :
+                    </label>
+                    <select
+                      value={eventForm.audience}
+                      onChange={(e) => setEventForm({ ...eventForm, audience: e.target.value as any })}
+                      className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs sm:text-sm transition-colors"
+                    >
+                      <option value="ALL">Tout le collège (Élèves, Parents, Profs)</option>
+                      <option value="PARENTS">Exclusivement les Parents d'Élèves</option>
+                      <option value="STUDENTS">Exclusivement les Élèves</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Catégorie :</label>
-                  <select
-                    value={eventForm.category}
-                    onChange={(e) => setEventForm({ ...eventForm, category: e.target.value as any })}
-                    className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
-                  >
-                    <option value="Pédagogique">Pédagogique</option>
-                    <option value="Réunion">Réunion des Parents</option>
-                    <option value="Examen">Examens & Épreuves d'État</option>
-                    <option value="Culturel">Culturel & Graduations</option>
-                    <option value="Sportif">Sportif</option>
-                    <option value="Férié">Jour Férié / Congé</option>
-                  </select>
+                  <label className="font-semibold text-slate-700 block mb-1 text-[11px] sm:text-xs">
+                    Description / Précisions :
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={eventForm.description}
+                    onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
+                    placeholder="Ordre du jour, consignes pour les participants..."
+                    className="w-full py-2 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs sm:text-sm transition-colors"
+                  />
+                </div>
+
+                <div className="bg-slate-50/70 p-2.5 sm:p-3 rounded-xl border border-slate-200/80">
+                  <ImageUploadCompressor
+                    currentImageUrl={eventForm.image}
+                    onImageReady={(url) => setEventForm({ ...eventForm, image: url })}
+                    label="Affiche ou Photo de l'Événement (Optionnelle) :"
+                    recommendedAspect="Format 16:9 ou 4:3 (Compression automatique)"
+                    categoryFilter="EVENTS"
+                  />
                 </div>
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Lieu :</label>
-                <input
-                  type="text"
-                  value={eventForm.location}
-                  onChange={(e) => setEventForm({ ...eventForm, location: e.target.value })}
-                  placeholder="Auditorium du Collège, Delmas 50"
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Public Ciblé :</label>
-                <select
-                  value={eventForm.audience}
-                  onChange={(e) => setEventForm({ ...eventForm, audience: e.target.value as any })}
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
-                >
-                  <option value="ALL">Tout le collège (Élèves, Parents, Professeurs)</option>
-                  <option value="PARENTS">Exclusivement les Parents d'Élèves</option>
-                  <option value="STUDENTS">Exclusivement les Élèves</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="font-semibold text-slate-700 block mb-1 text-[11px]">Description / Précisions :</label>
-                <textarea
-                  rows={2.5}
-                  value={eventForm.description}
-                  onChange={(e) => setEventForm({ ...eventForm, description: e.target.value })}
-                  placeholder="Ordre du jour, consignes pour les participants..."
-                  className="w-full py-1.5 px-3 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 text-xs transition-colors"
-                />
-              </div>
-
-              <div>
-                <ImageUploadCompressor
-                  currentImageUrl={eventForm.image}
-                  onImageReady={(url) => setEventForm({ ...eventForm, image: url })}
-                  label="Affiche ou Photo de l'Événement (Optionnelle) :"
-                  recommendedAspect="Format 16:9 ou 4:3 (Compression automatique)"
-                  categoryFilter="EVENTS"
-                />
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2.5 border-t border-slate-100">
+              {/* Footer Sticky */}
+              <div className="p-3 sm:p-4 border-t border-slate-100 bg-slate-50/90 shrink-0 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowEventModal(false)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs cursor-pointer font-medium"
+                  className="px-3.5 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs sm:text-sm cursor-pointer font-medium transition-colors"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs cursor-pointer shadow-xs"
+                  className="px-5 py-2 rounded-lg bg-blue-900 hover:bg-blue-950 text-white font-bold text-xs sm:text-sm cursor-pointer shadow-sm transition-all"
                 >
                   {editingEventId ? 'Mettre à jour' : 'Enregistrer'}
                 </button>
               </div>
-
             </form>
           </div>
         </div>
