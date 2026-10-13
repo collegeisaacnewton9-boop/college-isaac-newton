@@ -199,6 +199,18 @@ export interface SiteSettings {
     smtpPass: string;
     encryption: 'TLS' | 'SSL' | 'STARTTLS';
   };
+  whatsappConfig?: {
+    enabled?: boolean;
+    directionPhone: string;
+    directionPhoneClean?: string;
+    holderName?: string;
+    isVerified?: boolean;
+    verifiedAt?: string;
+    notifyAdmissions?: boolean;
+    notifyMessages?: boolean;
+    notifyDeadlines?: boolean;
+    updatedAt?: string;
+  };
   securityConfig?: {
     inactivityTimeoutMinutes?: number;
     sessionLockEnabled?: boolean;

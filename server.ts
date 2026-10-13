@@ -624,6 +624,18 @@ let siteSettings: any = {
     smtpPass: "ujwy suyt gjcp fnxf",
     encryption: "SSL",
   },
+  whatsappConfig: {
+    enabled: true,
+    directionPhone: "+509 3316-0934",
+    directionPhoneClean: "50933160934",
+    holderName: "Orphe Jean Marie · Directeur fondateur",
+    isVerified: true,
+    verifiedAt: "2026-10-12T14:30:00.000Z",
+    notifyAdmissions: true,
+    notifyMessages: true,
+    notifyDeadlines: true,
+    updatedAt: "2026-10-12T14:30:00.000Z",
+  },
   educationalCycles: {
     prescolaire: {
       title: 'Cycle Préscolaire',

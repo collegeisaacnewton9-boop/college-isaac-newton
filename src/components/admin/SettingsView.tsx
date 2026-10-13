@@ -58,6 +58,7 @@ import { AccessControlView } from './AccessControlView';
 import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
 import { GitHubSyncModal } from './GitHubSyncModal';
 import { MenuEditorView } from './MenuEditorView';
+import { WhatsAppGatewaySettings } from './WhatsAppGatewaySettings';
 import { 
   isProductionEnvironment, 
   shouldProposeGitHubOption, 
@@ -1639,6 +1640,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* PASSERELLE WHATSAPP OFFICIELLE DIRECTION (AVEC VÉRIFICATION PRÉALABLE & PERSISTANCE BDD) */}
+              <WhatsAppGatewaySettings
+                settings={cmsSettings}
+                onSettingsUpdated={(newSettings) => {
+                  setCmsSettings(newSettings);
+                  if (onSettingsUpdated) {
+                    onSettingsUpdated(newSettings);
+                  }
+                }}
+              />
 
               {/* SERVEUR DE MESSAGERIE SORTANTE (SMTP) - EDITABLE & DYNAMIC CARD */}
               <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-5">

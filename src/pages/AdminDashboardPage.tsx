@@ -79,6 +79,8 @@ import { appFetch } from '../services/loadingService';
 import { ImageUploadCompressor } from '../components/common/ImageUploadCompressor';
 import { isProductionEnvironment, shouldProposeGitHubOption } from '../utils/environment';
 import { toast } from 'sonner';
+import { SessionTimeoutModal } from '../components/admin/SessionTimeoutModal';
+import { WhatsAppGatewaySettings } from '../components/admin/WhatsAppGatewaySettings';
 
 interface AdminDashboardPageProps {
   currentUser: User | null;
@@ -400,6 +402,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     return () => window.removeEventListener('cin:events-updated', handleEventsUpdate);
   }, []);
 
+  // Session Timeout Warning Countdown & Inactivity Modal State (matching image.png)
+  const [isTimeoutModalOpen, setIsTimeoutModalOpen] = useState(false);
+  const [timeoutSecondsRemaining, setTimeoutSecondsRemaining] = useState(60);
+  const WARNING_DURATION_SECONDS = 60;
+
   // Inactivity timeout watcher driven by database settings (securityConfig)
   useEffect(() => {
     if (!currentUser) return;
@@ -407,29 +414,67 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
       || (typeof window !== 'undefined' ? parseInt(localStorage.getItem('cin_inactivity_timeout_mins') || '5', 10) : 5);
     
     if (!timeoutMins || timeoutMins <= 0) return;
-    const timeoutMs = timeoutMins * 60 * 1000;
+    const totalTimeoutSeconds = timeoutMins * 60;
+    const warningThresholdSeconds = Math.max(15, Math.min(WARNING_DURATION_SECONDS, totalTimeoutSeconds - 10));
+    const activeWaitSeconds = Math.max(5, totalTimeoutSeconds - warningThresholdSeconds);
 
-    let timer: NodeJS.Timeout;
+    let warningTimer: NodeJS.Timeout;
+    let countdownInterval: NodeJS.Timeout;
 
     const resetTimer = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        toast.warning('Session verrouillée pour inactivité', {
-          description: `Votre session s'est verrouillée automatiquement après ${timeoutMins} minute${timeoutMins > 1 ? 's' : ''} d'inactivité.`,
-        });
-        onLogout();
-      }, timeoutMs);
+      clearTimeout(warningTimer);
+      clearInterval(countdownInterval);
+      setIsTimeoutModalOpen(false);
+
+      warningTimer = setTimeout(() => {
+        // Trigger visual countdown modal as seen in image.png
+        setIsTimeoutModalOpen(true);
+        setTimeoutSecondsRemaining(warningThresholdSeconds);
+
+        let currentSecs = warningThresholdSeconds;
+        countdownInterval = setInterval(() => {
+          currentSecs -= 1;
+          setTimeoutSecondsRemaining(currentSecs);
+          if (currentSecs <= 0) {
+            clearInterval(countdownInterval);
+            setIsTimeoutModalOpen(false);
+            // Explicit user requirement: Dismiss all active notifications to avoid leftover banners
+            toast.dismiss();
+            onLogout();
+          }
+        }, 1000);
+      }, activeWaitSeconds * 1000);
+    };
+
+    const handleUserActivity = () => {
+      // User activity resets the timer only when the warning modal is NOT currently open
+      if (!isTimeoutModalOpen) {
+        resetTimer();
+      }
     };
 
     const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
-    activityEvents.forEach(evt => window.addEventListener(evt, resetTimer, { passive: true }));
+    activityEvents.forEach(evt => window.addEventListener(evt, handleUserActivity, { passive: true }));
     resetTimer();
 
     return () => {
-      clearTimeout(timer);
-      activityEvents.forEach(evt => window.removeEventListener(evt, resetTimer));
+      clearTimeout(warningTimer);
+      clearInterval(countdownInterval);
+      activityEvents.forEach(evt => window.removeEventListener(evt, handleUserActivity));
     };
-  }, [currentUser, cmsSettings?.securityConfig?.inactivityTimeoutMinutes, onLogout]);
+  }, [currentUser, cmsSettings?.securityConfig?.inactivityTimeoutMinutes, isTimeoutModalOpen, onLogout]);
+
+  const handleExtendSession = () => {
+    setIsTimeoutModalOpen(false);
+    toast.dismiss();
+    showToast('Session prolongée avec succès.');
+  };
+
+  const handleSafeLogout = () => {
+    setIsTimeoutModalOpen(false);
+    toast.dismiss();
+    onLogout();
+  };
 
   // Dedicated Gatekeeper States for In-Page Dashboard Security
   const [gateEmail, setGateEmail] = useState('');
@@ -493,7 +538,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           <div className="space-y-2.5 pt-2">
             <button
               onClick={() => {
-                onLogout();
+                handleSafeLogout();
                 setGateEmail('');
                 setGatePassword('');
               }}
@@ -1003,9 +1048,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               {/* Logout Button */}
               <button
                 type="button"
-                onClick={onLogout}
+                onClick={handleSafeLogout}
                 className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-rose-200 border border-rose-800/40 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1"
-                title="Déconnexion sécurisée"
+                title="Déconnexion sécurisée (sans notification résiduelle)"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span className="hidden xl:inline text-[11px]">Quitter</span>
@@ -1676,160 +1721,44 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             </div>
 
             {/* =========================================================================
-                CENTRE D'ALERTE WHATSAPP & VÉRIFICATION DE LA LIGNE DIRECTION
+                COMPOSANT DE CONFIGURATION & VÉRIFICATION WHATSAPP OFFICIEL DIRECTION
             ========================================================================= */}
-            <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 rounded-2xl p-3.5 sm:p-4 text-white border border-emerald-500/40 shadow-lg space-y-3">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-md">
-                    <MessageCircle className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-bold text-xs sm:text-sm text-emerald-300 flex items-center gap-1.5">
-                        <span>Ligne WhatsApp de la Direction (Alertes & Inscriptions)</span>
-                      </h3>
-                      {directionPhoneVerified ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold border border-emerald-400/30">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                          <span>Ligne Vérifiée & En Service</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono font-bold border border-amber-400/30">
-                          <AlertTriangle className="w-3 h-3 text-amber-400" />
-                          <span>Vérification Requise</span>
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
-                      Numéro officiel notifié automatiquement lors d'une nouvelle préinscription en ligne ou d'une urgence administrative.
-                    </p>
-                  </div>
-                </div>
+            <WhatsAppGatewaySettings
+              settings={cmsSettings}
+              onSettingsUpdated={(newSetts) => setCmsSettings(newSetts)}
+            />
 
-                <div className="flex items-center gap-2 self-start md:self-auto flex-wrap">
-                  <button
-                    type="button"
-                    onClick={handleTestDirectionWhatsApp}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
-                    title="Envoyer un message de test sur WhatsApp pour certifier la ligne"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Tester la Ligne WhatsApp</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSimulateAdmissionAlert}
-                    className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 text-xs font-semibold border border-emerald-500/30 transition-all flex items-center gap-1.5 cursor-pointer"
-                    title="Simuler la réception d'une alerte nouvelle inscription sur smartphone"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Simuler Alerte Dossier</span>
-                  </button>
+            {/* BARRE D'OUTIL DU MODE DÉCONNEXION & EXPIRATION DE SESSION (CONFORME À L'IMAGE FOURNIE) */}
+            <div className="bg-slate-900 rounded-xl p-3 border border-indigo-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-white">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-amber-400/20 text-amber-300 flex items-center justify-center shrink-0">
+                  <Clock className="w-4 h-4 text-amber-400" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-100 flex items-center gap-2">
+                    <span>Mode Déconnexion Sécurisé & Inactivité</span>
+                    <span className="px-2 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-mono border border-indigo-400/30">
+                      Actif ({cmsSettings?.securityConfig?.inactivityTimeoutMinutes || 5} min)
+                    </span>
+                  </h4>
+                  <p className="text-[11px] text-slate-400">
+                    Modale d'alerte avec compte à rebours 60s avant fermeture automatique. Zéro notification résiduelle après déconnexion.
+                  </p>
                 </div>
               </div>
 
-              {/* Number Configuration & Status Bar */}
-              <div className="bg-slate-900/90 rounded-xl p-3 border border-emerald-500/20 grid grid-cols-1 md:grid-cols-3 gap-3 items-center text-xs">
-                <div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
-                    Numéro Actif de la Direction :
-                  </span>
-                  {isEditingDirectionPhone ? (
-                    <div className="flex items-center gap-1.5">
-                      <input
-                        type="text"
-                        value={tempDirectionPhone}
-                        onChange={(e) => setTempDirectionPhone(e.target.value)}
-                        placeholder="+509 3316-0934"
-                        className="py-1 px-2.5 rounded-lg bg-slate-800 border border-emerald-500 text-white text-xs font-mono font-bold focus:outline-none w-38"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleSaveDirectionPhone}
-                        className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] cursor-pointer"
-                      >
-                        Valider
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsEditingDirectionPhone(false);
-                          setPhoneValidationError(null);
-                        }}
-                        className="px-2 py-1 rounded-lg bg-slate-700 text-slate-300 text-[11px] cursor-pointer"
-                      >
-                        Annuler
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-base font-bold text-amber-300 tracking-wider">
-                        {directionPhone}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setTempDirectionPhone(directionPhone);
-                          setIsEditingDirectionPhone(true);
-                        }}
-                        className="text-[10px] text-slate-400 hover:text-emerald-300 underline cursor-pointer"
-                      >
-                        Modifier
-                      </button>
-                    </div>
-                  )}
-                  {phoneValidationError && (
-                    <p className="text-[10px] text-rose-400 mt-1">{phoneValidationError}</p>
-                  )}
-                </div>
-
-                <div>
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block mb-0.5">
-                    Responsable & Attributaire :
-                  </span>
-                  <p className="font-semibold text-slate-200 text-xs">
-                    Orphe Jean Marie · Directeur fondateur
-                  </p>
-                  <p className="text-[10px] text-slate-400">
-                    Dernière vérification : {lastVerifiedAt ? new Date(lastVerifiedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Jamais'}
-                  </p>
-                </div>
-
-                <div className="flex flex-col gap-1 text-[11px]">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                    Déclencheurs d'Alertes Actifs :
-                  </span>
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={notifyAdmissions}
-                        onChange={(e) => setNotifyAdmissions(e.target.checked)}
-                        className="w-3.5 h-3.5 text-emerald-600 rounded-sm"
-                      />
-                      <span>Inscriptions</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={notifyMessages}
-                        onChange={(e) => setNotifyMessages(e.target.checked)}
-                        className="w-3.5 h-3.5 text-emerald-600 rounded-sm"
-                      />
-                      <span>Contacts</span>
-                    </label>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={notifyDeadlines}
-                        onChange={(e) => setNotifyDeadlines(e.target.checked)}
-                        className="w-3.5 h-3.5 text-emerald-600 rounded-sm"
-                      />
-                      <span>Échéances</span>
-                    </label>
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTimeoutModalOpen(true);
+                    setTimeoutSecondsRemaining(27);
+                  }}
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  title="Prévisualiser la modale d'expiration de session exactement comme sur l'image fournie"
+                >
+                  <span>Tester Modale Déconnexion (Aperçu)</span>
+                </button>
               </div>
             </div>
 
@@ -3195,6 +3124,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
           setEvents(prev => prev.map(e => e.id === updated.id ? updated : e));
           showToast(`Mise à jour enregistrée : « ${updated.title} »`);
         }}
+      />
+
+      {/* MODAL EXPIRATION IMMINENTE DE LA SESSION (CONFORME EXACTEMENT À L'IMAGE FOURNIE) */}
+      <SessionTimeoutModal
+        isOpen={isTimeoutModalOpen}
+        secondsRemaining={timeoutSecondsRemaining}
+        totalAlertSeconds={WARNING_DURATION_SECONDS}
+        onExtend={handleExtendSession}
+        onLogout={handleSafeLogout}
       />
 
     </div>
