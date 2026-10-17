@@ -321,6 +321,7 @@ export default function App() {
             onLogout={handleLogout}
             onNavigate={handleNavigate}
             onUserChange={setCurrentUser}
+            subSection={currentSubSection}
           />
         )}
       </main>

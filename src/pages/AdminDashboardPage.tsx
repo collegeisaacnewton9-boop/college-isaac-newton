@@ -90,6 +90,7 @@ interface AdminDashboardPageProps {
   onLogout: () => void;
   onNavigate?: (page: string, subSection?: string) => void;
   onUserChange?: (user: User) => void;
+  subSection?: string;
 }
 
 export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
@@ -98,11 +99,22 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   onLogout,
   onNavigate,
   onUserChange,
+  subSection,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'slideshow' | 'menus' | 'admissions' | 'news' | 'events' | 'media' | 'messages' | 'cms' | 'users' | 'whatsapp' | 'faculty'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'slideshow' | 'menus' | 'admissions' | 'news' | 'events' | 'media' | 'messages' | 'cms' | 'users' | 'whatsapp' | 'faculty'>(
+    (subSection && ['overview', 'slideshow', 'menus', 'admissions', 'news', 'events', 'media', 'messages', 'cms', 'users', 'whatsapp', 'faculty'].includes(subSection)) 
+      ? (subSection as any) 
+      : 'overview'
+  );
   const [settingsInitialTab, setSettingsInitialTab] = useState<SettingsTab>('profile');
   const [mediaInitialSubTab, setMediaInitialSubTab] = useState<'documents' | 'slideshow' | 'gallery' | 'media' | 'site-images'>('documents');
   const [, setEnvRevision] = useState(0);
+
+  useEffect(() => {
+    if (subSection && ['overview', 'slideshow', 'menus', 'admissions', 'news', 'events', 'media', 'messages', 'cms', 'users', 'whatsapp', 'faculty'].includes(subSection)) {
+      setActiveTab(subSection as any);
+    }
+  }, [subSection]);
 
   useEffect(() => {
     const handleEnvChanged = () => setEnvRevision((r) => r + 1);
