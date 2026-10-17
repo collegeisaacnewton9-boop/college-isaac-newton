@@ -1,0 +1,229 @@
+[
+  {
+    "id": "fac-orphee-jean-dumel",
+    "name": "Orphée Jean Dumel",
+    "roles": [
+      "Responsable de discipline et des Études"
+    ],
+    "subjects": [],
+    "categories": [
+      "direction"
+    ],
+    "photoUrl": "",
+    "displayOrder": 1,
+    "isVisible": true,
+    "biography": "Coordination générale de la vie scolaire, suivi de la discipline et encadrement pédagogique des études.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-01-10T08:00:00.000Z"
+  },
+  {
+    "id": "fac-coasmin-josue-maxy",
+    "name": "Coasmin Josué Maxy",
+    "roles": [
+      "Directeur Pédagogique",
+      "Membre de la Direction"
+    ],
+    "subjects": [],
+    "categories": [
+      "direction"
+    ],
+    "photoUrl": "/images/portrait_coasmin_maxy_1792232767777.jpg",
+    "displayOrder": 2,
+    "isVisible": true,
+    "biography": "Direction pédagogique, coordination des équipes d'enseignement, suivi de l'excellence académique et relations institutionnelles.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-10-17T10:26:00.000Z"
+  },
+  {
+    "id": "fac-salomon-jhonny-frantz",
+    "name": "Salomon Jhonny Frantz",
+    "roles": [
+      "Conseil pédagogique",
+      "Enseignant de Mathématiques"
+    ],
+    "subjects": [
+      "Mathématiques"
+    ],
+    "categories": [
+      "direction",
+      "conseil_pedagogique",
+      "enseignant"
+    ],
+    "photoUrl": "/images/portrait_salomon_frantz_1792232768591.jpg",
+    "displayOrder": 3,
+    "isVisible": true,
+    "biography": "Membre du Conseil pédagogique et enseignant de Mathématiques, engagé pour l’excellence du raisonnement logique et la structuration des apprentissages.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-10-17T10:26:00.000Z"
+  },
+  {
+    "id": "fac-ulysse-rosenie",
+    "name": "Ulysse Rosenie",
+    "roles": [
+      "Secrétaire de direction"
+    ],
+    "subjects": [],
+    "categories": [
+      "administration"
+    ],
+    "photoUrl": "",
+    "displayOrder": 4,
+    "isVisible": true,
+    "biography": "Gestion administrative du secrétariat, accueil des familles, dossiers scolaires et relations institutionnelles.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-01-10T08:00:00.000Z"
+  },
+  {
+    "id": "fac-augustmat-ones",
+    "name": "Augustmat Onés",
+    "roles": [
+      "Enseignant"
+    ],
+    "subjects": [
+      "Économie",
+      "Mathématiques"
+    ],
+    "categories": [
+      "enseignant"
+    ],
+    "photoUrl": "",
+    "displayOrder": 5,
+    "isVisible": true,
+    "biography": "Enseignement de l’Économie et des Mathématiques, formation à l’analyse quantitative et aux grands mécanismes économiques.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-01-10T08:00:00.000Z"
+  },
+  {
+    "id": "fac-exan-mackenson",
+    "name": "Exan Mackenson",
+    "roles": [
+      "Enseignant"
+    ],
+    "subjects": [
+      "Mathématiques"
+    ],
+    "categories": [
+      "enseignant"
+    ],
+    "photoUrl": "",
+    "displayOrder": 6,
+    "isVisible": true,
+    "biography": "Enseignement des Mathématiques, rigueur du calcul, géométrie et préparation aux épreuves officielles.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-01-10T08:00:00.000Z"
+  },
+  {
+    "id": "fac-jean-francois-helabre-levy",
+    "name": "Jean François Hélabre Lévy",
+    "roles": [
+      "Enseignant"
+    ],
+    "subjects": [
+      "Sciences sociales"
+    ],
+    "categories": [
+      "enseignant"
+    ],
+    "photoUrl": "",
+    "displayOrder": 7,
+    "isVisible": true,
+    "biography": "Enseignement des Sciences sociales, histoire, géographie et initiation à l’analyse civique et sociétale.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-01-10T08:00:00.000Z"
+  },
+  {
+    "id": "fac-mde-pierre-kattiana",
+    "name": "Mde Pierre Kattiana",
+    "roles": [
+      "Enseignante"
+    ],
+    "subjects": [
+      "Sciences expérimentales"
+    ],
+    "categories": [
+      "enseignant"
+    ],
+    "photoUrl": "",
+    "displayOrder": 8,
+    "isVisible": true,
+    "biography": "Enseignement des Sciences expérimentales, éveil à la démarche scientifique, physique-chimie et biologie.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-01-10T08:00:00.000Z"
+  },
+  {
+    "id": "fac-mde-jean-baptiste-erika-mede",
+    "name": "Mde Jean Baptiste / Erika Médé",
+    "roles": [
+      "Enseignante"
+    ],
+    "subjects": [
+      "Français"
+    ],
+    "categories": [
+      "enseignant"
+    ],
+    "photoUrl": "",
+    "displayOrder": 9,
+    "isVisible": true,
+    "biography": "Enseignement de la langue et littérature françaises, expression écrite, analyse textuelle et maîtrise de la grammaire.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-01-10T08:00:00.000Z"
+  },
+  {
+    "id": "fac-romelus-job",
+    "name": "Romélus Job",
+    "roles": [
+      "Enseignant"
+    ],
+    "subjects": [
+      "Français"
+    ],
+    "categories": [
+      "enseignant"
+    ],
+    "photoUrl": "",
+    "displayOrder": 10,
+    "isVisible": true,
+    "biography": "Enseignement du Français, renforcement des compétences orales et écrites, culture littéraire et rhétorique.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-01-10T08:00:00.000Z"
+  },
+  {
+    "id": "fac-pierre-mario",
+    "name": "Pierre Mario",
+    "roles": [
+      "Enseignant"
+    ],
+    "subjects": [
+      "Sciences expérimentales"
+    ],
+    "categories": [
+      "enseignant"
+    ],
+    "photoUrl": "",
+    "displayOrder": 11,
+    "isVisible": true,
+    "biography": "Enseignement des Sciences expérimentales, travaux pratiques en laboratoire et observation rigoureuse des phénomènes naturels.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-01-10T08:00:00.000Z"
+  },
+  {
+    "id": "fac-dr-pierre-maurice",
+    "name": "Dr Pierre Maurice",
+    "roles": [
+      "Enseignant"
+    ],
+    "subjects": [
+      "Philosophie"
+    ],
+    "categories": [
+      "enseignant"
+    ],
+    "photoUrl": "",
+    "displayOrder": 12,
+    "isVisible": true,
+    "biography": "Enseignement de la Philosophie au Nouveau Secondaire, formation à l’esprit critique, à l’éthique et à l’argumentation.",
+    "createdAt": "2026-01-10T08:00:00.000Z",
+    "updatedAt": "2026-01-10T08:00:00.000Z"
+  }
+]
