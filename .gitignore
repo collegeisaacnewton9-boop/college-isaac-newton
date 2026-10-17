@@ -1,0 +1,27 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+*.dump
+*.sql
+
+# Environment and sensitive keys
+.env*
+!.env.example
+*.pem
+*.key
+*.cert
+*.id_rsa
+id_rsa
+.secrets*
+credentials.json
+service-account*.json
+
+test-results/
+playwright-report/

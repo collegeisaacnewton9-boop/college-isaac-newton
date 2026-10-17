@@ -1,0 +1,137 @@
+import { Role, RolePermissionDetail } from '../types';
+
+export const ROLE_PERMISSIONS: Record<Role, RolePermissionDetail> = {
+  ADMIN: {
+    role: 'ADMIN',
+    name: 'Super-Administrateur / Direction Générale',
+    badgeLabel: 'Super-Admin',
+    badgeBg: 'bg-blue-100',
+    badgeText: 'text-blue-900',
+    badgeBorder: 'border-blue-300',
+    summary: 'Contrôle complet et illimité sur l’ensemble de la plateforme et délégation des droits.',
+    detailedScope: 'La Direction Générale et le Super-Administrateur détiennent la gouvernance totale du Collège Isaac Newton : contrôle d’accès et attribution des rôles, journal d’audit de sécurité, validation des dossiers d’admission, configuration du CMS et synchronisation des sources GitHub.',
+    allowedActions: [
+      'Gouvernance totale du Contrôle d’Accès (RBAC) & attribution des rôles',
+      'Validation, rejet et entretiens des dossiers de préinscription',
+      'Publication, modification et suppression des actualités et éditos',
+      'Planification des événements officiels sur le calendrier public',
+      'Traitement, réponse et archivage des messages du secrétariat',
+      'Modification des paramètres généraux, alertes et coordonnées du collège',
+      'Synchronisation GitHub REST API (@octokit/rest) et déploiements',
+      'Consultation intégrale du journal d’audit système',
+    ],
+    restrictedActions: [],
+    accessLevel: 'SUPER_ADMIN',
+  },
+
+  EDITOR: {
+    role: 'EDITOR',
+    name: 'Éditeur de Contenu / Secrétariat & Communication',
+    badgeLabel: 'Éditeur',
+    badgeBg: 'bg-purple-100',
+    badgeText: 'text-purple-900',
+    badgeBorder: 'border-purple-300',
+    summary: 'Gestion éditoriale complète des publications, actualités, galeries et articles du blog.',
+    detailedScope: 'Délégué à la cellule de communication de l’établissement. Permet de rédiger, planifier et publier les communiqués officiels, les récapitulatifs d’examens, les articles de vie scolaire et de gérer la photothèque du campus.',
+    allowedActions: [
+      'Création, modification et suppression d’articles d’actualités (News CMS)',
+      'Mise à la une des articles importants sur la page d’accueil',
+      'Gestion de la médiathèque, photos du campus et légendes',
+      'Consultation en lecture seule des dossiers d’admissions et du calendrier',
+    ],
+    restrictedActions: [
+      'Aucun droit de modification sur les rôles des utilisateurs (Contrôle d’Accès bloqué)',
+      'Aucun droit d’approbation formelle des admissions officielles',
+      'Aucun accès aux paramètres système sensibles ni à la synchronisation GitHub',
+      'Aucun accès au journal d’audit sécurisé',
+    ],
+    accessLevel: 'DELEGATED_MANAGER',
+  },
+
+  TEACHER: {
+    role: 'TEACHER',
+    name: 'Enseignant / Corps Professoral & Pédagogie',
+    badgeLabel: 'Enseignant',
+    badgeBg: 'bg-emerald-100',
+    badgeText: 'text-emerald-900',
+    badgeBorder: 'border-emerald-300',
+    summary: 'Gestion du calendrier scolaire officiel, réunions pédagogiques et devoirs/ressources.',
+    detailedScope: 'Dédié aux professeurs et coordinateurs pédagogiques. Permet d’alimenter l’agenda officiel (dates de devoirs surveillés, rencontres parents-professeurs, sessions d’orientation 9e AF / NS4) et de consulter les listes de classe.',
+    allowedActions: [
+      'Création, mise à jour et organisation des événements du calendrier officiel',
+      'Programmation des rencontres pédagogiques et sessions d’orientation d’État',
+      'Consultation des effectifs d’élèves admis et des niveaux académiques',
+      'Consultation des ressources et documents officiels de l’école',
+    ],
+    restrictedActions: [
+      'Aucune modification des fiches d’admission ni statut d’inscription',
+      'Aucune modification des rôles d’utilisateurs ni des permissions',
+      'Aucun accès à la boîte de réception des messages privés du secrétariat',
+      'Aucun droit sur les paramètres du serveur, alertes globales ou GitHub',
+    ],
+    accessLevel: 'DELEGATED_MANAGER',
+  },
+
+  MODERATOR: {
+    role: 'MODERATOR',
+    name: 'Modérateur / Vie Scolaire & Relations Familles',
+    badgeLabel: 'Modérateur',
+    badgeBg: 'bg-amber-100',
+    badgeText: 'text-amber-900',
+    badgeBorder: 'border-amber-300',
+    summary: 'Traitement de la boîte de réception du secrétariat, suivi des demandes des familles et avis.',
+    detailedScope: 'Délégué aux responsables de la vie scolaire et de l’accueil. Permet de consulter en temps réel les sollicitations des parents d’élèves, de qualifier les messages (Nouveau, Traité, Archivé) et d’assurer une réponse par e-mail ou WhatsApp.',
+    allowedActions: [
+      'Accès complet à la boîte de réception des messages du secrétariat',
+      'Changement des statuts de traitement (Nouveau, Traité, Archivé)',
+      'Envoi de réponses directes aux parents via e-mail ou WhatsApp officiel',
+      'Consultation de la liste des demandes de visite de campus',
+    ],
+    restrictedActions: [
+      'Aucun accès à l’attribution des rôles ni à la gestion des comptes',
+      'Aucune publication ou modification d’articles d’actualité officiels',
+      'Aucun accès aux paramètres globaux du site ou à la configuration GitHub',
+      'Aucune modification des décisions d’admission des élèves',
+    ],
+    accessLevel: 'DELEGATED_MANAGER',
+  },
+
+  PARENT: {
+    role: 'PARENT',
+    name: 'Parent d’Élève / Espace Famille',
+    badgeLabel: 'Parent',
+    badgeBg: 'bg-indigo-100',
+    badgeText: 'text-indigo-900',
+    badgeBorder: 'border-indigo-300',
+    summary: 'Consultation du suivi de dossier de préinscription et vie scolaire de l’enfant.',
+    detailedScope: 'Accès portail famille permettant de suivre l’état d’avancement de la préinscription, consulter les bulletins et communiquer avec l’administration.',
+    allowedActions: [
+      'Suivi de la préinscription en ligne de son enfant',
+      'Accès aux bulletins et calendrier scolaire public',
+      'Envoi de messages au secrétariat',
+    ],
+    restrictedActions: [
+      'Accès strictement refusé au panneau d’administration Direction (Back-Office)',
+    ],
+    accessLevel: 'PUBLIC_PORTAL',
+  },
+
+  STUDENT: {
+    role: 'STUDENT',
+    name: 'Élève / Espace Scolaire',
+    badgeLabel: 'Élève',
+    badgeBg: 'bg-teal-100',
+    badgeText: 'text-teal-900',
+    badgeBorder: 'border-teal-300',
+    summary: 'Consultation des cours, devoirs, calendrier d’examens et actualités.',
+    detailedScope: 'Accès portail élève permettant de consulter son emploi du temps, les dates d’examens d’État et les ressources pédagogiques.',
+    allowedActions: [
+      'Consultation du calendrier des cours et devoirs',
+      'Téléchargement des règlements et supports pédagogiques',
+    ],
+    restrictedActions: [
+      'Accès strictement refusé au panneau d’administration Direction (Back-Office)',
+    ],
+    accessLevel: 'PUBLIC_PORTAL',
+  },
+};
