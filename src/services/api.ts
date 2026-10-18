@@ -42,6 +42,38 @@ const DEFAULT_SETTINGS: SiteSettings = {
     currentSchoolYear: '2026-2027',
     deadlineNotice: 'Dépôt des dossiers ouvert jusqu\'au 31 août 2026',
   },
+  admissionRequirements: {
+    academicYear: '2026-2027',
+    registrationFee: '3 000 gourdes',
+    openingHours: 'Du lundi au vendredi, de 8 h à 15 h',
+    presenceRequiredNotice: "L'enfant doit être présent lors de l'inscription.",
+    levelsConcerned: [
+      'Préscolaire',
+      'Fondamental : 1er, 2e et 3e cycles',
+      'Secondaire',
+    ],
+    fondamentaleDocuments: [
+      'Acte de naissance ou extrait des archives : original et copie.',
+      'Carnet scolaire du dernier établissement : original.',
+      'Deux photos d’identité récentes.',
+      'Frais d’inscription : 3 000 gourdes.',
+      'Pièce d’identité de la personne responsable : CIN ou NIF.',
+    ],
+    secondaireDocuments: [
+      'Acte de naissance ou extrait des archives : original et copie.',
+      'Carnet scolaire du dernier établissement : original.',
+      'Deux photos d’identité récentes.',
+      'Frais d’inscription : 3 000 gourdes.',
+      'Pièce d’identité de la personne responsable : CIN ou NIF.',
+    ],
+    additionalDocuments: [
+      'Relevé de notes NS2 et NS3.',
+      'Fiche de 9e A.F.',
+      'Attestation 9ème A.F.',
+      'N.S.U et code de l’école.',
+    ],
+    updatedAt: '2026-10-18T08:30:00.000Z',
+  },
   contactInfo: {
     phone: '+509 3316-0934',
     phoneAlt: '+509 3721-1818',
@@ -631,14 +663,22 @@ export const apiService = {
   },
 
   // --- EVENTS ---
-  async getEvents(): Promise<SchoolEvent[]> {
+  async getEvents(options?: { includeDrafts?: boolean; academicYear?: string }): Promise<SchoolEvent[]> {
     try {
-      const res = await appFetch(`/api/events?_t=${Date.now()}`);
+      const params = new URLSearchParams();
+      params.set('_t', String(Date.now()));
+      if (options?.includeDrafts) params.set('includeDrafts', 'true');
+      if (options?.academicYear) params.set('academicYear', options.academicYear);
+      const res = await appFetch(`/api/events?${params.toString()}`);
       if (res.ok) return await res.json();
     } catch {
       // Fallback
     }
-    return getLocal<SchoolEvent[]>(STORAGE_KEYS.EVENTS, INITIAL_EVENTS);
+    const local = getLocal<SchoolEvent[]>(STORAGE_KEYS.EVENTS, INITIAL_EVENTS);
+    if (!options?.includeDrafts) {
+      return local.filter(e => e.status !== 'DRAFT');
+    }
+    return local;
   },
 
   async createEvent(event: Omit<SchoolEvent, 'id'>): Promise<SchoolEvent> {

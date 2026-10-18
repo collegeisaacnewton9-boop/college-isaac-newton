@@ -111,8 +111,14 @@ export async function initDatabase(): Promise<boolean> {
           is_public BOOLEAN DEFAULT TRUE,
           image TEXT,
           created_at TIMESTAMPTZ DEFAULT NOW()
-        );
         ALTER TABLE school_events ADD COLUMN IF NOT EXISTS image TEXT;
+        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS academic_year TEXT DEFAULT '2026-2027';
+        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PUBLISHED';
+        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS indicated_duration TEXT;
+        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0;
+        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS event_type TEXT;
+        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS control_number INTEGER;
+        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS period_label TEXT;
       `);
 
       // 4. Table Contact Messages
@@ -999,6 +1005,13 @@ export async function dbGetEvents(): Promise<any[]> {
       audience: r.audience || 'ALL',
       isPublic: r.is_public !== false,
       image: r.image || '',
+      academicYear: r.academic_year || '2026-2027',
+      status: r.status || 'PUBLISHED',
+      indicatedDuration: r.indicated_duration || '',
+      displayOrder: r.display_order ?? 0,
+      eventType: r.event_type || '',
+      controlNumber: r.control_number || undefined,
+      periodLabel: r.period_label || '',
       createdAt: r.created_at,
     }));
   } catch (err: any) {
@@ -1012,8 +1025,11 @@ export async function dbInsertEvent(evt: any): Promise<any | null> {
   if (!p || !isConnected) return null;
   try {
     const res = await p.query(`
-      INSERT INTO school_events (id, title, description, start_date, end_date, location, category, audience, is_public, image)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO school_events (
+        id, title, description, start_date, end_date, location, category, audience, is_public, image,
+        academic_year, status, indicated_duration, display_order, event_type, control_number, period_label
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING *
     `, [
       evt.id,
@@ -1025,7 +1041,14 @@ export async function dbInsertEvent(evt: any): Promise<any | null> {
       evt.category || 'Pédagogique',
       evt.audience || 'ALL',
       evt.isPublic !== false,
-      evt.image || null
+      evt.image || null,
+      evt.academicYear || '2026-2027',
+      evt.status || 'PUBLISHED',
+      evt.indicatedDuration || null,
+      evt.displayOrder ?? 0,
+      evt.eventType || null,
+      evt.controlNumber || null,
+      evt.periodLabel || null
     ]);
     const r = res.rows[0];
     return {
@@ -1039,6 +1062,13 @@ export async function dbInsertEvent(evt: any): Promise<any | null> {
       audience: r.audience,
       isPublic: r.is_public,
       image: r.image || '',
+      academicYear: r.academic_year || '2026-2027',
+      status: r.status || 'PUBLISHED',
+      indicatedDuration: r.indicated_duration || '',
+      displayOrder: r.display_order ?? 0,
+      eventType: r.event_type || '',
+      controlNumber: r.control_number || undefined,
+      periodLabel: r.period_label || '',
     };
   } catch (err: any) {
     console.error('[DB Insert Event Error]', err.message);
@@ -1060,8 +1090,15 @@ export async function dbUpdateEvent(id: string, evt: any): Promise<any | null> {
           category = COALESCE($6, category),
           audience = COALESCE($7, audience),
           is_public = COALESCE($8, is_public),
-          image = COALESCE($9, image)
-      WHERE id = $10
+          image = COALESCE($9, image),
+          academic_year = COALESCE($10, academic_year),
+          status = COALESCE($11, status),
+          indicated_duration = COALESCE($12, indicated_duration),
+          display_order = COALESCE($13, display_order),
+          event_type = COALESCE($14, event_type),
+          control_number = COALESCE($15, control_number),
+          period_label = COALESCE($16, period_label)
+      WHERE id = $17
       RETURNING *
     `, [
       evt.title,
@@ -1073,6 +1110,13 @@ export async function dbUpdateEvent(id: string, evt: any): Promise<any | null> {
       evt.audience,
       evt.isPublic !== undefined ? evt.isPublic : null,
       evt.image !== undefined ? evt.image : null,
+      evt.academicYear || null,
+      evt.status || null,
+      evt.indicatedDuration !== undefined ? evt.indicatedDuration : null,
+      evt.displayOrder !== undefined ? evt.displayOrder : null,
+      evt.eventType !== undefined ? evt.eventType : null,
+      evt.controlNumber !== undefined ? evt.controlNumber : null,
+      evt.periodLabel !== undefined ? evt.periodLabel : null,
       id
     ]);
     if (res.rows.length === 0) return null;
@@ -1088,6 +1132,13 @@ export async function dbUpdateEvent(id: string, evt: any): Promise<any | null> {
       audience: r.audience,
       isPublic: r.is_public,
       image: r.image || '',
+      academicYear: r.academic_year || '2026-2027',
+      status: r.status || 'PUBLISHED',
+      indicatedDuration: r.indicated_duration || '',
+      displayOrder: r.display_order ?? 0,
+      eventType: r.event_type || '',
+      controlNumber: r.control_number || undefined,
+      periodLabel: r.period_label || '',
     };
   } catch (err: any) {
     console.error('[DB Update Event Error]', err.message);

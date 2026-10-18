@@ -362,7 +362,7 @@ let newsArticles = [
   }
 ];
 
-let schoolEvents = [
+let schoolEvents: any[] = [
   // Septembre 2026
   {
     id: 'evt-rentree',
@@ -1998,28 +1998,63 @@ app.delete('/api/news/:id', async (req: Request, res: Response) => {
 });
 
 // 5. School Events routes
+// 5. School Events routes
 app.get('/api/events', async (req: Request, res: Response) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
+
+  let allEvents = schoolEvents;
+
   if (isDbActive()) {
     try {
       const dbEvts = await dbGetEvents();
       if (dbEvts && dbEvts.length > 0) {
+        allEvents = dbEvts;
         schoolEvents = dbEvts;
-        return res.json(dbEvts);
       }
     } catch (e: any) {
       console.error('[API Events DB Error]', e.message);
     }
   }
-  res.json(schoolEvents);
+
+  // Security & Privacy: Filter drafts from public visitors
+  const authHeader = req.headers.authorization || '';
+  const isAuthAdmin = authHeader.includes('admin') || authHeader.includes('editor') || authHeader.includes('direction');
+  const includeDrafts = req.query.includeDrafts === 'true' && isAuthAdmin;
+
+  let result = [...allEvents];
+  if (!includeDrafts) {
+    result = result.filter(e => e.status !== 'DRAFT');
+  }
+
+  if (req.query.academicYear) {
+    const targetYear = String(req.query.academicYear);
+    result = result.filter(e => (e.academicYear || '2026-2027') === targetYear);
+  }
+
+  // Sort strictly in chronological order by startDate
+  result.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+
+  res.json(result);
 });
 
 app.post('/api/events', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization || '';
+  const isAuthAdmin = authHeader.includes('admin') || authHeader.includes('editor') || authHeader.includes('direction') || authHeader.includes('cin');
+  if (!isAuthAdmin && process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Accès non autorisé : droits d\'administration requis pour planifier des dates.' });
+  }
+
   const newEvt = {
     ...req.body,
-    id: `evt-${Date.now()}`,
+    id: req.body.id || `evt-${Date.now()}`,
+    academicYear: req.body.academicYear || '2026-2027',
+    status: req.body.status || 'PUBLISHED',
+    indicatedDuration: req.body.indicatedDuration || '',
+    displayOrder: req.body.displayOrder ?? 0,
+    isPublic: req.body.isPublic !== false,
+    createdAt: new Date().toISOString(),
   };
 
   if (isDbActive()) {
@@ -2027,6 +2062,7 @@ app.post('/api/events', async (req: Request, res: Response) => {
       const saved = await dbInsertEvent(newEvt);
       if (saved) {
         schoolEvents.unshift(saved);
+        saveEventsToDisk(schoolEvents);
         auditLogs.push({
           id: `log-${Date.now()}`,
           action: 'EVENT_CREATED_POSTGRES',
@@ -2042,6 +2078,7 @@ app.post('/api/events', async (req: Request, res: Response) => {
   }
 
   schoolEvents.unshift(newEvt);
+  saveEventsToDisk(schoolEvents);
   auditLogs.push({
     id: `log-${Date.now()}`,
     action: 'EVENT_CREATED',
@@ -2053,17 +2090,29 @@ app.post('/api/events', async (req: Request, res: Response) => {
 });
 
 app.put('/api/events/:id', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization || '';
+  const isAuthAdmin = authHeader.includes('admin') || authHeader.includes('editor') || authHeader.includes('direction') || authHeader.includes('cin');
+  if (!isAuthAdmin && process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Accès non autorisé : droits d\'administration requis pour modifier le calendrier.' });
+  }
+
   const { id } = req.params;
   const idx = schoolEvents.findIndex(e => e.id === id);
   if (idx === -1) {
     return res.status(404).json({ error: 'Événement introuvable' });
   }
 
+  const payload = {
+    ...req.body,
+    updatedAt: new Date().toISOString()
+  };
+
   if (isDbActive()) {
     try {
-      const updated = await dbUpdateEvent(id, req.body);
+      const updated = await dbUpdateEvent(id, payload);
       if (updated) {
         schoolEvents[idx] = { ...schoolEvents[idx], ...updated };
+        saveEventsToDisk(schoolEvents);
         auditLogs.push({
           id: `log-${Date.now()}`,
           action: 'EVENT_UPDATED_POSTGRES',
@@ -2080,8 +2129,9 @@ app.put('/api/events/:id', async (req: Request, res: Response) => {
 
   schoolEvents[idx] = {
     ...schoolEvents[idx],
-    ...req.body,
+    ...payload,
   };
+  saveEventsToDisk(schoolEvents);
   auditLogs.push({
     id: `log-${Date.now()}`,
     action: 'EVENT_UPDATED',
@@ -2093,6 +2143,12 @@ app.put('/api/events/:id', async (req: Request, res: Response) => {
 });
 
 app.delete('/api/events/:id', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization || '';
+  const isAuthAdmin = authHeader.includes('admin') || authHeader.includes('editor') || authHeader.includes('direction') || authHeader.includes('cin');
+  if (!isAuthAdmin && process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Accès non autorisé : droits d\'administration requis pour supprimer du calendrier.' });
+  }
+
   const { id } = req.params;
 
   if (isDbActive()) {
@@ -2104,6 +2160,7 @@ app.delete('/api/events/:id', async (req: Request, res: Response) => {
   }
 
   schoolEvents = schoolEvents.filter(e => e.id !== id);
+  saveEventsToDisk(schoolEvents);
   auditLogs.push({
     id: `log-${Date.now()}`,
     action: 'EVENT_DELETED',
@@ -3552,6 +3609,12 @@ app.get('/api/settings', (req: Request, res: Response) => {
 });
 
 app.put('/api/settings', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization || '';
+  const isAuthAdmin = authHeader.includes('admin') || authHeader.includes('editor') || authHeader.includes('direction') || authHeader.includes('cin');
+  if (!isAuthAdmin && process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Accès non autorisé : privilèges administrateur requis pour modifier les paramètres.' });
+  }
+
   const incoming = req.body || {};
 
   // Protection du mot de passe SMTP : conservation du mot de passe réel si le client envoie le masque ou une valeur vide

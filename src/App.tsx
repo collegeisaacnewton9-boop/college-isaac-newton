@@ -278,7 +278,7 @@ export default function App() {
         )}
 
         {currentPage === 'events' && (
-          <EventsPage onNavigate={handleNavigate} />
+          <EventsPage onNavigate={handleNavigate} currentUser={currentUser} />
         )}
 
         {currentPage === 'gallery' && (

@@ -24,7 +24,8 @@ import {
   Filter, 
   Compass, 
   Bookmark,
-  Share2
+  Share2,
+  CalendarCheck
 } from 'lucide-react';
 import { SchoolEvent, EventCategory } from '../../types';
 
@@ -45,12 +46,33 @@ const CATEGORY_CONFIG: Record<EventCategory, {
   bgLight: string;
   icon: React.ElementType;
 }> = {
+  Contrôle: {
+    label: 'Périodes de Contrôles',
+    badgeClass: 'bg-indigo-50 text-indigo-900 border-indigo-200',
+    dotColor: 'bg-indigo-600',
+    bgLight: 'bg-indigo-50/70 border-indigo-200',
+    icon: CalendarCheck,
+  },
   Examen: {
     label: 'Examens & Évaluations',
     badgeClass: 'bg-rose-50 text-rose-800 border-rose-200',
     dotColor: 'bg-rose-500',
     bgLight: 'bg-rose-50/70 border-rose-200',
     icon: GraduationCap,
+  },
+  Officiel: {
+    label: 'Examens Officiels d’État (9e AF / NS4)',
+    badgeClass: 'bg-red-50 text-red-900 border-red-300',
+    dotColor: 'bg-red-600',
+    bgLight: 'bg-red-50/70 border-red-300',
+    icon: GraduationCap,
+  },
+  Vacances: {
+    label: 'Vacances Scolaires',
+    badgeClass: 'bg-amber-50 text-amber-900 border-amber-200',
+    dotColor: 'bg-amber-500',
+    bgLight: 'bg-amber-50/70 border-amber-200',
+    icon: Palmtree,
   },
   Férié: {
     label: 'Vacances & Jours Fériés',
@@ -180,11 +202,14 @@ export const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     let examens = 0;
     let vacances = 0;
     let activites = 0;
+    let totalPublic = 0;
 
     events.forEach(e => {
-      if (e.category === 'Examen') {
+      if (e.status === 'DRAFT' || e.isPublic === false) return;
+      totalPublic++;
+      if (e.category === 'Examen' || e.category === 'Officiel') {
         examens++;
-      } else if (e.category === 'Férié') {
+      } else if (e.category === 'Férié' || e.category === 'Vacances') {
         vacances++;
       } else {
         activites++;
@@ -192,7 +217,7 @@ export const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     });
 
     return {
-      ALL: events.length,
+      ALL: totalPublic,
       EXAMENS: examens,
       VACANCES: vacances,
       ACTIVITES: activites,
@@ -201,27 +226,32 @@ export const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
 
   // Filtered events based on Group, Sub-category, and Search query
   const filteredEvents = useMemo(() => {
-    return events.filter(e => {
-      // 1. Group filter (Examens, Vacances, Activités)
-      if (activeGroup === 'EXAMENS' && e.category !== 'Examen') return false;
-      if (activeGroup === 'VACANCES' && e.category !== 'Férié') return false;
-      if (activeGroup === 'ACTIVITES' && (e.category === 'Examen' || e.category === 'Férié')) return false;
+    return events
+      .filter(e => {
+        // Exclude drafts and non-public items from public view
+        if (e.status === 'DRAFT' || e.isPublic === false) return false;
 
-      // 2. Specific Category filter
-      if (activeCategoryFilter !== 'Tous' && e.category !== activeCategoryFilter) return false;
+        // 1. Group filter (Examens, Vacances, Activités)
+        if (activeGroup === 'EXAMENS' && e.category !== 'Examen' && e.category !== 'Officiel') return false;
+        if (activeGroup === 'VACANCES' && e.category !== 'Férié' && e.category !== 'Vacances') return false;
+        if (activeGroup === 'ACTIVITES' && (e.category === 'Examen' || e.category === 'Officiel' || e.category === 'Férié' || e.category === 'Vacances')) return false;
 
-      // 3. Search query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchesTitle = e.title.toLowerCase().includes(q);
-        const matchesDesc = e.description.toLowerCase().includes(q);
-        const matchesLoc = e.location.toLowerCase().includes(q);
-        const matchesCat = e.category.toLowerCase().includes(q);
-        if (!matchesTitle && !matchesDesc && !matchesLoc && !matchesCat) return false;
-      }
+        // 2. Specific Category filter
+        if (activeCategoryFilter !== 'Tous' && e.category !== activeCategoryFilter) return false;
 
-      return true;
-    });
+        // 3. Search query
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase().trim();
+          const matchesTitle = e.title.toLowerCase().includes(q);
+          const matchesDesc = (e.description || '').toLowerCase().includes(q);
+          const matchesLoc = (e.location || '').toLowerCase().includes(q);
+          const matchesCat = (e.category || '').toLowerCase().includes(q);
+          if (!matchesTitle && !matchesDesc && !matchesLoc && !matchesCat) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   }, [events, activeGroup, activeCategoryFilter, searchQuery]);
 
   // Map events to date strings YYYY-MM-DD for fast lookup

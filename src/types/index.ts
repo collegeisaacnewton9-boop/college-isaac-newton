@@ -103,7 +103,26 @@ export interface NewsArticle {
   authorName?: string;
 }
 
-export type EventCategory = 'Pédagogique' | 'Culturel' | 'Sportif' | 'Réunion' | 'Examen' | 'Férié';
+export type EventCategory = 
+  | 'Pédagogique' 
+  | 'Culturel' 
+  | 'Sportif' 
+  | 'Réunion' 
+  | 'Examen' 
+  | 'Férié'
+  | 'Contrôle'
+  | 'Vacances'
+  | 'Officiel';
+
+export type AcademicEventType = 
+  | 'CONTROLE_PERIODE' 
+  | 'EXAMEN' 
+  | 'VACANCES' 
+  | 'REPRISE' 
+  | 'REMISE_NOTES' 
+  | 'EVENEMENT_IMPORTANT' 
+  | 'FIN_CYCLE' 
+  | 'AUTRE';
 
 export interface SchoolEvent {
   id: string;
@@ -116,6 +135,15 @@ export interface SchoolEvent {
   audience: 'ALL' | 'PARENTS' | 'STUDENTS';
   isPublic: boolean;
   image?: string;
+  academicYear?: string; // e.g. '2026-2027', '2027-2028'
+  status?: 'PUBLISHED' | 'DRAFT'; // default 'PUBLISHED'
+  indicatedDuration?: string; // e.g. '49 jours', '44 jours', '51 jours', '37 jours'
+  displayOrder?: number;
+  eventType?: AcademicEventType;
+  controlNumber?: 1 | 2 | 3 | 4;
+  periodLabel?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface GalleryItem {
@@ -236,6 +264,19 @@ export interface SiteSettings {
   };
   educationalCycles?: AcademicCyclesRecord;
   navigationMenu?: NavigationMenuItem[];
+  admissionRequirements?: AdmissionRequirementsConfig;
+}
+
+export interface AdmissionRequirementsConfig {
+  academicYear: string;
+  registrationFee: string; // e.g. "3 000 gourdes"
+  openingHours: string; // e.g. "Du lundi au vendredi, de 8 h à 15 h"
+  presenceRequiredNotice: string; // e.g. "L'enfant doit être présent lors de l'inscription."
+  levelsConcerned: string[];
+  fondamentaleDocuments: string[];
+  secondaireDocuments: string[];
+  additionalDocuments: string[];
+  updatedAt?: string;
 }
 
 export interface AuditLog {
