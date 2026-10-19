@@ -42,29 +42,17 @@ import {
   FolderSync,
   FileText,
   Layers,
-  ArrowRight,
-  CloudDownload,
-  Zap,
-  GitPullRequest,
-  Server,
-  Globe
+  ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { githubService, GitHubRepoConfig, DEFAULT_GITHUB_CONFIG } from '../../services/githubService';
-import { SiteSettings, NewsArticle, User, AcademicCycleInfo, AcademicCyclesRecord, SecurityAuditReport } from '../../types';
+import { SiteSettings, NewsArticle, User, AcademicCycleInfo, AcademicCyclesRecord } from '../../types';
 import { apiService } from '../../services/api';
 import { DEFAULT_EDUCATIONAL_CYCLES } from '../../data/mockData';
 import { AccessControlView } from './AccessControlView';
 import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
 import { GitHubSyncModal } from './GitHubSyncModal';
 import { MenuEditorView } from './MenuEditorView';
-import { WhatsAppGatewaySettings } from './WhatsAppGatewaySettings';
-import { 
-  isProductionEnvironment, 
-  shouldProposeGitHubOption, 
-  getEnvironmentOverride, 
-  setEnvironmentOverride 
-} from '../../utils/environment';
 
 interface SettingsViewProps {
   initialSettings?: SiteSettings | null;
@@ -73,7 +61,7 @@ interface SettingsViewProps {
   initialTab?: SettingsTab;
 }
 
-export type SettingsTab = 'profile' | 'menus' | 'academic' | 'cycles' | 'news' | 'gateways' | 'users' | 'security' | 'backup' | 'audit';
+export type SettingsTab = 'profile' | 'menus' | 'academic' | 'cycles' | 'news' | 'gateways' | 'users' | 'security' | 'backup';
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
   initialSettings,
@@ -87,26 +75,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab || 'profile');
 
   useEffect(() => {
-    if (initialTab) {
-      setActiveTab(initialTab);
-    }
-  }, [initialTab]);
-
-  useEffect(() => {
-    if (!isSuperAdmin && (activeTab === 'backup' || activeTab === 'audit')) {
-      setActiveTab('profile');
-    }
-    // Sur le serveur de Production en direct, l'onglet audit comparatif n'a aucun sens : rediriger vers profile
-    if (isProductionEnvironment() && activeTab === 'audit') {
+    if (!isSuperAdmin && activeTab === 'backup') {
       setActiveTab('profile');
     }
   }, [isSuperAdmin, activeTab]);
-
-  // Production Alignment & Audit State
-  const [isAligningLive, setIsAligningLive] = useState(false);
-  const [isAuditing, setIsAuditing] = useState(false);
-  const [auditLastChecked, setAuditLastChecked] = useState('10/10/2026 08:41:06');
-  const [auditData, setAuditData] = useState<any | null>(null);
 
   // CMS Settings State
   const [cmsSettings, setCmsSettings] = useState<SiteSettings | null>(initialSettings || null);
@@ -120,28 +92,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
   const [testEmailTarget, setTestEmailTarget] = useState('collegeisaacnewton9@gmail.com');
-
-  // Cyber Security Audit State
-  const [securityReport, setSecurityReport] = useState<SecurityAuditReport | null>(null);
-  const [isLoadingSecurityReport, setIsLoadingSecurityReport] = useState(false);
-
-  const fetchSecurityReport = async () => {
-    setIsLoadingSecurityReport(true);
-    try {
-      const rep = await apiService.getSecurityAudit();
-      setSecurityReport(rep);
-    } catch {
-      toast.error('Erreur lors du chargement du rapport de sécurité');
-    } finally {
-      setIsLoadingSecurityReport(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'security') {
-      fetchSecurityReport();
-    }
-  }, [activeTab]);
 
   // News Articles (Home Page) State
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
@@ -157,38 +107,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     status: 'PUBLISHED' as 'PUBLISHED' | 'DRAFT',
     featured: true,
   });
-
-  // Environment State & Override
-  const [currentEnvMode, setCurrentEnvMode] = useState<'production' | 'development' | 'auto'>(() => {
-    return getEnvironmentOverride() || 'auto';
-  });
-
-  useEffect(() => {
-    const handler = () => {
-      setCurrentEnvMode(getEnvironmentOverride() || 'auto');
-    };
-    window.addEventListener('cin:env-changed', handler);
-    return () => window.removeEventListener('cin:env-changed', handler);
-  }, []);
-
-  const handleSwitchEnvMode = (mode: 'production' | 'development' | 'auto') => {
-    setEnvironmentOverride(mode);
-    setCurrentEnvMode(mode);
-    if (mode === 'production') {
-      toast.success('Mode « Poste en Production Réelle » activé !', {
-        description: 'Les boutons GitHub, modules de synchronisation et audits de développement sont désormais masqués.',
-      });
-      if (activeTab === 'audit') {
-        setActiveTab('profile');
-      }
-    } else if (mode === 'development') {
-      toast.info('Mode « Poste de Développement » activé', {
-        description: 'Outils de synchronisation GitHub et audits comparatifs débloqués.',
-      });
-    } else {
-      toast.info('Mode détection automatique réactivé');
-    }
-  };
 
   // GitHub Modal & Sync State
   const [isGitHubModalOpen, setIsGitHubModalOpen] = useState(false);
@@ -426,32 +344,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   }, [initialSettings]);
 
-  const loadBackupStats = async () => {
-    try {
-      const [adm, newsList, evts, slds, auditRes] = await Promise.allSettled([
-        apiService.getAdmissions(),
-        apiService.getNews(),
-        apiService.getEvents(),
-        apiService.getHeroSlides(),
-        apiService.getLiveAuditCompare(),
-      ]);
-      setBackupStatsLive({
-        admissions: adm.status === 'fulfilled' && Array.isArray(adm.value) ? adm.value.length : 0,
-        news: newsList.status === 'fulfilled' && Array.isArray(newsList.value) ? newsList.value.length : 0,
-        events: evts.status === 'fulfilled' && Array.isArray(evts.value) ? evts.value.length : 0,
-        slides: slds.status === 'fulfilled' && Array.isArray(slds.value) ? slds.value.length : 8,
-      });
-      if (auditRes.status === 'fulfilled' && auditRes.value) {
-        setAuditData(auditRes.value);
-        if (auditRes.value.lastChecked) {
-          setAuditLastChecked(new Date(auditRes.value.lastChecked).toLocaleString('fr-FR'));
-        }
-      }
-    } catch {
-      // Non-blocking
-    }
-  };
-
   const loadSettings = async () => {
     try {
       const data = await apiService.getSettings();
@@ -470,7 +362,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       // Non-blocking
     }
 
-    await loadBackupStats();
+    try {
+      const [adm, newsList, evts, slds] = await Promise.allSettled([
+        apiService.getAdmissions(),
+        apiService.getNews(),
+        apiService.getEvents(),
+        apiService.getHeroSlides(),
+      ]);
+      setBackupStatsLive({
+        admissions: adm.status === 'fulfilled' && Array.isArray(adm.value) ? adm.value.length : 0,
+        news: newsList.status === 'fulfilled' && Array.isArray(newsList.value) ? newsList.value.length : 0,
+        events: evts.status === 'fulfilled' && Array.isArray(evts.value) ? evts.value.length : 0,
+        slides: slds.status === 'fulfilled' && Array.isArray(slds.value) ? slds.value.length : 4,
+      });
+    } catch {
+      // Non-blocking
+    }
   };
 
   // News CRUD Handlers
@@ -815,117 +722,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   };
 
-  // --- AUDIT & ALIGNEMENT PRODUCTION (LIVE) HANDLERS ---
-  const handlePullFromProduction = async () => {
-    setIsAligningLive(true);
-    try {
-      const res = await apiService.mergeLiveProduction();
-      await loadBackupStats();
-      await loadSettings();
-      toast.success('Rapatriement depuis la Production effectué avec succès !', {
-        description: res.message || 'Les données distantes de collegeisaacnewton.com ont été synchronisées.',
-      });
-    } catch (err: any) {
-      toast.error('Erreur lors de l’alignement', { description: err.message });
-    } finally {
-      setIsAligningLive(false);
-    }
-  };
-
-  const handleLaunchAudit = async () => {
-    setIsAuditing(true);
-    try {
-      const auditRes = await apiService.getLiveAuditCompare();
-      if (auditRes) {
-        setAuditData(auditRes);
-        if (auditRes.lastChecked) {
-          setAuditLastChecked(new Date(auditRes.lastChecked).toLocaleString('fr-FR'));
-        }
-      }
-      await loadBackupStats();
-      toast.success('Audit comparatif mis à jour !', {
-        description: 'État du code Git et base de données vérifiés en direct face à collegeisaacnewton.com.',
-      });
-    } catch (err: any) {
-      toast.error('Erreur lors de l’audit', { description: err.message });
-    } finally {
-      setIsAuditing(false);
-    }
-  };
-
-  const handleMergeAll = async () => {
-    setIsAligningLive(true);
-    try {
-      const res = await apiService.mergeLiveProduction();
-      toast.success('Fusion sélective réussie !', {
-        description: res.message || 'Toutes les collections de données ont été harmonisées avec la Production.',
-      });
-      await loadBackupStats();
-      await loadSettings();
-    } catch (err: any) {
-      toast.error('Erreur lors de la fusion', { description: err.message });
-    } finally {
-      setIsAligningLive(false);
-    }
-  };
-
-  const handleOverwriteAll = async () => {
-    setIsAligningLive(true);
-    try {
-      const res = await apiService.mergeLiveProduction();
-      toast.success('Écrasement forcé intégral appliqué !', {
-        description: res.message || 'Le poste de développement a été synchronisé de manière stricte sur la Production.',
-      });
-      await loadBackupStats();
-      await loadSettings();
-    } catch (err: any) {
-      toast.error('Erreur lors de l’écrasement', { description: err.message });
-    } finally {
-      setIsAligningLive(false);
-    }
-  };
-
-  const handleMergeCategory = async (catTitle: string) => {
-    setIsAligningLive(true);
-    try {
-      const res = await apiService.mergeAuditCategory(catTitle);
-      toast.success(res.message || `Fusion appliquée pour : ${catTitle}`);
-      await loadBackupStats();
-      await loadSettings();
-    } catch (err: any) {
-      toast.error(`Erreur lors de la fusion : ${catTitle}`, { description: err.message });
-    } finally {
-      setIsAligningLive(false);
-    }
-  };
-
-  const handleOverwriteCategory = async (catTitle: string) => {
-    setIsAligningLive(true);
-    try {
-      const res = await apiService.mergeAuditCategory(catTitle);
-      toast.success(res.message || `Harmonisation appliquée pour : ${catTitle}`);
-      await loadBackupStats();
-      await loadSettings();
-    } catch (err: any) {
-      toast.error(`Erreur lors de l’alignement : ${catTitle}`, { description: err.message });
-    } finally {
-      setIsAligningLive(false);
-    }
-  };
-
-  const getCategoryIcon = (id: string) => {
-    switch (id) {
-      case 'slides': return <Layers className="w-4 h-4" />;
-      case 'news': return <Newspaper className="w-4 h-4" />;
-      case 'events': return <Calendar className="w-4 h-4" />;
-      case 'contentBlocks': return <Edit3 className="w-4 h-4" />;
-      case 'documents': return <FileText className="w-4 h-4" />;
-      case 'users': return <Users className="w-4 h-4" />;
-      case 'settings':
-      default: return <Building2 className="w-4 h-4" />;
-    }
-  };
-
   return (
     <div className="space-y-4 animate-fade-in font-sans text-slate-800">
       
@@ -1149,29 +945,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </button>
             )}
 
-            {/* Audit Production & Live (Super Admin en Dev Uniquement - Masqué en Production) */}
-            {isSuperAdmin && !isProductionEnvironment() && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('audit')}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left font-medium text-xs sm:text-[13px] transition-all cursor-pointer ${
-                  activeTab === 'audit'
-                    ? 'bg-blue-600 text-white font-black shadow-md ring-1 ring-blue-300'
-                    : 'text-blue-900 bg-blue-50/70 hover:bg-blue-100 border border-blue-200/80'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Activity className={`w-4 h-4 ${activeTab === 'audit' ? 'text-white' : 'text-blue-600'}`} />
-                  <span>Audit Production & Live</span>
-                </div>
-                <span className={`px-1.5 py-0.5 rounded text-[9.5px] font-mono font-black ${
-                  activeTab === 'audit' ? 'bg-white text-blue-900' : 'bg-blue-200 text-blue-900'
-                }`}>
-                  AUDIT
-                </span>
-              </button>
-            )}
-
           </div>
 
           {/* SAUVEGARDE JSON MINI CARD (Super Admin Only) */}
@@ -1204,7 +977,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           )}
 
           {/* DÉPÔT GITHUB MINI CARD (BOTTOM OF SIDEBAR - DEV ONLY) */}
-          {shouldProposeGitHubOption() && (
+          {import.meta.env.DEV && (
             <div className="bg-slate-950 text-white rounded-2xl p-3 border border-slate-800 shadow-md space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -1286,66 +1059,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {/* Form Content */}
               <form onSubmit={handleSaveSettings} className="space-y-6">
                 
-                {/* 0. MODE DU POSTE (PRODUCTION RÉELLE vs DÉVELOPPEMENT) */}
-                <div className="p-3.5 sm:p-4 rounded-2xl border bg-slate-50/90 border-slate-200/90 shadow-2xs space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-start sm:items-center gap-2.5">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 ${
-                        isProductionEnvironment()
-                          ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'bg-blue-900 text-white shadow-xs'
-                      }`}>
-                        {isProductionEnvironment() ? 'PROD' : 'DEV'}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-xs sm:text-sm text-slate-900">
-                            Mode d'Exécution : {isProductionEnvironment() ? 'Poste en Production Réelle' : 'Poste de Développement'}
-                          </h4>
-                          <span className={`px-2 py-0.2 rounded-full text-[10px] font-bold ${
-                            isProductionEnvironment()
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-blue-100 text-blue-900'
-                          }`}>
-                            {isProductionEnvironment() ? 'Mode Établissement Actif' : 'Mode Technique Dev'}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          {isProductionEnvironment() 
-                            ? 'Sur ce poste en production, les boutons GitHub, dépôts distants et outils d\'audit comparatif sont masqués.'
-                            : 'Sur le poste de développement, les modules de synchronisation vers GitHub et moniteur live sont disponibles.'
-                          }
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0 bg-white p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
-                      <button
-                        type="button"
-                        onClick={() => handleSwitchEnvMode('production')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                          isProductionEnvironment()
-                            ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                        }`}
-                      >
-                        ✓ Poste en Production
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleSwitchEnvMode('development')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                          !isProductionEnvironment()
-                            ? 'bg-blue-900 text-white shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                        }`}
-                      >
-                        Poste de Développement
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
                 {/* 1. INFORMATIONS GÉNÉRALES */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-xs font-black text-slate-900 tracking-wider uppercase">
@@ -1662,17 +1375,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   </div>
                 </div>
               </div>
-
-              {/* PASSERELLE WHATSAPP OFFICIELLE DIRECTION (AVEC VÉRIFICATION PRÉALABLE & PERSISTANCE BDD) */}
-              <WhatsAppGatewaySettings
-                settings={cmsSettings}
-                onSettingsUpdated={(newSettings) => {
-                  setCmsSettings(newSettings);
-                  if (onSettingsUpdated) {
-                    onSettingsUpdated(newSettings);
-                  }
-                }}
-              />
 
               {/* SERVEUR DE MESSAGERIE SORTANTE (SMTP) - EDITABLE & DYNAMIC CARD */}
               <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-5">
@@ -2884,98 +2586,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               </div>
 
-              {/* CARD 5: Audit Approfondi de Sécurité & Conformité .env / Secrets */}
-              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-950 text-emerald-400 flex items-center justify-center shrink-0 shadow-xs">
-                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight">
-                          Audit de Cybersécurité & Conformité .env
-                        </h3>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          Score : {securityReport?.overallScore || 98}/100 · SÉCURISÉ
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        Vérification approfondie contre les failles, injections et fuites de clés API ou mots de passe.
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={fetchSecurityReport}
-                    disabled={isLoadingSecurityReport}
-                    className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-all cursor-pointer self-start sm:self-auto"
-                  >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isLoadingSecurityReport ? 'animate-spin' : ''}`} />
-                    <span>Actualiser l'audit</span>
-                  </button>
-                </div>
-
-                {/* Résumé de l'état */}
-                <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs text-emerald-950 flex items-start gap-2.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="block font-semibold">Système audité et protégé :</strong>
-                    <span className="text-[11.5px] leading-relaxed text-emerald-900">
-                      {securityReport?.summary || 'Protection active contre les fuites .env, injections, traversées de chemins et attaques par force brute.'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Liste des vérifications de sécurité */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                  {(securityReport?.checks || []).map((check) => (
-                    <div 
-                      key={check.id}
-                      className="p-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white transition-colors space-y-1.5"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <strong className="text-xs text-slate-900">{check.name}</strong>
-                        </div>
-                        <span className="text-[9.5px] font-mono uppercase font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                          {check.status}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        {check.details}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Métriques de défense */}
-                {securityReport?.defenseMetrics && (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-100 text-center">
-                    <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
-                      <span className="text-[10px] uppercase font-mono text-slate-400 block">Fichiers protégés</span>
-                      <strong className="text-sm font-mono text-slate-900">
-                        {securityReport.defenseMetrics.protectedInternalFilesCount} fichiers sensibles
-                      </strong>
-                    </div>
-                    <div className="p-2 rounded-xl bg-slate-50 border border-slate-200">
-                      <span className="text-[10px] uppercase font-mono text-slate-400 block">Endpoints assainis</span>
-                      <strong className="text-sm font-mono text-slate-900">
-                        {securityReport.defenseMetrics.sanitizedEndpoints.length} routes API
-                      </strong>
-                    </div>
-                    <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 col-span-2 sm:col-span-1">
-                      <span className="text-[10px] uppercase font-mono text-slate-400 block">Tentatives bloquées</span>
-                      <strong className="text-sm font-mono text-emerald-700">
-                        0 intrusion détectée
-                      </strong>
-                    </div>
-                  </div>
-                )}
-              </div>
-
             </div>
           )}
 
@@ -3064,8 +2674,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               </div>
 
-              {/* THREE CLEAN BALANCED ACTION CARDS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* TWO CLEAN BALANCED ACTION CARDS */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 
                 {/* CARD 1: EXPORT */}
                 <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between space-y-4">
@@ -3075,10 +2685,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
                           <Download className="w-4 h-4" />
                         </div>
-                        <h3 className="font-bold text-sm text-slate-900">Exporter (.json)</h3>
+                        <h3 className="font-bold text-sm text-slate-900">Exporter la Sauvegarde</h3>
                       </div>
                       <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-mono font-semibold">
-                        Export
+                        .json
                       </span>
                     </div>
 
@@ -3098,7 +2708,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     ) : (
                       <Download className="w-4 h-4 text-amber-400" />
                     )}
-                    <span>Télécharger la Sauvegarde</span>
+                    <span>Télécharger la Sauvegarde JSON</span>
                   </button>
                 </div>
 
@@ -3110,7 +2720,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                           <Upload className="w-4 h-4" />
                         </div>
-                        <h3 className="font-bold text-sm text-slate-900">Restaurer Fichier</h3>
+                        <h3 className="font-bold text-sm text-slate-900">Restaurer & Synchroniser</h3>
                       </div>
                       <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
                         Restauration
@@ -3126,7 +2736,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         className="hidden"
                       />
                       <FileJson className="w-5 h-5 text-amber-500 shrink-0" />
-                      <span className="text-xs font-semibold text-slate-700 truncate max-w-[200px]">
+                      <span className="text-xs font-semibold text-slate-700 truncate max-w-[240px]">
                         {backupFileName ? backupFileName : 'Sélectionner un fichier JSON'}
                       </span>
                     </label>
@@ -3160,513 +2770,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     ) : (
                       <FolderSync className="w-4 h-4" />
                     )}
-                    <span>Restaurer Fichier JSON</span>
+                    <span>Restaurer sur ce Serveur</span>
                   </button>
                 </div>
-
-                {/* CARD 3: ALIGNER AVEC LE LIVE (DEV ONLY) OU STATUT SERVEUR EN DIRECT (PROD) */}
-                {!isProductionEnvironment() ? (
-                  <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                            <RefreshCw className="w-4 h-4" />
-                          </div>
-                          <h3 className="font-bold text-sm text-slate-900">Aligner avec le Live</h3>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold">
-                          1-Clic Prod
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-slate-600">
-                        Rapatrie en direct toutes les diapositives, articles, événements et médias créés sur le serveur de Production en ligne.
-                      </p>
-
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1 font-mono text-[11px]">
-                        <div className="flex justify-between text-slate-500">
-                          <span>Serveur cible :</span>
-                          <span className="text-blue-700 font-bold">collegeisaacnewton.com</span>
-                        </div>
-                        <div className="flex justify-between text-slate-500">
-                          <span>Protocole :</span>
-                          <span className="text-slate-700 font-semibold">HTTPS API REST</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <button
-                        type="button"
-                        onClick={handlePullFromProduction}
-                        disabled={isAligningLive}
-                        className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
-                      >
-                        {isAligningLive ? (
-                          <Loader2 className="w-4 h-4 animate-spin text-white" />
-                        ) : (
-                          <CloudDownload className="w-4 h-4" />
-                        )}
-                        <span>Rapatrier depuis la Production</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab('audit')}
-                        className="w-full py-2 px-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <Activity className="w-3.5 h-3.5 text-blue-600" />
-                        <span>Ouvrir l'Outil d'Audit Comparatif (Diff)</span>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-white rounded-2xl border border-emerald-200/80 shadow-xs p-4 sm:p-5 flex flex-col justify-between space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-sm text-slate-900">
-                              Serveur de Production en Direct
-                            </h3>
-                            <p className="text-[11px] text-slate-500">
-                              collegeisaacnewton.com
-                            </p>
-                          </div>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">
-                          En Ligne
-                        </span>
-                      </div>
-
-                      <p className="text-xs text-slate-600 leading-relaxed">
-                        Vous êtes actuellement connecté sur le serveur de production officiel. Toutes vos opérations de sauvegarde, restauration et modifications sont immédiatement effectives dans la base de données PostgreSQL en direct.
-                      </p>
-
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1 font-mono text-[11px]">
-                        <div className="flex justify-between text-slate-500">
-                          <span>Statut serveur :</span>
-                          <span className="text-emerald-700 font-bold">Opérationnel (200 OK)</span>
-                        </div>
-                        <div className="flex justify-between text-slate-500">
-                          <span>Base active :</span>
-                          <span className="text-slate-800 font-semibold">PostgreSQL Cloud</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-
-            </div>
-          )}
-
-          {/* =========================================================================
-              TAB: AUDIT DE L'ÉTAT DE PRODUCTION & MONITEUR LIVE (DEV UNIQUEMENT)
-          ========================================================================= */}
-          {activeTab === 'audit' && isSuperAdmin && !isProductionEnvironment() && (
-            <div className="space-y-6 animate-fade-in">
-
-              {/* HERO BANNER */}
-              <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-2xl p-5 sm:p-6 border border-blue-500/30 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-start sm:items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-400/30 flex items-center justify-center shrink-0">
-                    <Activity className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-base sm:text-lg font-black text-white">
-                      Audit de l'État de Production & Moniteur Live
-                    </h2>
-                    <p className="text-xs text-slate-300 font-light mt-0.5">
-                      Compare en temps réel le code source Git et l'ensemble des données de votre poste local avec le serveur de Production en direct (<span className="text-blue-300 font-mono font-medium">collegeisaacnewton.com</span>).
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleLaunchAudit}
-                  disabled={isAuditing}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-all shadow-md cursor-pointer shrink-0"
-                >
-                  {isAuditing ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <RefreshCw className="w-4 h-4" />
-                  )}
-                  <span>Lancer l'Audit Comparatif</span>
-                </button>
-              </div>
-
-              {/* TWO SIDES: POSTE LOCAL vs SERVEUR LIVE */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                
-                {/* LOCAL POSTE */}
-                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div className="flex items-center gap-2">
-                      <HardDrive className="w-4 h-4 text-slate-700" />
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800">
-                        Poste Local (Développement)
-                      </h3>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">
-                      LOCAL
-                    </span>
-                  </div>
-
-                  <div className="space-y-2.5 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Commit Git actuel :</span>
-                      <div className="flex items-center gap-1.5 font-mono">
-                        <span className="px-2 py-0.5 rounded bg-slate-100 font-bold text-slate-900">4462976</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText('4462976');
-                            toast.success('SHA copié !');
-                          }}
-                          className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Branche active :</span>
-                      <span className="font-mono font-bold text-slate-900">main</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Message du commit :</span>
-                      <span className="font-medium text-slate-700 truncate max-w-[200px]" title="Mise à jour synchronisée depuis le SI Collège Isaac Newton - 10/10/2026 à 06:41">
-                        Mise à jour synchronisée depuis le SI Collège Isaa...
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Date du commit :</span>
-                      <span className="font-mono text-slate-700">10/10/2026 06:41:26</span>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-slate-500">Base locale active :</span>
-                      <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                        JSON Disk Storage
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* PRODUCTION SERVER */}
-                <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div className="flex items-center gap-2">
-                      <Globe className="w-4 h-4 text-blue-600" />
-                      <h3 className="font-bold text-xs uppercase tracking-wider text-slate-800">
-                        Serveur Live (Production)
-                      </h3>
-                    </div>
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold">
-                      EN LIGNE
-                    </span>
-                  </div>
-
-                  <div className="space-y-2.5 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Commit Live / GitHub :</span>
-                      <div className="flex items-center gap-1.5 font-mono">
-                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-900 font-bold">4462976</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText('4462976');
-                            toast.success('SHA copié !');
-                          }}
-                          className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Serveur Live :</span>
-                      <a
-                        href="https://collegeisaacnewton.com"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-mono font-bold text-blue-600 hover:underline inline-flex items-center gap-1"
-                      >
-                        <span>collegeisaacnewton.com</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Dernier message :</span>
-                      <span className="font-medium text-slate-700 truncate max-w-[200px]" title="Mise à jour synchronisée depuis le SI Collège Isaac Newton - 10/10/2026 à 06:41">
-                        Mise à jour synchronisée depuis le SI Collège Isaac
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-slate-500">Déployé / Actif le :</span>
-                      <span className="font-mono text-slate-700">{auditLastChecked}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-slate-500">Moteur Base Prod :</span>
-                      <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
-                        connected (PostgreSQL)
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-
-              {/* GITHUB OFFICIAL REPO STRIP */}
-              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <span>Dépôt GitHub officiel :</span>
-                  <a
-                    href="https://github.com/collegeisaacnewton9-boop/college-isaac-newton"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-mono font-bold text-blue-600 hover:underline inline-flex items-center gap-1"
-                  >
-                    <span>collegeisaacnewton9-boop/college-isaac-newton</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsGitHubModalOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors cursor-pointer shadow-xs shrink-0"
-                >
-                  <GitCommit className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Pousser les commits locaux via Git</span>
-                </button>
-              </div>
-
-              {/* DATABASE COMPARATIVE SECTION (LOCAL VS PRODUCTION) */}
-              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-                  <div className="flex items-start gap-2.5">
-                    <div className="p-2 rounded-lg bg-blue-50 text-blue-600 mt-0.5">
-                      <Database className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-sm sm:text-base text-slate-900">
-                        Comparatif de la Base de Données (Local vs Production)
-                      </h3>
-                      <p className="text-xs text-slate-500 font-light mt-0.5">
-                        Analyse détaillée des 7 collections de contenus. Vous pouvez fusionner sélectivement sans écraser vos créations locales, ou forcer l'alignement strict.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={handleMergeAll}
-                      disabled={isAligningLive}
-                      className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
-                    >
-                      <GitPullRequest className="w-3.5 h-3.5" />
-                      <span>Tout Fusionner (Merge Sélectif)</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleOverwriteAll}
-                      disabled={isAligningLive}
-                      className="px-3.5 py-2 rounded-xl bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
-                    >
-                      <Zap className="w-3.5 h-3.5" />
-                      <span>Écrasement Forcé Intégral</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* SUMMARY WARNING BANNER DYNAMIQUE */}
-                {(() => {
-                  const displayCategories = auditData?.categories || [
-                    {
-                      id: 'slides',
-                      name: "Diapositives d'Accueil (Hero Slides)",
-                      description: "Titres, photos et boutons d'appel à l'action du carrousel",
-                      localCount: backupStatsLive.slides || 8,
-                      prodCount: 8,
-                      isIdentical: true,
-                      statusText: 'Parfaitement synchronisé',
-                    },
-                    {
-                      id: 'news',
-                      name: "Articles & Actualités",
-                      description: "Articles publiés, communiqués officiels et photos de couverture",
-                      localCount: backupStatsLive.news || 3,
-                      prodCount: 6,
-                      isIdentical: (backupStatsLive.news || 3) >= 6,
-                      statusText: (backupStatsLive.news || 3) >= 6 ? 'Parfaitement synchronisé' : '3 nouveaux sur la prod',
-                    },
-                    {
-                      id: 'events',
-                      name: "Agenda & Événements Scolaires",
-                      description: "Calendrier académique, examens et réunions pédagogiques",
-                      localCount: backupStatsLive.events || 23,
-                      prodCount: 4,
-                      isIdentical: true,
-                      statusText: 'Calendrier officiel complet (23 événements vérifiés)',
-                    },
-                    {
-                      id: 'contentBlocks',
-                      name: "Textes & Blocs de Contenu (CMS Live)",
-                      description: "Slogans, descriptions de programmes et textes modifiables en direct",
-                      localCount: 18,
-                      prodCount: 1,
-                      isIdentical: true,
-                      statusText: 'Parfaitement synchronisé',
-                    },
-                    {
-                      id: 'documents',
-                      name: "Documents Officiels & Règlements (PDF)",
-                      description: "Fichiers certifiés, règlement intérieur et listes de fournitures",
-                      localCount: 5,
-                      prodCount: 5,
-                      isIdentical: true,
-                      statusText: 'Parfaitement synchronisé',
-                    },
-                    {
-                      id: 'users',
-                      name: "Comptes Utilisateurs & Droits (RBAC)",
-                      description: "Administrateurs, direction, enseignants et accès sécurisés",
-                      localCount: 7,
-                      prodCount: 1,
-                      isIdentical: true,
-                      statusText: 'Comptes rôles & sécurité conformes',
-                    },
-                    {
-                      id: 'settings',
-                      name: "Paramètres Généraux du Collège",
-                      description: "Coordonnées de Delmas 50, année scolaire active et configuration des passerelles",
-                      localCount: 1,
-                      prodCount: 1,
-                      isIdentical: true,
-                      statusText: 'Parfaitement synchronisé',
-                    },
-                  ];
-
-                  const total = displayCategories.length;
-                  const identical = displayCategories.filter((c: any) => c.isIdentical).length;
-                  const diff = total - identical;
-
-                  return (
-                    <>
-                      {/* SUMMARY BANNER */}
-                      <div className={`p-3.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
-                        diff === 0
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-                          : 'bg-amber-50 border-amber-200/80 text-amber-900'
-                      }`}>
-                        <div className="flex items-center gap-2.5">
-                          {diff === 0 ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                          ) : (
-                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                          )}
-                          <div>
-                            <span className="font-bold block sm:inline mr-1">
-                              {diff === 0
-                                ? 'Toutes les catégories sont harmonisées avec la Production !'
-                                : `${diff} catégorie(s) présentent des ajustements avec la Production`
-                              }
-                            </span>
-                            <span className="text-slate-600 text-[11.5px]">
-                              · {identical} sur {total} catégories sont strictement conformes.
-                            </span>
-                          </div>
-                        </div>
-
-                        <span className={`px-2.5 py-1 rounded-full font-mono font-bold text-[11px] self-start sm:self-center border shadow-2xs ${
-                          diff === 0
-                            ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                            : 'bg-white text-amber-900 border-amber-300'
-                        }`}>
-                          Identiques : {identical} / {total}
-                        </span>
-                      </div>
-
-                      {/* THE 7 DYNAMIC COMPARATIVE CATEGORIES */}
-                      <div className="divide-y divide-slate-100">
-                        {displayCategories.map((cat: any) => (
-                          <div key={cat.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div className="flex items-start gap-3">
-                              <div className="p-2 rounded-xl bg-slate-100 text-slate-700 shrink-0 mt-0.5">
-                                {getCategoryIcon(cat.id)}
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-bold text-xs sm:text-sm text-slate-900">
-                                    {cat.name}
-                                  </h4>
-                                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                    cat.isIdentical
-                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                      : 'bg-amber-50 text-amber-700 border-amber-200'
-                                  }`}>
-                                    {cat.isIdentical ? 'Identique (Synchronisé)' : 'Différences détectées'}
-                                  </span>
-                                </div>
-                                <p className="text-[11px] text-slate-500 mt-0.5">
-                                  {cat.description}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 self-end sm:self-center">
-                              <div className="text-right font-mono text-xs">
-                                <span className="text-[10px] text-slate-400 block uppercase font-sans">Local vs Prod</span>
-                                <span className="font-bold text-slate-800">{cat.localCount} / {cat.prodCount}</span>
-                              </div>
-                              <span className={`text-xs hidden md:inline font-medium ${
-                                cat.isIdentical ? 'text-slate-400' : 'text-amber-600'
-                              }`}>
-                                {cat.statusText}
-                              </span>
-                              <div className="flex items-center gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => handleMergeCategory(cat.name)}
-                                  disabled={isAligningLive}
-                                  className="px-2.5 py-1.5 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 font-semibold text-xs transition-colors cursor-pointer disabled:opacity-50"
-                                >
-                                  Fusionner
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleOverwriteCategory(cat.name)}
-                                  disabled={isAligningLive}
-                                  className="px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-700 hover:bg-rose-50 font-semibold text-xs transition-colors cursor-pointer disabled:opacity-50"
-                                >
-                                  Écraser
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  );
-                })()}
 
               </div>
 

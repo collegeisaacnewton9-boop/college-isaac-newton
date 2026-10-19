@@ -67,7 +67,7 @@ export const TestimonialSection: React.FC<TestimonialSectionProps> = ({ currentU
             contentKey="home.testimonials.title"
             defaultContent="Témoignages & Paroles de notre Communauté"
             as="h2"
-            className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis"
+            className="font-serif text-2xl sm:text-3xl font-bold text-slate-900"
             currentUser={currentUser}
             multiline={false}
           />

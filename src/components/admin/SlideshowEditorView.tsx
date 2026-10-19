@@ -27,7 +27,6 @@ import { HeroSlide, MediaItem, Role } from '../../types';
 import { apiService } from '../../services/api';
 import { SCHOOL_IMAGES } from '../../assets/images';
 import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
-import { MediaPickerModal } from '../common/MediaPickerModal';
 import { getHeroSlideImageUrl } from '../../utils/cacheBuster';
 
 interface SlideshowEditorViewProps {
@@ -1021,22 +1020,62 @@ export const SlideshowEditorView: React.FC<SlideshowEditorViewProps> = ({
       )}
 
       {/* =========================================================================
-          4. CENTRAL MEDIA PICKER MODAL (FULL CAPABILITIES, CATEGORIES & COMPRESSION)
+          4. MEDIA PICKER MODAL (RESPONSIVE FOR ALL SCREEN SIZES)
       ========================================================================= */}
       {showMediaPicker && (
-        <MediaPickerModal
-          isOpen={showMediaPicker}
-          onClose={() => setShowMediaPicker(false)}
-          onSelectImage={(url) => {
-            handleFieldChange('image', url);
-            setShowMediaPicker(false);
-            toast.success('Image appliquée à la diapositive !');
-          }}
-          currentSelectedUrl={formDraft?.image || ''}
-          categoryFilter="SLIDESHOW"
-          title="Médiathèque — Diaporama & Photos d'Arrière-Plan"
-          description="Sélectionnez une photo de l'établissement déjà indexée sur le serveur pour cette diapositive."
-        />
+        <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-3xl p-4 sm:p-5 space-y-3 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-blue-900" />
+                <span>Sélectionner une Image pour la Diapositive</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowMediaPicker(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 p-1 max-h-[60vh]">
+              {mediaItems.map((media) => (
+                <div
+                  key={media.id}
+                  onClick={() => {
+                    handleFieldChange('image', media.url);
+                    setShowMediaPicker(false);
+                    toast.success('Image appliquée à la diapositive !');
+                  }}
+                  className="rounded-xl border border-slate-200 overflow-hidden cursor-pointer hover:border-blue-900 hover:shadow-md transition-all group flex flex-col justify-between"
+                >
+                  <div className="aspect-[16/10] bg-slate-900 overflow-hidden">
+                    <img
+                      src={media.url}
+                      alt={media.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  </div>
+                  <div className="p-1.5">
+                    <p className="text-[10.5px] font-bold text-slate-800 truncate">{media.title}</p>
+                    <span className="text-[9px] font-semibold text-slate-400">{media.category}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowMediaPicker(false)}
+                className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs cursor-pointer"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

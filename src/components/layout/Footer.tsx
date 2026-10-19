@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { SchoolLogo } from '../ui/SchoolLogo';
 import { SCHOOL_INFO } from '../../data/mockData';
-import { PWAInstallButton } from '../common/PWAInstallButton';
 
 interface FooterProps {
   onNavigate: (page: string, subSection?: string) => void;
@@ -372,8 +371,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
             >
               Confidentialité
             </button>
-            <span className="text-slate-800">·</span>
-            <PWAInstallButton variant="compact" />
             <span className="text-slate-800">·</span>
             <button 
               onClick={onOpenAuth} 

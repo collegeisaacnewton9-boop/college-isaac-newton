@@ -51,26 +51,16 @@ export const ResponsiveLazyImage: React.FC<ResponsiveLazyImageProps> = ({
   onError,
   ...restProps
 }) => {
-  const isDataUrl = typeof src === 'string' && (src.startsWith('data:') || src.startsWith('blob:'));
-  const [isLoaded, setIsLoaded] = useState(isDataUrl);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
-  const imgRef = React.useRef<HTMLImageElement>(null);
 
   // Sync if src prop changes
   React.useEffect(() => {
     setCurrentSrc(src);
-    const dataOrBlob = typeof src === 'string' && (src.startsWith('data:') || src.startsWith('blob:'));
-    setIsLoaded(dataOrBlob);
+    setIsLoaded(false);
     setHasError(false);
   }, [src]);
-
-  // Synchronous cache detection check to avoid stuck blank images
-  React.useEffect(() => {
-    if (imgRef.current && imgRef.current.complete && imgRef.current.naturalWidth > 0) {
-      setIsLoaded(true);
-    }
-  }, [currentSrc]);
 
   const computedSizes = sizes || (preset !== 'custom' ? PRESET_SIZES[preset] : undefined);
   const aspectClass = ASPECT_RATIO_CLASSES[aspectRatio];
@@ -84,12 +74,9 @@ export const ResponsiveLazyImage: React.FC<ResponsiveLazyImageProps> = ({
     if (!hasError && fallbackSrc && currentSrc !== fallbackSrc) {
       setHasError(true);
       setCurrentSrc(fallbackSrc);
-      setIsLoaded(true);
     }
     onError?.(e);
   };
-
-  const effectiveLoading = isDataUrl ? 'eager' : loading;
 
   return (
     <div
@@ -113,11 +100,10 @@ export const ResponsiveLazyImage: React.FC<ResponsiveLazyImageProps> = ({
 
       {/* Main Image */}
       <img
-        ref={imgRef}
         src={currentSrc}
         alt={alt}
         sizes={computedSizes}
-        loading={effectiveLoading}
+        loading={loading}
         decoding={decoding}
         fetchPriority={fetchPriority}
         referrerPolicy="no-referrer"

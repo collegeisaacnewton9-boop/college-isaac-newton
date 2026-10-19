@@ -91,7 +91,7 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
             <Camera className="w-4 h-4 text-amber-500" />
             <span>Vie Scolaire & Campus</span>
           </div>
-          <h2 className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900">
             Galerie des Activités Scolaires
           </h2>
         </div>
@@ -173,12 +173,9 @@ export const ActivityGallerySection: React.FC<ActivityGallerySectionProps> = ({ 
               </div>
             </div>
 
-            {/* Clean Title at Bottom - Single line */}
+            {/* Clean Title at Bottom */}
             <div className="absolute bottom-0 inset-x-0 p-3.5 sm:p-4 text-white">
-              <h3 
-                className="font-serif font-bold text-sm sm:text-base text-white group-hover:text-amber-300 transition-colors leading-snug whitespace-nowrap overflow-hidden text-ellipsis"
-                title={item.title}
-              >
+              <h3 className="font-serif font-bold text-sm sm:text-base text-white group-hover:text-amber-300 transition-colors leading-snug line-clamp-1">
                 {item.title}
               </h3>
               {item.caption && (

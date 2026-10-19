@@ -16,8 +16,4 @@ export const SCHOOL_IMAGES = {
   heroCampus: '/images/campus_facade_real_1790679454540.jpg',
   heroCampusAlt: '/images/hero_campus_facade_1790529159819.jpg',
   studentsAssembly: '/images/students_assembly_1790529184364.jpg',
-  
-  // Faculty & Leadership Official Portraits
-  portraitCoasminMaxy: '/images/portrait_coasmin_maxy_1792232767777.jpg',
-  portraitSalomonFrantz: '/images/portrait_salomon_frantz_1792232768591.jpg',
 };

@@ -98,16 +98,6 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
     return () => clearInterval(interval);
   }, [isAutoPlay, isHovered, total]);
 
-  // Preload all infrastructure slide images for instant, zero-delay rotation in production
-  useEffect(() => {
-    filteredItems.forEach((item) => {
-      if (item.imageUrl) {
-        const img = new Image();
-        img.src = getGalleryImageUrl(item.imageUrl, item);
-      }
-    });
-  }, [filteredItems]);
-
   // Reset index when category changes
   useEffect(() => {
     setCurrentIndex(0);
@@ -193,9 +183,9 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
               </button>
             )}
           </div>
-          <h2 className="font-serif text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 flex items-center gap-2 max-w-full">
-            <span className="whitespace-nowrap overflow-hidden text-ellipsis">{sectionHeader.title}</span>
-            <span className="text-xs font-sans font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200 shrink-0">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2">
+            <span>{sectionHeader.title}</span>
+            <span className="text-xs font-sans font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
               {items.length} espaces
             </span>
           </h2>
@@ -291,46 +281,39 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
               className="lg:col-span-7 xl:col-span-7 h-[260px] sm:h-[300px] lg:h-full w-full relative overflow-hidden bg-slate-900 cursor-pointer group shrink-0"
               onClick={() => setLightboxItem(currentItem)}
             >
-              {/* Stacked Slides with Smooth CSS Crossfade (Never unmounts, zero blank flash, 100% production reliable) */}
-              {filteredItems.map((item, idx) => {
-                const isActive = idx === currentIndex;
-                const isData = typeof item.imageUrl === 'string' && (item.imageUrl.startsWith('data:') || item.imageUrl.startsWith('blob:'));
-                return (
-                  <div
-                    key={item.id}
-                    className={`absolute inset-0 w-full h-full transition-opacity duration-500 ease-in-out ${
-                      isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-                    }`}
-                  >
-                    <img
-                      src={getGalleryImageUrl(item.imageUrl, item)}
-                      alt={item.altText || item.title}
-                      loading={isActive || isData ? 'eager' : 'lazy'}
-                      decoding="async"
-                      fetchPriority={isActive ? 'high' : 'auto'}
-                      className="w-full h-full object-cover select-none transition-transform duration-700 ease-out group-hover:scale-105"
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        if (!target.dataset.triedFallback) {
-                          target.dataset.triedFallback = '1';
-                          target.src = '/images/campus_courtyard_building_1790531780046.jpg';
-                        }
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent lg:hidden" />
-                  </div>
-                );
-              })}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={currentItem.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4, ease: 'easeInOut' }}
+                  className="absolute inset-0 w-full h-full"
+                >
+                  <ResponsiveLazyImage
+                    src={getGalleryImageUrl(currentItem.imageUrl, currentItem)}
+                    alt={currentItem.altText || currentItem.title}
+                    preset="hero"
+                    darkPlaceholder
+                    containerClassName="w-full h-full"
+                    imgClassName="select-none transition-transform duration-700 ease-out group-hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
+                    fallbackSrc="/images/campus_courtyard_building_1790531780046.jpg"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent lg:hidden" />
+                </motion.div>
+              </AnimatePresence>
               
               {/* Zoom pill badge */}
-              <div className="absolute top-3 left-3 bg-slate-950/70 backdrop-blur-md text-white text-[11px] font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity border border-white/10 z-20 pointer-events-none">
+              <div className="absolute top-3 left-3 bg-slate-950/70 backdrop-blur-md text-white text-[11px] font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5 opacity-90 group-hover:opacity-100 transition-opacity border border-white/10 z-10 pointer-events-none">
                 <ZoomIn className="w-3.5 h-3.5 text-amber-400" />
                 <span>Cliquer pour agrandir</span>
               </div>
 
               {/* Staff edit controls on photo */}
               {canManage && (
-                <div className="absolute top-3 right-3 flex items-center gap-1.5 z-20">
+                <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
                   <button
                     type="button"
                     onClick={(e) => handleOpenEdit(currentItem, e)}
@@ -350,15 +333,12 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
                 </div>
               )}
 
-              {/* Mobile overlay caption with single-line responsive title */}
-              <div className="absolute bottom-0 inset-x-0 p-3 sm:p-4 text-white lg:hidden z-20 pointer-events-none">
-                <span className="text-[10px] uppercase font-bold text-amber-300 tracking-wider block">
+              {/* Mobile overlay caption */}
+              <div className="absolute bottom-0 inset-x-0 p-3 sm:p-4 text-white lg:hidden z-10 pointer-events-none">
+                <span className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">
                   {currentItem.category || 'Infrastructure'}
                 </span>
-                <h3 
-                  className="font-serif text-sm sm:text-base md:text-lg font-bold text-white leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full drop-shadow"
-                  title={currentItem.title}
-                >
+                <h3 className="font-serif text-base sm:text-lg font-bold text-white leading-tight truncate">
                   {currentItem.title}
                 </h3>
               </div>
@@ -374,7 +354,7 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
                     transition={{ duration: 0.25, ease: 'easeOut' }}
-                    className="space-y-2 min-w-0"
+                    className="space-y-2"
                   >
                     <div className="flex items-center justify-between">
                       <span className="inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-400/10 px-2.5 py-0.5 rounded-md border border-amber-400/20">
@@ -386,12 +366,8 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
                       </span>
                     </div>
 
-                    {/* Single-line responsive title with ellipsis */}
-                    <div className="flex items-center justify-between gap-2 min-w-0">
-                      <h3 
-                        className="font-serif text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-white leading-snug whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
-                        title={currentItem.title}
-                      >
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-serif text-lg sm:text-xl lg:text-2xl font-bold text-white leading-snug">
                         {currentItem.title}
                       </h3>
                       {canManage && (

@@ -112,9 +112,12 @@ export const ContentBlockProvider: React.FC<{ children: React.ReactNode; current
     try {
       const updated = await apiService.saveMultipleContentBlocks(blocksToSave);
       setBlocks(updated);
+      toast.success('Textes et blocs enregistrés avec succès !', {
+        duration: 2500,
+      });
       return true;
     } catch {
-      toast.error('Erreur lors de la sauvegarde');
+      toast.error('Erreur lors de la sauvegarde des textes');
       return false;
     } finally {
       setIsSaving(false);

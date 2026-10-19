@@ -82,12 +82,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   };
 
   const handleLogout = () => {
-    toast.dismiss();
     apiService.logout();
     onUserChange(null);
     setEmail('');
     setPassword('');
     setError(null);
+    toast.info('Vous êtes maintenant déconnecté du portail.');
     onClose();
   };
 

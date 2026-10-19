@@ -17,15 +17,9 @@ import {
   MapPin,
   Briefcase,
   BookOpen,
-  Sparkles,
-  MessageCircle,
-  Share2,
-  ExternalLink,
-  Send,
-  Check,
-  X
+  Sparkles
 } from 'lucide-react';
-import { AdmissionFormData, AcademicCycle, AdmissionApplication } from '../types';
+import { AdmissionFormData, AcademicCycle } from '../types';
 import { apiService } from '../services/api';
 import { SCHOOL_INFO } from '../data/mockData';
 import { validateEmail, validatePhone, formatPhoneNumber } from '../utils/validation';
@@ -40,38 +34,6 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
   const [submitting, setSubmitting] = useState(false);
   const [submittedNumber, setSubmittedNumber] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-
-  // Dynamic Direction WhatsApp Configuration from Settings / Database
-  const [directionPhone, setDirectionPhone] = useState<string>(() => {
-    return localStorage.getItem('cin_direction_wa_phone') || '+509 3316-0934';
-  });
-  const [directionPhoneClean, setDirectionPhoneClean] = useState<string>(() => {
-    const raw = (localStorage.getItem('cin_direction_wa_phone') || '50933160934').replace(/[^0-9]/g, '');
-    return raw.startsWith('509') ? raw : `509${raw}`;
-  });
-  const [directionHolderName, setDirectionHolderName] = useState<string>('Orphe Jean Marie · Directeur fondateur');
-  const [createdAdmission, setCreatedAdmission] = useState<AdmissionApplication | null>(null);
-  const [showDispatchModal, setShowDispatchModal] = useState(false);
-  const [isAlertTransmitted, setIsAlertTransmitted] = useState(false);
-  const [popupBlocked, setPopupBlocked] = useState(false);
-  const [copiedMsg, setCopiedMsg] = useState(false);
-
-  // Synchronize planned Direction WhatsApp configuration from API / Database
-  useEffect(() => {
-    apiService.getSettings().then(setts => {
-      if (setts?.whatsappConfig) {
-        const phone = setts.whatsappConfig.directionPhone || '+509 3316-0934';
-        const rawClean = setts.whatsappConfig.directionPhoneClean || phone.replace(/[^0-9]/g, '');
-        const clean = rawClean.startsWith('509') ? rawClean : `509${rawClean}`;
-        setDirectionPhone(phone);
-        setDirectionPhoneClean(clean);
-        if (setts.whatsappConfig.holderName) {
-          setDirectionHolderName(setts.whatsappConfig.holderName);
-        }
-        localStorage.setItem('cin_direction_wa_phone', phone);
-      }
-    }).catch(() => {});
-  }, []);
 
   // Form State
   const [formData, setFormData] = useState<AdmissionFormData>({
@@ -319,118 +281,11 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     try {
       const created = await apiService.submitAdmission(formData);
       setSubmittedNumber(created.applicationNumber);
-      setCreatedAdmission(created);
-      setShowDispatchModal(true);
-
-      // Auto-trigger WhatsApp dispatch to the planned Direction number
-      handleLaunchWhatsApp(created.applicationNumber, formData, created.id);
     } catch {
       alert("Une erreur est survenue lors de l'enregistrement. Vos données locales ont été préservées.");
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const buildWhatsAppMessageText = (appNum: string, data: AdmissionFormData) => {
-    return (
-      `*NOUVELLE PRÉINSCRIPTION — COLLÈGE ISAAC NEWTON*\n\n` +
-      `📋 *Dossier :* ${appNum}\n` +
-      `👤 *Élève :* ${data.studentLastName.toUpperCase()} ${data.studentFirstName}\n` +
-      `🎯 *Classe demandée :* ${data.targetLevel} (${data.cycle})\n` +
-      `🎂 *Date de Naissance :* ${data.studentBirthDate}\n` +
-      `👨‍👩‍👧 *Parent / Responsable :* ${data.parentFullName} (${data.parentRelationship})\n` +
-      `📞 *Téléphone Parent :* ${data.parentPhone}\n` +
-      `📧 *E-mail :* ${data.parentEmail || 'Non renseigné'}\n` +
-      `🏫 *École précédente :* ${data.previousSchool || 'Non renseignée'}\n\n` +
-      `Bonjour Direction, je viens d'enregistrer la préinscription de mon enfant sur le portail officiel du Collège Isaac Newton. Je vous transmets ma référence pour l'ouverture du dossier et la convocation au test. Merci !`
-    );
-  };
-
-  const handleLaunchWhatsApp = (appNum: string, data: AdmissionFormData, recordId?: string) => {
-    const text = buildWhatsAppMessageText(appNum, data);
-    const targetClean = directionPhoneClean || '50933160934';
-    const url = `https://wa.me/${targetClean}?text=${encodeURIComponent(text)}`;
-    let isBlocked = false;
-    try {
-      const win = window.open(url, '_blank');
-      if (!win || win.closed || typeof win.closed === 'undefined') {
-        setPopupBlocked(true);
-        isBlocked = true;
-      } else {
-        setPopupBlocked(false);
-      }
-    } catch {
-      setPopupBlocked(true);
-      isBlocked = true;
-    }
-    setIsAlertTransmitted(true);
-
-    // Enregistrer l'événement technique dans le journal WhatsApp
-    apiService.logWhatsAppEvent({
-      type: 'PRE_REGISTRATION_ALERT',
-      recipientRole: 'DIRECTION',
-      recipientPhone: directionPhone || '+509 3316-0934',
-      applicationNumber: appNum,
-      studentName: `${data.studentLastName.toUpperCase()} ${data.studentFirstName}`,
-      status: isBlocked ? 'BLOCKED_POPUP' : 'SUCCESS_DEEP_LINK',
-      details: isBlocked 
-        ? `L'ouverture automatique vers le Directeur (${targetClean}) a été bloquée par le navigateur. Clic direct requis sur le bouton.`
-        : `Lien WhatsApp ouvert avec succès vers le Directeur (${targetClean}).`,
-      diagnosticNotes: isBlocked 
-        ? `Contrainte de sécurité du navigateur client (popup bloqué post-requête asynchrone).`
-        : `L'application WhatsApp a été lancée avec le message pré-rempli.`,
-      messagePreview: text.slice(0, 160) + '...',
-    }).catch(() => {});
-
-    if (recordId) {
-      apiService.notifyAdmissionWhatsApp(recordId).catch(() => {});
-    }
-  };
-
-  const handleSendReceiptToParentWhatsApp = () => {
-    if (!submittedNumber) return;
-    const parentDigits = (formData.parentPhone || '').replace(/[^0-9]/g, '');
-    const parentClean = parentDigits.startsWith('509') ? parentDigits : (parentDigits.length === 8 ? `509${parentDigits}` : parentDigits);
-
-    const parentReceiptText = 
-      `*RÉCÉPISSÉ DE PRÉINSCRIPTION — COLLÈGE ISAAC NEWTON*\n\n` +
-      `📋 *N° de Dossier :* ${submittedNumber}\n` +
-      `👤 *Élève :* ${formData.studentLastName.toUpperCase()} ${formData.studentFirstName}\n` +
-      `🎯 *Classe demandée :* ${formData.targetLevel} (${formData.cycle})\n` +
-      `👨‍👩‍👧 *Responsable légal :* ${formData.parentFullName} (${formData.parentRelationship})\n` +
-      `📞 *Contact :* ${formData.parentPhone}\n\n` +
-      `⚠️ *RAPPEL FORMEL — PIÈCES PHYSIQUES OBLIGATOIRES POUR FINALISER L'INSCRIPTION :*\n` +
-      `1. Extrait d'acte de naissance (Original ou extrait légalisé conforme) [OBLIGATOIRE]\n` +
-      `2. 4 photos d'identité récentes identiques format passeport [OBLIGATOIRE]\n` +
-      `3. Bulletins scolaires des 2 dernières années [OBLIGATOIRE dès 1e AF]\n` +
-      `4. Certificat de passage officiel (si classe supérieure)\n` +
-      `5. Fiche vaccinale/médicale & Pièce d'identité du tuteur [OBLIGATOIRE]\n\n` +
-      `📍 *Dépôt physique :* Secrétariat Collège Isaac Newton, Delmas 50, rue Dominique #2 bis, Port-au-Prince.\n` +
-      `📞 *Direction :* ${directionPhone} · *Secrétariat :* ${SCHOOL_INFO.phone}\n` +
-      `La préinscription en ligne bloque votre place temporairement. L'inscription définitive sera officialisée lors du dépôt de ces pièces.`;
-
-    const parentUrl = `https://wa.me/${parentClean}?text=${encodeURIComponent(parentReceiptText)}`;
-    window.open(parentUrl, '_blank');
-
-    apiService.logWhatsAppEvent({
-      type: 'PARENT_RECEIPT',
-      recipientRole: 'PARENT',
-      recipientPhone: formData.parentPhone,
-      applicationNumber: submittedNumber,
-      studentName: `${formData.studentLastName.toUpperCase()} ${formData.studentFirstName}`,
-      status: 'SUCCESS_DEEP_LINK',
-      details: `Récépissé et liste des pièces obligatoires expédiés vers le WhatsApp du parent (${formData.parentPhone}).`,
-      diagnosticNotes: `Transmission directe au tuteur légal avec le rappel des 5 pièces physiques requises.`,
-      messagePreview: parentReceiptText.slice(0, 160) + '...',
-    }).catch(() => {});
-  };
-
-  const copyWhatsAppMessage = () => {
-    if (!submittedNumber) return;
-    const text = buildWhatsAppMessageText(submittedNumber, formData);
-    navigator.clipboard.writeText(text);
-    setCopiedMsg(true);
-    setTimeout(() => setCopiedMsg(false), 2500);
   };
 
   const copyToClipboard = () => {
@@ -457,120 +312,8 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
 
   // SUCCESS CONFIRMATION SCREEN
   if (submittedNumber) {
-    const plannedText = buildWhatsAppMessageText(submittedNumber, formData);
-
     return (
-      <div className="max-w-2xl mx-auto px-3 sm:px-4 py-6 sm:py-10 animate-fade-in relative">
-        
-        {/* =========================================================================
-            MODAL D'ALERTE IMMÉDIATE WHATSAPP À LA DIRECTION (DISPATCH INSTANTANÉ)
-        ========================================================================= */}
-        {showDispatchModal && (
-          <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-            <div className="bg-white rounded-2xl max-w-lg w-full p-4 sm:p-6 shadow-2xl border-2 border-emerald-400/90 text-left space-y-4 animate-in fade-in zoom-in-95 duration-200">
-              
-              <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                    <MessageCircle className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="font-serif text-base sm:text-lg font-bold text-slate-900 leading-snug">
-                      Transmission WhatsApp à la Direction
-                    </h2>
-                    <p className="text-[11px] text-emerald-800 font-medium">
-                      Ligne officielle planifiée : <strong>{directionPhone}</strong>
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowDispatchModal(false)}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
-                  title="Fermer et consulter le récépissé"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Dossier recap badge */}
-              <div className="p-3 rounded-xl bg-slate-900 text-white flex items-center justify-between text-xs">
-                <div>
-                  <span className="text-[9.5px] uppercase font-mono text-slate-400 block">Dossier créé</span>
-                  <span className="font-mono text-base font-bold text-amber-400">{submittedNumber}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[9.5px] uppercase text-slate-400 block">Candidat</span>
-                  <span className="font-bold text-slate-100">{formData.studentLastName.toUpperCase()} {formData.studentFirstName}</span>
-                </div>
-              </div>
-
-              {/* Explanation of Web WhatsApp behavior */}
-              <div className="text-[11px] sm:text-xs text-slate-600 space-y-1.5 leading-relaxed bg-emerald-50/70 p-3 rounded-xl border border-emerald-200/80">
-                <p>
-                  <strong>ℹ️ Information importante :</strong> Les navigateurs web ne peuvent pas envoyer de message de manière invisible depuis votre appareil sans votre validation.
-                </p>
-                <p>
-                  Pour que le <strong>Directeur ({directionHolderName})</strong> reçoive immédiatement l'alerte sur son numéro planifié, <strong>cliquez sur le bouton vert ci-dessous pour ouvrir WhatsApp avec le message officiel pré-rempli</strong>, puis appuyez sur « Envoyer ».
-                </p>
-              </div>
-
-              {popupBlocked && (
-                <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-300 text-[11px] text-amber-900 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                  <span>
-                    Votre navigateur a bloqué l'ouverture automatique. Cliquez sur le bouton vert ci-dessous pour ouvrir WhatsApp directement vers le {directionPhone}.
-                  </span>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="space-y-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => handleLaunchWhatsApp(submittedNumber, formData, createdAdmission?.id)}
-                  className="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <MessageCircle className="w-4 h-4 shrink-0" />
-                  <span>Ouvrir WhatsApp & Envoyer à la Direction ({directionPhone})</span>
-                </button>
-
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <button
-                    type="button"
-                    onClick={copyWhatsAppMessage}
-                    className="py-2 px-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Copy className="w-3.5 h-3.5 text-slate-500" />
-                    <span>{copiedMsg ? 'Texte Copié !' : 'Copier le texte'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowDispatchModal(false)}
-                    className="py-2 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Voir le récépissé</span>
-                  </button>
-                </div>
-
-                {formData.parentPhone && (
-                  <button
-                    type="button"
-                    onClick={handleSendReceiptToParentWhatsApp}
-                    className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                  >
-                    <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Recevoir aussi le récépissé & pièces obligatoires sur mon WhatsApp ({formData.parentPhone})</span>
-                  </button>
-                )}
-              </div>
-
-            </div>
-          </div>
-        )}
-
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 py-6 sm:py-10 animate-fade-in">
         <div className="bg-white rounded-2xl p-4 sm:p-7 shadow-lg border border-slate-200/90 text-center space-y-4">
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
             <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7" />
@@ -603,192 +346,64 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
             </button>
           </div>
 
-          {/* =========================================================================
-              NOTIFICATION WHATSAPP AU NUMÉRO PLANIFIÉ DE LA DIRECTION
-          ========================================================================= */}
-          <div className="text-left bg-gradient-to-r from-emerald-50 via-teal-50/70 to-emerald-50 rounded-2xl p-4 sm:p-5 border-2 border-emerald-400/90 shadow-sm space-y-3">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <MessageCircle className="w-5 h-5 text-white" />
+          {/* Rappel impératif : Pièces obligatoires pour finaliser l'inscription */}
+          <div className="text-left bg-amber-50/85 rounded-xl p-3.5 sm:p-4 border-2 border-amber-300/80 shadow-xs space-y-2.5 text-xs text-amber-950">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 text-amber-950 font-bold text-xs sm:text-sm">
+                <ShieldCheck className="w-4 h-4 text-amber-700 shrink-0" />
+                <span>Pièces physiques obligatoires pour finaliser l'inscription</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-bold text-slate-900 text-xs sm:text-sm">
-                    Ligne WhatsApp Officielle de la Direction : {directionPhone}
-                  </h3>
-                  <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-bold border ${
-                    isAlertTransmitted
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
-                      : 'bg-amber-100 text-amber-800 border-amber-300'
-                  }`}>
-                    {isAlertTransmitted ? '✓ Alerte WhatsApp envoyée' : '⚡ Action immédiate requise'}
-                  </span>
-                </div>
-                <p className="text-[11px] sm:text-xs text-slate-600 mt-1 leading-relaxed">
-                  Numéro certifié de la Direction : <strong>{directionPhone}</strong> ({directionHolderName}). 
-                  Sur le web, vous devez ouvrir WhatsApp pour délivrer le message directement au Directeur et obtenir une date d'entretien en priorité.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => handleLaunchWhatsApp(submittedNumber, formData, createdAdmission?.id)}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all hover:scale-[1.01] cursor-pointer"
-              >
-                <MessageCircle className="w-4 h-4 shrink-0" />
-                <span>{isAlertTransmitted ? 'Renvoyer le Dossier à la Direction' : 'Envoyer mon Dossier à la Direction'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={copyWhatsAppMessage}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-200 transition-colors cursor-pointer"
-                title="Copier le texte pour coller sur WhatsApp"
-              >
-                <Copy className="w-3.5 h-3.5 text-slate-500" />
-                <span>{copiedMsg ? 'Copié !' : 'Copier Message'}</span>
-              </button>
-
-              <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                  `*RÉCÉPISSÉ DE PRÉINSCRIPTION — COLLÈGE ISAAC NEWTON*\n\n` +
-                  `📋 *N° de Dossier :* ${submittedNumber}\n` +
-                  `👤 *Élève :* ${formData.studentFirstName} ${formData.studentLastName}\n` +
-                  `🎯 *Classe :* ${formData.targetLevel}\n` +
-                  `📍 *Secrétariat :* Delmas 50, rue Dominique #2 bis, Port-au-Prince\n` +
-                  `📞 *Secrétariat Général :* ${directionPhone} / +509 3721-1818\n\n` +
-                  `Dossier préinscrit avec succès. Présenter les pièces physiques requises pour finaliser l'admission.`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs border border-slate-200 transition-colors cursor-pointer"
-                title="Partager à un proche ou tuteur"
-              >
-                <Share2 className="w-3.5 h-3.5 text-slate-500" />
-                <span>Partager</span>
-              </a>
-
-              {formData.parentPhone && (
-                <button
-                  type="button"
-                  onClick={handleSendReceiptToParentWhatsApp}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-950 text-white font-semibold text-xs transition-colors cursor-pointer"
-                  title="Recevoir le récépissé et les pièces requises sur votre WhatsApp"
-                >
-                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Recevoir sur mon WhatsApp ({formData.parentPhone})</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* =========================================================================
-              RAPPEL FORMEL & SOLENNEL : PIÈCES PHYSIQUES OBLIGATOIRES POUR FINALISER L'INSCRIPTION
-          ========================================================================= */}
-          <div className="text-left bg-gradient-to-br from-amber-50 via-amber-100/40 to-amber-50 rounded-2xl p-4 sm:p-5 border-2 border-amber-400 shadow-sm space-y-3 text-xs text-amber-950">
-            <div className="flex items-center justify-between gap-2 flex-wrap border-b border-amber-200 pb-2.5">
-              <div className="flex items-center gap-2 text-amber-950 font-bold text-xs sm:text-sm">
-                <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0" />
-                <span>RAPPEL FORMEL : PIÈCES PHYSIQUES OBLIGATOIRES POUR FINALISER L'INSCRIPTION</span>
-              </div>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-full bg-amber-300 text-amber-950 border border-amber-400 font-mono">
-                DÉPÔT OBLIGATOIRE
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 border border-amber-300">
+                Dépôt obligatoire
               </span>
             </div>
-
-            <p className="text-[11.5px] sm:text-xs text-amber-950 leading-relaxed font-medium">
-              La préinscription en ligne réserve temporairement une priorité. <strong>L'inscription définitive sera officialisée et la place attribuée exclusivement sur présentation physique de l'ensemble des pièces obligatoires</strong> au secrétariat du Collège Isaac Newton (Delmas 50, rue Dominique #2 bis, Port-au-Prince) :
+            <p className="text-[11px] sm:text-xs text-amber-900 leading-relaxed">
+              La préinscription en ligne réserve une place temporaire. <strong>L'inscription définitive sera officialisée uniquement sur présentation physique des pièces obligatoires</strong> au secrétariat du Collège Isaac Newton (Delmas 50, rue Dominique #2) :
             </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1 text-slate-800">
-              
-              {/* 1. Acte de naissance */}
-              <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-amber-200 shadow-2xs">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-slate-800">
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-white/90 border border-amber-200 shadow-2xs">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <strong className="text-xs text-slate-900 font-bold">1. Extrait d'acte de naissance</strong>
-                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-300 uppercase">
-                      Obligatoire
-                    </span>
+                  <div className="flex items-center gap-1">
+                    <strong className="text-[11px] text-slate-900">Extrait d'acte de naissance</strong>
+                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1 py-0.2 rounded border border-rose-200">Requis</span>
                   </div>
-                  <p className="text-[10.5px] text-slate-500 mt-0.5">
-                    Original ou extrait légalisé conforme (immatriculation MENFP).
-                  </p>
+                  <p className="text-[10px] text-slate-500">Original ou copie légalisée conforme</p>
                 </div>
               </div>
 
-              {/* 2. Photos d'identité */}
-              <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-amber-200 shadow-2xs">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-white/90 border border-amber-200 shadow-2xs">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <strong className="text-xs text-slate-900 font-bold">2. 4 photos d'identité récentes</strong>
-                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-300 uppercase">
-                      Obligatoire
-                    </span>
+                  <div className="flex items-center gap-1">
+                    <strong className="text-[11px] text-slate-900">Bulletins scolaires des 2 ans</strong>
+                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1 py-0.2 rounded border border-rose-200">Requis</span>
                   </div>
-                  <p className="text-[10.5px] text-slate-500 mt-0.5">
-                    Format passeport identiques (fond clair pour carte d'élève et registre).
-                  </p>
+                  <p className="text-[10px] text-slate-500">Bulletins originaux des deux dernières années</p>
                 </div>
               </div>
 
-              {/* 3. Bulletins scolaires */}
-              <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-amber-200 shadow-2xs">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-white/90 border border-amber-200 shadow-2xs">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <strong className="text-xs text-slate-900 font-bold">3. Bulletins des 2 dernières années</strong>
-                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-300 uppercase">
-                      Obligatoire (dès 1e AF)
-                    </span>
+                  <div className="flex items-center gap-1">
+                    <strong className="text-[11px] text-slate-900">Certificat de passage officiel</strong>
+                    <span className="text-[9px] font-bold text-amber-800 bg-amber-50 px-1 py-0.2 rounded border border-amber-200">Si classe sup.</span>
                   </div>
-                  <p className="text-[10.5px] text-slate-500 mt-0.5">
-                    Relevés de notes originaux pour orientation et vérification académique.
-                  </p>
+                  <p className="text-[10px] text-slate-500">Signé et timbré par la direction précédente</p>
                 </div>
               </div>
 
-              {/* 4. Certificat de passage */}
-              <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-amber-200 shadow-2xs">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-white/90 border border-amber-200 shadow-2xs">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <strong className="text-xs text-slate-900 font-bold">4. Certificat de passage officiel</strong>
-                    <span className="text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-300 uppercase">
-                      Si classe supérieure
-                    </span>
+                  <div className="flex items-center gap-1">
+                    <strong className="text-[11px] text-slate-900">4 photos d'identité récentes</strong>
+                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1 py-0.2 rounded border border-rose-200">Requis</span>
                   </div>
-                  <p className="text-[10.5px] text-slate-500 mt-0.5">
-                    Signé et timbré par la direction de l'école de provenance.
-                  </p>
+                  <p className="text-[10px] text-slate-500">Format passeport (fond blanc ou clair)</p>
                 </div>
               </div>
-
-              {/* 5. Carnet de santé et pièce du tuteur */}
-              <div className="flex items-start gap-2.5 p-2.5 rounded-xl bg-white border border-amber-200 shadow-2xs sm:col-span-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <div>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <strong className="text-xs text-slate-900 font-bold">5. Fiche vaccinale / médicale & Pièce d'identité du tuteur</strong>
-                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-300 uppercase">
-                      Obligatoire
-                    </span>
-                  </div>
-                  <p className="text-[10.5px] text-slate-500 mt-0.5">
-                    Carnet de vaccination à jour et photocopie de la pièce d'identité (CIN ou passeport) du responsable légal.
-                  </p>
-                </div>
-              </div>
-
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-amber-200/60 border border-amber-300 text-[11px] text-amber-950 font-medium flex items-center justify-between flex-wrap gap-2">
-              <span>📍 Lieu de dépôt : <strong>Secrétariat Collège Isaac Newton · Delmas 50, rue Dominique #2 bis</strong></span>
-              <span className="font-mono font-bold text-slate-900">Horaires : Lun - Ven · 08h00 - 14h00</span>
             </div>
           </div>
 
@@ -800,18 +415,18 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
             </h3>
             <ol className="list-decimal pl-4 space-y-1 leading-relaxed text-slate-600 text-[11px] sm:text-xs">
               <li>
-                <strong>Étude sous 48-72h :</strong> Examen de l'admissibilité administrative par la direction.
+                <strong>Étude sous 48-72h :</strong> Examen de l'admissibilité administrative.
               </li>
               <li>
                 <strong>Test diagnostique :</strong> Convocation de l'élève pour le test d'aptitude.
               </li>
               <li>
-                <strong>Dépôt des pièces obligatoires :</strong> Validation physique au secrétariat et remise du kit scolaire.
+                <strong>Entretien final :</strong> Dépôt des pièces physiques et confirmation de la place.
               </li>
             </ol>
             <div className="pt-2 flex items-center gap-1.5 text-slate-500 font-mono text-[10px] sm:text-[11px] border-t border-slate-200/60">
               <Phone className="w-3 h-3 text-slate-400" />
-              <span>Ligne officielle : {directionPhone} · Secrétariat : {SCHOOL_INFO.phone}</span>
+              <span>Secrétariat général : {SCHOOL_INFO.phone}</span>
             </div>
           </div>
 
@@ -822,7 +437,7 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
               className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition-colors cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Imprimer le récépissé & Liste des pièces</span>
+              <span>Imprimer le récépissé</span>
             </button>
 
             <button

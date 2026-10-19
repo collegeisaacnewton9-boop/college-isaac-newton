@@ -3,7 +3,6 @@ import { Phone, Mail, MapPin, Bell, ArrowRight, X } from 'lucide-react';
 import { SCHOOL_INFO } from '../../data/mockData';
 import { Language, SiteSettings } from '../../types';
 import { apiService } from '../../services/api';
-import { PWAInstallButton } from '../common/PWAInstallButton';
 
 interface TopUtilityBarProps {
   currentLang?: Language;
@@ -130,14 +129,10 @@ export const TopUtilityBar: React.FC<TopUtilityBarProps> = ({
             </a>
           </div>
 
-          {/* Discreet School Motto & PWA Install Button (Accessible hors-ligne Port-au-Prince) */}
-          <div className="flex items-center gap-4">
-            <div className="text-[11px] text-slate-400 font-serif italic hidden lg:block">
-              « {settings?.schoolMotto || SCHOOL_INFO.founderMotto} »
-            </div>
-            <PWAInstallButton variant="compact" />
+          {/* Discreet School Motto */}
+          <div className="text-[11px] text-slate-400 font-serif italic hidden lg:block">
+            « {settings?.schoolMotto || SCHOOL_INFO.founderMotto} »
           </div>
-
 
         </div>
       </div>

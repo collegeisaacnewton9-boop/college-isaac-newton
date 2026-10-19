@@ -59,12 +59,6 @@ export const ImageCompressor: React.FC<ImageCompressorProps> & {
 }) => {
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [lastResult, setLastResult] = useState<CompressedImageResult | null>(null);
-  const [selectedFile, setSelectedFile] = useState<{
-    name: string;
-    size: number;
-    formattedSize: string;
-    isOver500Ko: boolean;
-  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const openFileDialog = () => {
@@ -74,14 +68,6 @@ export const ImageCompressor: React.FC<ImageCompressorProps> & {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    const isOver = file.size > 500 * 1024;
-    setSelectedFile({
-      name: file.name,
-      size: file.size,
-      formattedSize: formatBytes(file.size),
-      isOver500Ko: isOver,
-    });
 
     setIsCompressing(true);
     try {
@@ -139,48 +125,6 @@ export const ImageCompressor: React.FC<ImageCompressorProps> & {
             </>
           )}
         </button>
-      )}
-
-      {/* Dynamic Weight Badge & 500KB Alert directly under file input */}
-      {selectedFile && (
-        <div
-          className={`mt-2 p-2 rounded-xl text-xs flex items-center justify-between gap-2 border shadow-xs animate-in fade-in ${
-            selectedFile.isOver500Ko
-              ? 'bg-amber-50/95 border-amber-300 text-amber-950'
-              : 'bg-emerald-50/95 border-emerald-300 text-emerald-950'
-          }`}
-        >
-          <div className="flex items-center gap-1.5 min-w-0">
-            {selectedFile.isOver500Ko ? (
-              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            ) : (
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            )}
-            <span className="font-semibold truncate max-w-[140px]">{selectedFile.name}</span>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            <span className="text-[11px] text-slate-600 font-medium">Poids :</span>
-            <span
-              className={`font-mono font-bold px-1.5 py-0.5 rounded text-[11px] border ${
-                selectedFile.isOver500Ko
-                  ? 'bg-amber-200 border-amber-400 text-amber-950 font-black'
-                  : 'bg-emerald-200 border-emerald-300 text-emerald-950'
-              }`}
-            >
-              {selectedFile.formattedSize}
-            </span>
-            {selectedFile.isOver500Ko ? (
-              <span className="text-[10px] font-bold text-amber-900 bg-amber-200/80 px-1.5 py-0.5 rounded-full border border-amber-400">
-                ⚠️ &gt; 500 Ko
-              </span>
-            ) : (
-              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded-full border border-emerald-300">
-                ✓ ≤ 500 Ko
-              </span>
-            )}
-          </div>
-        </div>
       )}
     </div>
   );

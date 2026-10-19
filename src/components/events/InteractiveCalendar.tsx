@@ -357,142 +357,29 @@ export const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
     <div className="space-y-6">
 
       {/* 1. TOP CONTROLS & ACADEMIC FILTER TABS */}
-      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200/90 shadow-xs space-y-4">
+      {/* 1. COMPACT MODERN CONTROL BAR & FILTERS */}
+      <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 shadow-xs space-y-3">
         
-        {/* Row 1: The 3 Main Category Groups Requested (Examens, Vacances, Activités) + All */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1 hidden sm:inline">
-              Vue :
-            </span>
-
-            {/* Tous */}
-            <button
-              type="button"
-              onClick={() => handleSetGroup('ALL')}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeGroup === 'ALL'
-                  ? 'bg-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-              }`}
-            >
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span>Toutes les Dates</span>
-              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
-                activeGroup === 'ALL' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-              }`}>
-                {groupCounts.ALL}
-              </span>
-            </button>
-
-            {/* Examens */}
-            <button
-              type="button"
-              onClick={() => handleSetGroup('EXAMENS')}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeGroup === 'EXAMENS'
-                  ? 'bg-rose-700 text-white shadow-sm ring-2 ring-rose-500/20'
-                  : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200/80'
-              }`}
-            >
-              <GraduationCap className="w-4 h-4 text-rose-500 group-hover:text-rose-700" />
-              <span>Examens & Contrôles</span>
-              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
-                activeGroup === 'EXAMENS' ? 'bg-white/20 text-white' : 'bg-rose-200 text-rose-900'
-              }`}>
-                {groupCounts.EXAMENS}
-              </span>
-            </button>
-
-            {/* Vacances */}
-            <button
-              type="button"
-              onClick={() => handleSetGroup('VACANCES')}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeGroup === 'VACANCES'
-                  ? 'bg-amber-600 text-white shadow-sm ring-2 ring-amber-500/20'
-                  : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80'
-              }`}
-            >
-              <Palmtree className="w-4 h-4 text-amber-500" />
-              <span>Vacances & Jours Fériés</span>
-              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
-                activeGroup === 'VACANCES' ? 'bg-white/20 text-white' : 'bg-amber-200 text-amber-950'
-              }`}>
-                {groupCounts.VACANCES}
-              </span>
-            </button>
-
-            {/* Activités */}
-            <button
-              type="button"
-              onClick={() => handleSetGroup('ACTIVITES')}
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                activeGroup === 'ACTIVITES'
-                  ? 'bg-blue-900 text-white shadow-sm ring-2 ring-blue-500/20'
-                  : 'bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200/80'
-              }`}
-            >
-              <Sparkles className="w-4 h-4 text-blue-500" />
-              <span>Activités & Vie Scolaire</span>
-              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-full ${
-                activeGroup === 'ACTIVITES' ? 'bg-white/20 text-white' : 'bg-blue-200 text-blue-950'
-              }`}>
-                {groupCounts.ACTIVITES}
-              </span>
-            </button>
-          </div>
-
-          {/* View Switcher: Calendar vs Agenda */}
-          <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-semibold self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setViewMode('calendar')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'calendar'
-                  ? 'bg-blue-900 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
-              }`}
-            >
-              <CalendarDays className="w-4 h-4" />
-              <span>Grille Mensuelle</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setViewMode('agenda')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'agenda'
-                  ? 'bg-blue-900 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
-              }`}
-            >
-              <ListFilter className="w-4 h-4" />
-              <span>Vue Agenda ({filteredEvents.length})</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Row 2: Month Navigation & Trimesters Quick Jump */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {/* Row 1: Month Stepper + Trimesters Quick Jump + View Mode Switcher + PDF */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2.5 border-b border-slate-100">
           
-          {/* Stepper + Month Name */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+          {/* Stepper + Month Name + Trimester Badge */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-lg border border-slate-200 shrink-0">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="p-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-all cursor-pointer"
+                className="p-1 rounded-md text-slate-700 hover:text-slate-900 hover:bg-white transition-all cursor-pointer"
                 title="Mois précédent"
                 aria-label="Mois précédent"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
               
               <button
                 type="button"
                 onClick={handleJumpToToday}
-                className="px-2.5 py-1 text-xs font-semibold text-slate-700 hover:text-blue-900 hover:bg-white rounded-lg transition-colors cursor-pointer"
+                className="px-2 py-1 text-xs font-semibold text-slate-700 hover:text-blue-900 hover:bg-white rounded-md transition-colors cursor-pointer"
                 title="Revenir à la période actuelle"
               >
                 Période
@@ -501,103 +388,215 @@ export const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="p-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-white transition-all cursor-pointer"
+                className="p-1 rounded-md text-slate-700 hover:text-slate-900 hover:bg-white transition-all cursor-pointer"
                 title="Mois suivant"
                 aria-label="Mois suivant"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-slate-900 capitalize tracking-tight flex items-center gap-2">
+            <h2 className="font-serif text-lg sm:text-xl font-bold text-slate-900 capitalize tracking-tight flex items-center gap-2 truncate">
               <span>{monthName}</span>
               {currentMonth >= 8 && currentMonth <= 11 && (
-                <span className="text-[11px] font-sans font-semibold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                <span className="text-[10px] sm:text-[11px] font-sans font-semibold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 shrink-0">
                   1er Trimestre
                 </span>
               )}
               {currentMonth >= 0 && currentMonth <= 2 && (
-                <span className="text-[11px] font-sans font-semibold text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                <span className="text-[10px] sm:text-[11px] font-sans font-semibold text-emerald-900 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 shrink-0">
                   2e Trimestre
                 </span>
               )}
               {currentMonth >= 3 && currentMonth <= 6 && (
-                <span className="text-[11px] font-sans font-semibold text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                <span className="text-[10px] sm:text-[11px] font-sans font-semibold text-amber-900 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 shrink-0">
                   3e Trimestre
                 </span>
               )}
             </h2>
           </div>
 
-          {/* Quick Trimesters Jumper */}
-          <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-slate-400 text-[11px] font-bold uppercase tracking-wider mr-1">
-              Trimestres :
-            </span>
+          {/* Right Controls: Trimesters + View Switcher + PDF */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+            {/* Quick Trimesters Jumper */}
+            <div className="hidden lg:flex items-center gap-1 text-xs bg-slate-50 p-1 rounded-lg border border-slate-200/80">
+              <span className="text-slate-400 text-[10px] font-bold uppercase tracking-wider px-1">
+                Trimestres :
+              </span>
+              <button
+                type="button"
+                onClick={() => handleJumpToTrimester(1)}
+                className="px-2 py-0.5 rounded text-slate-700 hover:text-blue-900 hover:bg-white font-medium text-[11px] transition-colors cursor-pointer"
+                title="Aller au 1er Trimestre (Sept - Déc 2026)"
+              >
+                1er Trim
+              </button>
+              <button
+                type="button"
+                onClick={() => handleJumpToTrimester(2)}
+                className="px-2 py-0.5 rounded text-slate-700 hover:text-emerald-900 hover:bg-white font-medium text-[11px] transition-colors cursor-pointer"
+                title="Aller au 2e Trimestre (Jan - Mars 2027)"
+              >
+                2e Trim
+              </button>
+              <button
+                type="button"
+                onClick={() => handleJumpToTrimester(3)}
+                className="px-2 py-0.5 rounded text-slate-700 hover:text-amber-900 hover:bg-white font-medium text-[11px] transition-colors cursor-pointer"
+                title="Aller au 3e Trimestre (Avr - Juil 2027)"
+              >
+                3e Trim
+              </button>
+            </div>
+
+            {/* View Switcher: Calendar vs Agenda */}
+            <div className="inline-flex p-0.5 bg-slate-100 rounded-lg border border-slate-200 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setViewMode('calendar')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                  viewMode === 'calendar'
+                    ? 'bg-blue-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <CalendarDays className="w-3.5 h-3.5" />
+                <span>Grille</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setViewMode('agenda')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                  viewMode === 'agenda'
+                    ? 'bg-blue-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <ListFilter className="w-3.5 h-3.5" />
+                <span>Agenda ({filteredEvents.length})</span>
+              </button>
+            </div>
+
+            {/* Calendrier PDF Officiel */}
+            {onNavigateToResources && (
+              <button
+                type="button"
+                onClick={onNavigateToResources}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:text-blue-900 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer shrink-0"
+                title="Télécharger le calendrier officiel en PDF"
+              >
+                <Download className="w-3.5 h-3.5 text-blue-900" />
+                <span className="hidden sm:inline">PDF</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Row 2: Category Filter Buttons + Quick Search */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          
+          {/* Category Filter Buttons */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {/* Toutes les dates */}
             <button
               type="button"
-              onClick={() => handleJumpToTrimester(1)}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-900 text-slate-700 font-medium transition-colors border border-slate-200 cursor-pointer"
-              title="Aller au 1er Trimestre (Sept - Déc 2026)"
+              onClick={() => handleSetGroup('ALL')}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeGroup === 'ALL'
+                  ? 'bg-slate-900 text-white shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+              }`}
             >
-              1er Trim (Automne)
+              <CalendarDays className="w-3.5 h-3.5" />
+              <span>Toutes les Dates</span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                activeGroup === 'ALL' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+              }`}>
+                {groupCounts.ALL}
+              </span>
             </button>
+
+            {/* Examens & Contrôles */}
             <button
               type="button"
-              onClick={() => handleJumpToTrimester(2)}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-900 text-slate-700 font-medium transition-colors border border-slate-200 cursor-pointer"
-              title="Aller au 2e Trimestre (Jan - Mars 2027)"
+              onClick={() => handleSetGroup('EXAMENS')}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeGroup === 'EXAMENS'
+                  ? 'bg-rose-700 text-white shadow-xs'
+                  : 'bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200/80'
+              }`}
             >
-              2e Trim (Hiver)
+              <GraduationCap className="w-3.5 h-3.5 text-rose-500" />
+              <span>Examens & Contrôles</span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                activeGroup === 'EXAMENS' ? 'bg-white/20 text-white' : 'bg-rose-200 text-rose-900'
+              }`}>
+                {groupCounts.EXAMENS}
+              </span>
             </button>
+
+            {/* Vacances & Jours Fériés */}
             <button
               type="button"
-              onClick={() => handleJumpToTrimester(3)}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-900 text-slate-700 font-medium transition-colors border border-slate-200 cursor-pointer"
-              title="Aller au 3e Trimestre (Avr - Juil 2027)"
+              onClick={() => handleSetGroup('VACANCES')}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeGroup === 'VACANCES'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80'
+              }`}
             >
-              3e Trim (Printemps-Été)
+              <Palmtree className="w-3.5 h-3.5 text-amber-500" />
+              <span>Vacances & Jours Fériés</span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                activeGroup === 'VACANCES' ? 'bg-white/20 text-white' : 'bg-amber-200 text-amber-950'
+              }`}>
+                {groupCounts.VACANCES}
+              </span>
+            </button>
+
+            {/* Activités & Vie Scolaire */}
+            <button
+              type="button"
+              onClick={() => handleSetGroup('ACTIVITES')}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                activeGroup === 'ACTIVITES'
+                  ? 'bg-blue-900 text-white shadow-xs'
+                  : 'bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200/80'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+              <span>Activités & Vie Scolaire</span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                activeGroup === 'ACTIVITES' ? 'bg-white/20 text-white' : 'bg-blue-200 text-blue-950'
+              }`}>
+                {groupCounts.ACTIVITES}
+              </span>
             </button>
           </div>
 
-        </div>
-
-        {/* Row 3: Instant Keyword Search Filter */}
-        <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-slate-100">
-          <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          {/* Instant Search Bar */}
+          <div className="relative w-full sm:w-64 md:w-72 shrink-0">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher par mot-clé (ex : 9e AF, Bac, Noël, Carnaval, Réunion, Test)..."
-              className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-100 text-xs transition-all outline-none"
+              placeholder="Rechercher par mot-clé..."
+              className="w-full pl-8 pr-7 py-1.5 rounded-lg bg-slate-50 border border-slate-200 focus:bg-white focus:border-blue-600 focus:ring-1 focus:ring-blue-100 text-xs transition-all outline-none"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
                 title="Effacer la recherche"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-3 h-3" />
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            {onNavigateToResources && (
-              <button
-                type="button"
-                onClick={onNavigateToResources}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-slate-700 hover:text-blue-900 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer"
-                title="Télécharger la version imprimable PDF"
-              >
-                <Download className="w-3.5 h-3.5 text-blue-900" />
-                <span>Calendrier PDF Officiel</span>
-              </button>
-            )}
-          </div>
         </div>
 
       </div>

@@ -313,39 +313,20 @@ export async function compressImage(
             lastModified: Date.now(),
           });
 
-          // Read blob as DataURL so the dataUrl matches the exact compressed blob bytes and MIME type
-          const blobReader = new FileReader();
-          blobReader.onloadend = () => {
-            const dataUrl = (blobReader.result as string) || canvas.toDataURL(finalMimeType, quality);
-            resolve({
-              file: compressedFile,
-              blob,
-              dataUrl,
-              originalSize,
-              compressedSize,
-              reductionPercent,
-              width: targetWidth,
-              height: targetHeight,
-              mimeType: finalMimeType,
-              fileName: newFileName,
-            });
-          };
-          blobReader.onerror = () => {
-            const dataUrl = canvas.toDataURL(finalMimeType, quality);
-            resolve({
-              file: compressedFile,
-              blob,
-              dataUrl,
-              originalSize,
-              compressedSize,
-              reductionPercent,
-              width: targetWidth,
-              height: targetHeight,
-              mimeType: finalMimeType,
-              fileName: newFileName,
-            });
-          };
-          blobReader.readAsDataURL(blob);
+          const dataUrl = canvas.toDataURL(finalMimeType, quality);
+
+          resolve({
+            file: compressedFile,
+            blob,
+            dataUrl,
+            originalSize,
+            compressedSize,
+            reductionPercent,
+            width: targetWidth,
+            height: targetHeight,
+            mimeType: finalMimeType,
+            fileName: newFileName,
+          });
         } catch (error) {
           reject(error);
         }

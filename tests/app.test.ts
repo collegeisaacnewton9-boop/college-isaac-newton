@@ -241,12 +241,130 @@ describe('Collège Isaac Newton - Unit Tests', () => {
         'cms',
         'users'
       ];
-      assert.strictEqual(coreModules.length, 10, 'Dashboard must configure exactly 10 modules');
+      assert.strictEqual(coreModules.length, 10, 'Dashboard must configure exactly 10 core modules');
       assert.ok(coreModules.includes('overview'), 'overview must be present');
       assert.ok(coreModules.includes('slideshow'), 'slideshow must be present');
       assert.ok(coreModules.includes('menus'), 'menus must be present');
       assert.ok(coreModules.includes('admissions'), 'admissions must be present');
       assert.ok(coreModules.includes('users'), 'users must be present');
+    });
+
+    it('should configure all 12 modules including faculty and whatsapp diagnostics', () => {
+      const allModules = [
+        'overview',
+        'slideshow',
+        'menus',
+        'admissions',
+        'news',
+        'events',
+        'media',
+        'messages',
+        'cms',
+        'users',
+        'faculty',
+        'whatsapp'
+      ];
+      assert.strictEqual(allModules.length, 12, 'Dashboard must include 12 total administrative modules');
+      assert.ok(allModules.includes('faculty'), 'faculty module must be available');
+      assert.ok(allModules.includes('whatsapp'), 'whatsapp diagnostic module must be available');
+    });
+
+    it('should verify compact header height budget and essential actions preservation', async () => {
+      const fs = await import('fs');
+      const adminCode = fs.readFileSync('src/pages/AdminDashboardPage.tsx', 'utf-8');
+      
+      // Header row 1 (~56px: h-14) and row 2 (~44px: h-11)
+      assert.ok(adminCode.includes('h-14'), 'Row 1 command bar must be compact (~56px)');
+      assert.ok(adminCode.includes('h-11'), 'Row 2 module navigation bar must be compact (~44px)');
+
+      // Preserved actions
+      assert.ok(adminCode.includes('Retour au site'), 'Must retain Site public / Retour au site action');
+      assert.ok(adminCode.includes('Actualiser'), 'Must retain Actualiser action');
+      assert.ok(adminCode.includes('Synchronisation GitHub'), 'Must retain GitHub sync action in tools');
+      assert.ok(adminCode.includes('Sauvegarde JSON'), 'Must retain Sauvegarde JSON in tools');
+      assert.ok(adminCode.includes('Audit Production Live'), 'Must retain Audit Prod Live in tools');
+      assert.ok(adminCode.includes('imminentAlerts'), 'Must retain event alert button');
+      assert.ok(adminCode.includes('getShortRole'), 'Must use compact non-truncated role labels');
+      assert.ok(adminCode.includes('handleSafeLogout'), 'Must retain Quitter / logout action');
+      assert.ok(adminCode.includes('role="tablist"'), 'Must maintain accessible tablist');
+      assert.ok(adminCode.includes('role="tab"'), 'Must maintain accessible tabs');
+
+      // Check App.tsx excludes public header on admin page
+      const appCode = fs.readFileSync('src/App.tsx', 'utf-8');
+      assert.ok(appCode.includes("currentPage !== 'admin'"), 'Public header and footer must be omitted on admin page');
+    });
+  });
+
+  describe('Calendrier scolaire & Agenda officiel - Ergonomie, Structure & Filtres', () => {
+    it('should have a modern compact header with concise description and essential actions', async () => {
+      const fs = await import('fs');
+      const eventsPageCode = fs.readFileSync('src/pages/EventsPage.tsx', 'utf-8');
+
+      // Title & Year
+      assert.ok(eventsPageCode.includes('Calendrier Scolaire & Agenda Officiel'), 'Must contain official calendar title');
+      assert.ok(eventsPageCode.includes('2026-2027'), 'Must default to academic year 2026-2027');
+
+      // Short concise description
+      assert.ok(
+        eventsPageCode.includes('Dates des contrôles, examens, vacances et événements de l’année scolaire.'),
+        'Must replace lengthy text with concise phrase'
+      );
+
+      // Sober essential actions
+      assert.ok(eventsPageCode.includes('Version Imprimable'), 'Must maintain Version Imprimable action');
+      assert.ok(eventsPageCode.includes('Conditions d’Admission'), 'Must maintain Conditions d’Admission action');
+
+      // Dynamic data loading from API service
+      assert.ok(eventsPageCode.includes('apiService.getEvents()'), 'Must load events dynamically from apiService');
+    });
+
+    it('should cleanly organize official dates without redundant stacked blocks before calendar', async () => {
+      const fs = await import('fs');
+      const eventsPageCode = fs.readFileSync('src/pages/EventsPage.tsx', 'utf-8');
+
+      // Ensure calendar is presented immediately without duplicate giant banners
+      const calendarIndex = eventsPageCode.indexOf('<InteractiveCalendar');
+      const controlsIndex = eventsPageCode.indexOf('Structure des 4 Contrôles Académiques');
+      
+      assert.ok(calendarIndex > 0, 'InteractiveCalendar must be rendered on the page');
+      assert.ok(controlsIndex > 0, 'Official 4 controls reference section must be preserved');
+      assert.ok(
+        calendarIndex < controlsIndex,
+        'InteractiveCalendar must be positioned high up so calendar is immediately visible on laptop viewports'
+      );
+
+      // All 4 official controls preserved
+      assert.ok(eventsPageCode.includes('1er Contrôle'), '1er Contrôle must be present');
+      assert.ok(eventsPageCode.includes('2e Contrôle'), '2e Contrôle must be present');
+      assert.ok(eventsPageCode.includes('3e Contrôle'), '3e Contrôle must be present');
+      assert.ok(eventsPageCode.includes('4e Contrôle'), '4e Contrôle must be present');
+
+      // Official State Exams & Holidays preserved
+      assert.ok(eventsPageCode.includes('Examens officiels de 9e A.F.'), '9e AF exam must be present');
+      assert.ok(eventsPageCode.includes('Examens officiels de NS4'), 'NS4 exam must be present');
+      assert.ok(eventsPageCode.includes('Vacances de Noël'), 'Noel holidays must be present');
+      assert.ok(eventsPageCode.includes('Vacances de Carnaval'), 'Carnaval holidays must be present');
+      assert.ok(eventsPageCode.includes('Vacances de Pâques'), 'Paques holidays must be present');
+    });
+
+    it('should provide compact, intuitive calendar filter bar, navigation, and export features', async () => {
+      const fs = await import('fs');
+      const calendarCode = fs.readFileSync('src/components/events/InteractiveCalendar.tsx', 'utf-8');
+
+      // Core category filters
+      assert.ok(calendarCode.includes('Toutes les Dates'), 'Must include Toutes les Dates filter');
+      assert.ok(calendarCode.includes('Examens & Contrôles'), 'Must include Examens & Contrôles filter');
+      assert.ok(calendarCode.includes('Vacances & Jours Fériés'), 'Must include Vacances & Jours Fériés filter');
+      assert.ok(calendarCode.includes('Activités & Vie Scolaire'), 'Must include Activités & Vie Scolaire filter');
+
+      // Instant search and view switchers
+      assert.ok(calendarCode.includes('Rechercher par mot-clé...'), 'Must include instant search placeholder');
+      assert.ok(calendarCode.includes('Grille'), 'Must support monthly grid view');
+      assert.ok(calendarCode.includes('Agenda'), 'Must support chronological agenda view');
+
+      // Export capabilities
+      assert.ok(calendarCode.includes('getGoogleCalendarUrl'), 'Must provide Google Calendar export');
+      assert.ok(calendarCode.includes('handleExportIcs'), 'Must provide .ics calendar export');
     });
   });
 

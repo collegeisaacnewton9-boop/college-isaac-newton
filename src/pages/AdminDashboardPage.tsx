@@ -132,9 +132,41 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   // Dashboard Navigation State & Refs
   const navScrollContainerRef = useRef<HTMLDivElement>(null);
   const modulesMenuRef = useRef<HTMLDivElement>(null);
+  const toolsMenuRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isModulesMenuOpen, setIsModulesMenuOpen] = useState(false);
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  // Helper for non-truncated, accessible role display
+  const getShortRole = (user: User | null): string => {
+    if (!user) return 'Invité';
+    if (user.role === 'ADMIN') return 'Direction';
+    if (user.role === 'EDITOR') return 'Rédaction';
+    if (user.role === 'TEACHER') return 'Enseignant';
+    if (user.role === 'MODERATOR') return 'Modérateur';
+    if (user.role === 'PARENT') return 'Parent';
+    if (user.role === 'STUDENT') return 'Élève';
+    return user.role;
+  };
+
+  // Names of all 12 modules for clear header title display
+  const MODULE_TITLES: Record<string, string> = {
+    overview: 'Tableau de Bord',
+    slideshow: 'Éditeur Diaporama',
+    menus: 'Menus & Navigation',
+    admissions: 'Admissions',
+    news: 'Actualités',
+    events: 'Agenda Officiel',
+    media: 'Médiathèque',
+    messages: 'Messages',
+    cms: 'Configuration',
+    users: 'Accès & Équipe',
+    faculty: 'Professeurs',
+    whatsapp: 'WhatsApp',
+  };
 
   // Smooth scroll handler for tabs
   const scrollTabs = useCallback((direction: 'left' | 'right') => {
@@ -178,20 +210,36 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     return () => clearTimeout(timer);
   }, [activeTab, updateScrollState]);
 
-  // Close modules menu on outside click
+  // Close menus on outside click or Escape key
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (modulesMenuRef.current && !modulesMenuRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (modulesMenuRef.current && !modulesMenuRef.current.contains(target)) {
         setIsModulesMenuOpen(false);
       }
+      if (toolsMenuRef.current && !toolsMenuRef.current.contains(target)) {
+        setIsToolsMenuOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(target)) {
+        setIsProfileMenuOpen(false);
+      }
     };
-    if (isModulesMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsModulesMenuOpen(false);
+        setIsToolsMenuOpen(false);
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isModulesMenuOpen]);
+  }, []);
 
   // Data states
   const [admissions, setAdmissions] = useState<AdmissionApplication[]>([]);
@@ -920,117 +968,76 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
         </div>
       )}
 
-      {/* TOP EXECUTIVE COMMAND BAR */}
+      {/* COMPACT ERGONOMIC EXECUTIVE HEADER */}
       <header className="bg-slate-950/95 backdrop-blur-md text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
-        <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-6">
-          {/* TOP EXECUTIVE COMMAND BAR - RESPONSIVE ON MOBILE, TABLET & DESKTOP */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between py-2 sm:py-2.5 gap-2.5 border-b border-slate-800/80">
+        <div className="max-w-7xl mx-auto">
+          
+          {/* ROW 1: COMPACT EXECUTIVE COMMAND BAR (~56px) */}
+          <div className="h-14 flex items-center justify-between gap-2 px-3 sm:px-4 lg:px-6">
             
-            {/* School Title & Academic Identity */}
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-blue-600 via-blue-700 to-slate-950 flex items-center justify-center text-amber-300 font-sans font-black text-base shadow-sm border border-blue-400/30 shrink-0 tracking-tight ring-1 ring-white/10">
+            {/* Left: Brand Monogram + Title + Discreet Status */}
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              {/* Logo Monogram */}
+              <div 
+                className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 via-blue-700 to-slate-950 flex items-center justify-center text-amber-300 font-sans font-black text-xs shadow-xs border border-blue-400/40 shrink-0 ring-1 ring-white/10"
+                title="Collège Isaac Newton · Administration"
+              >
                 IN
               </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="font-sans font-bold text-sm sm:text-base text-white tracking-tight truncate">
-                    Collège Isaac Newton
-                  </h1>
-                  <span className="px-1.5 py-0.5 rounded-md bg-blue-900/70 border border-blue-400/30 text-[9.5px] text-blue-200 font-bold uppercase tracking-wider">
-                    Direction
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-[11px] text-slate-400 flex-wrap mt-0.5">
-                  <span className="flex items-center gap-1.5 text-slate-300">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Session 2026–2027</span>
-                  </span>
-                  <span className="text-slate-600">·</span>
-                  <span className="text-emerald-300 font-medium text-[10.5px]">
-                    Système Sécurisé En Ligne
-                  </span>
-                  <span className="text-slate-600 hidden md:inline">·</span>
-                  <span className="text-slate-400 hidden md:inline truncate">Delmas 50 · collegeisaacnewton.com</span>
+
+              {/* Title & Active Module */}
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span className="font-bold text-xs sm:text-sm text-white tracking-tight truncate">
+                  Administration
+                </span>
+                <span className="text-slate-600 hidden sm:inline">·</span>
+                <span 
+                  className="text-xs text-amber-300 font-semibold hidden md:inline truncate max-w-[180px] lg:max-w-xs"
+                  title={`Module actif : ${MODULE_TITLES[activeTab] || 'Tableau de Bord'}`}
+                >
+                  {MODULE_TITLES[activeTab] || 'Tableau de Bord'}
+                </span>
+
+                {/* Discreet Status Pill */}
+                <div 
+                  className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-950/70 border border-emerald-600/30 text-[10px] text-emerald-300 font-medium"
+                  title="Système Sécurisé En Ligne · Session 2026–2027"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>En ligne</span>
                 </div>
               </div>
             </div>
 
-            {/* Consolidated Executive Toolbar (Single Cohesive Row on Desktop/Tablet) */}
-            <div className="flex items-center gap-1.5 sm:gap-2 self-start lg:self-auto shrink-0 flex-wrap sm:flex-nowrap">
+            {/* Right: Essential Direct Actions + Secondary Actions Menu + Profile */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               
-              {/* Back to Public Site */}
+              {/* 1. Return to Public Site */}
               {onNavigate && (
                 <button
                   type="button"
                   onClick={() => onNavigate('home')}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-semibold transition-all border border-slate-700/80 shadow-xs cursor-pointer group"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-semibold transition-all border border-slate-700/80 shadow-xs cursor-pointer group"
                   title="Consulter le site public en mode visiteur"
                 >
                   <Globe className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition-transform" />
-                  <span className="hidden sm:inline">Site Public</span>
+                  <span className="hidden sm:inline">Retour au site</span>
                 </button>
               )}
 
-              {/* Refresh Data */}
+              {/* 2. Refresh Data */}
               <button
                 type="button"
                 onClick={loadData}
                 disabled={isLoading}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-semibold transition-all border border-slate-700/80 shadow-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-semibold transition-all border border-slate-700/80 shadow-xs cursor-pointer"
                 title="Actualiser les données du tableau de bord"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-amber-400' : 'text-slate-400'}`} />
                 <span className="hidden md:inline">Actualiser</span>
               </button>
 
-              {/* GitHub Synchronizer Button (En Développement Uniquement - Masqué sur le site en Production) */}
-              {currentUser.role === 'ADMIN' && shouldProposeGitHubOption() && (
-                <button
-                  type="button"
-                  onClick={() => setShowGitHubModal(true)}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 text-emerald-300 hover:text-white text-xs font-bold transition-all border border-emerald-700/60 cursor-pointer shadow-xs"
-                  title="Exporter et synchroniser les sources vers GitHub"
-                >
-                  <GitBranch className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="hidden sm:inline">GitHub</span>
-                </button>
-              )}
-
-              {/* Option B: Sauvegarde JSON Complète (Super Admin Uniquement) */}
-              {currentUser.role === 'ADMIN' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSettingsInitialTab('backup');
-                    setActiveTab('cms');
-                    showToast('Accès Super Admin : Sauvegarde & Restauration JSON');
-                  }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-950/80 hover:bg-amber-900 text-amber-300 hover:text-white text-xs font-bold transition-all border border-amber-600/70 cursor-pointer shadow-xs"
-                  title="Sauvegarde & Synchronisation JSON (Super Admin)"
-                >
-                  <FileJson className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden sm:inline">Sauvegarde JSON</span>
-                </button>
-              )}
-
-              {/* Audit Production & Live (Super Admin en Dev Uniquement - Masqué sur le site en Production) */}
-              {currentUser.role === 'ADMIN' && !isProductionEnvironment() && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSettingsInitialTab('audit');
-                    setActiveTab('cms');
-                    showToast('Ouverture de l’Audit Comparatif Live');
-                  }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-950/80 hover:bg-blue-900 text-blue-300 hover:text-white text-xs font-bold transition-all border border-blue-600/70 cursor-pointer shadow-xs"
-                  title="Audit de l’état de Production & Moniteur Live"
-                >
-                  <Activity className="w-3.5 h-3.5 text-blue-400" />
-                  <span className="hidden sm:inline">Audit Prod Live</span>
-                </button>
-              )}
-
-              {/* Automated Alert Button for Events < 48h */}
+              {/* 3. Alerts Button (Only visible if imminentAlerts > 0) */}
               {imminentAlerts.length > 0 && (
                 <button
                   type="button"
@@ -1039,39 +1046,196 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                     setLastMinuteModalTab('reminder');
                     setIsLastMinuteModalOpen(true);
                   }}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-white text-xs font-bold transition-all border border-amber-400/40 cursor-pointer shadow-xs animate-pulse"
-                  title={`${imminentAlerts.length} événement(s) dans moins de 48 heures - Cliquez pour diffuser un rappel ou un ajustement rapide`}
+                  className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-white text-xs font-bold transition-all border border-amber-400/40 cursor-pointer shadow-xs animate-pulse"
+                  title={`${imminentAlerts.length} événement(s) dans moins de 48 heures - Cliquez pour diffuser un rappel`}
                 >
                   <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden sm:inline">Alerte &lt; 48h ({imminentAlerts.length})</span>
-                  <span className="sm:hidden">{imminentAlerts.length}</span>
+                  <span className="text-[11px] font-bold">{imminentAlerts.length}</span>
+                  <span className="hidden lg:inline text-[11px]">alerte{imminentAlerts.length > 1 ? 's' : ''}</span>
                 </button>
               )}
 
+              {/* 4. Secondary Actions & Tools Dropdown (GitHub, Sauvegarde JSON, Audit Prod Live) */}
+              {currentUser && currentUser.role === 'ADMIN' && (
+                <div className="relative" ref={toolsMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsToolsMenuOpen(!isToolsMenuOpen)}
+                    aria-expanded={isToolsMenuOpen}
+                    aria-label="Menu des actions administratives"
+                    className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
+                      isToolsMenuOpen
+                        ? 'bg-slate-800 text-amber-300 border-amber-400/40 shadow-xs'
+                        : 'bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border-slate-700/80 shadow-xs'
+                    }`}
+                    title="Actions et outils d'administration (GitHub, Sauvegarde JSON, Audit Live)"
+                  >
+                    <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="hidden md:inline">Actions</span>
+                    <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isToolsMenuOpen ? 'rotate-180 text-amber-300' : ''}`} />
+                  </button>
+
+                  {isToolsMenuOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 w-64 bg-slate-900/95 backdrop-blur-xl border border-slate-700/90 rounded-xl shadow-2xl p-2 z-50 text-slate-100 space-y-1 animate-fade-in">
+                      <div className="px-2 py-1 text-[10px] uppercase font-bold text-slate-400 tracking-wider border-b border-slate-800 flex items-center justify-between">
+                        <span>Actions & Outils</span>
+                        <span className="text-amber-400 font-mono text-[9px]">Super Admin</span>
+                      </div>
+
+                      {/* GitHub Synchronizer */}
+                      {shouldProposeGitHubOption() && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowGitHubModal(true);
+                            setIsToolsMenuOpen(false);
+                          }}
+                          className="w-full text-left p-2 rounded-lg flex items-center gap-2.5 text-xs text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors cursor-pointer"
+                        >
+                          <GitBranch className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <div>
+                            <div className="font-semibold text-white">Synchronisation GitHub</div>
+                            <div className="text-[10px] text-slate-400">Exporter et vérifier les commits</div>
+                          </div>
+                        </button>
+                      )}
+
+                      {/* Sauvegarde JSON */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSettingsInitialTab('backup');
+                          setActiveTab('cms');
+                          setIsToolsMenuOpen(false);
+                          showToast('Accès Super Admin : Sauvegarde & Restauration JSON');
+                        }}
+                        className="w-full text-left p-2 rounded-lg flex items-center gap-2.5 text-xs text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors cursor-pointer"
+                      >
+                        <FileJson className="w-4 h-4 text-amber-400 shrink-0" />
+                        <div>
+                          <div className="font-semibold text-white">Sauvegarde JSON (Option B)</div>
+                          <div className="text-[10px] text-slate-400">Exporter ou restaurer l’état complet</div>
+                        </div>
+                      </button>
+
+                      {/* Audit Production & Live */}
+                      {!isProductionEnvironment() && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSettingsInitialTab('security');
+                            setActiveTab('cms');
+                            setIsToolsMenuOpen(false);
+                            showToast('Ouverture de l’Audit Comparatif Live');
+                          }}
+                          className="w-full text-left p-2 rounded-lg flex items-center gap-2.5 text-xs text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors cursor-pointer"
+                        >
+                          <Activity className="w-4 h-4 text-blue-400 shrink-0" />
+                          <div>
+                            <div className="font-semibold text-white">Audit Production Live</div>
+                            <div className="text-[10px] text-slate-400">Vérifier l’état comparatif en direct</div>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Vertical divider */}
-              <div className="h-6 w-px bg-slate-800 mx-0.5 hidden sm:block" />
+              <div className="h-5 w-px bg-slate-800 mx-0.5 hidden sm:block" />
 
-              {/* User Profile Card */}
-              <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs shadow-xs">
-                <div className="w-6 h-6 rounded-lg bg-blue-900/60 border border-blue-500/30 flex items-center justify-center shrink-0">
-                  <Shield className="w-3.5 h-3.5 text-amber-400" />
-                </div>
-                <div className="text-left leading-tight">
-                  <span className="font-semibold text-white block text-xs truncate max-w-[130px] sm:max-w-[160px]">
-                    {currentUser.fullName}
-                  </span>
-                  <span className="text-[9.5px] text-amber-300 font-semibold block">
-                    {ROLE_PERMISSIONS[currentUser.role]?.badgeLabel || currentUser.role}
-                  </span>
-                </div>
-              </div>
+              {/* 5. User Profile Dropdown (Clean, non-truncated label with full card in popup) */}
+              {currentUser && (
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                    aria-expanded={isProfileMenuOpen}
+                    aria-label="Menu du profil utilisateur"
+                    className={`flex items-center gap-1.5 p-1 sm:px-2 sm:py-1 rounded-lg border text-xs transition-all cursor-pointer ${
+                      isProfileMenuOpen
+                        ? 'bg-slate-800 text-amber-300 border-amber-400/40 shadow-xs'
+                        : 'bg-slate-900/90 hover:bg-slate-800 text-white border-slate-700/80 shadow-xs'
+                    }`}
+                    title={`${currentUser.fullName} (${ROLE_PERMISSIONS[currentUser.role]?.badgeLabel || currentUser.role})`}
+                  >
+                    <div className="w-6 h-6 rounded-md bg-blue-900/80 border border-blue-400/30 flex items-center justify-center text-amber-300 font-bold text-[11px] shrink-0">
+                      <Shield className="w-3.5 h-3.5" />
+                    </div>
+                    <span className="font-semibold text-white hidden sm:inline text-xs">
+                      {getShortRole(currentUser)}
+                    </span>
+                    <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180 text-amber-300' : ''}`} />
+                  </button>
 
-              {/* Logout Button */}
+                  {isProfileMenuOpen && (
+                    <div className="absolute right-0 top-full mt-1.5 w-72 bg-slate-900/95 backdrop-blur-xl border border-slate-700/90 rounded-xl shadow-2xl p-3 z-50 text-slate-100 space-y-2.5 animate-fade-in">
+                      {/* Full User Identity Card */}
+                      <div className="flex items-start gap-2.5 pb-2.5 border-b border-slate-800">
+                        <div className="w-9 h-9 rounded-lg bg-blue-900/80 border border-blue-400/40 flex items-center justify-center text-amber-300 font-bold text-sm shrink-0">
+                          {currentUser.fullName ? currentUser.fullName.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-xs text-white leading-snug">
+                            {currentUser.fullName}
+                          </div>
+                          <div className="text-[11px] text-amber-300 font-medium mt-0.5">
+                            {ROLE_PERMISSIONS[currentUser.role]?.badgeLabel || currentUser.role}
+                          </div>
+                          {currentUser.department && (
+                            <div className="text-[10px] text-slate-400 mt-0.5 leading-tight">
+                              {currentUser.department}
+                            </div>
+                          )}
+                          {currentUser.email && (
+                            <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                              {currentUser.email}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Quick Profile Link */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSettingsInitialTab('profile');
+                          setActiveTab('cms');
+                          setIsProfileMenuOpen(false);
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between text-xs text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors cursor-pointer"
+                      >
+                        <span className="flex items-center gap-2">
+                          <Settings className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Mon Profil & Sécurité</span>
+                        </span>
+                        <ChevronRight className="w-3 h-3 text-slate-500" />
+                      </button>
+
+                      {/* Safe Logout Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          handleSafeLogout();
+                        }}
+                        className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2 text-xs text-rose-300 hover:bg-rose-950/40 hover:text-rose-200 border border-rose-800/40 transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Déconnexion sécurisée</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 6. Direct Logout Button */}
               <button
                 type="button"
                 onClick={handleSafeLogout}
-                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-rose-200 border border-rose-800/40 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1"
-                title="Déconnexion sécurisée (sans notification résiduelle)"
+                className="p-1.5 sm:px-2 sm:py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-rose-200 border border-rose-800/40 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                title="Déconnexion sécurisée"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span className="hidden xl:inline text-[11px]">Quitter</span>
@@ -1081,8 +1245,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
           </div>
 
-          {/* NAVIGATION TABS - INLINE RESPONSIVE LAYOUT WITHOUT OVERLAPPING BUTTONS */}
-          <div className="flex items-center gap-1 sm:gap-1.5 py-1.5 border-t border-slate-800/80">
+          {/* ROW 2: COMPACT MODULE NAVIGATION BAR (~44px) */}
+          <div className="h-11 flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 lg:px-6 border-t border-slate-800/80 bg-slate-950/90">
             
             {/* Left Chevron Scroll Button (Inline, only visible when scrollable) */}
             {canScrollLeft && (
@@ -1090,24 +1254,28 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 onClick={() => scrollTabs('left')}
                 aria-label="Faire défiler les onglets vers la gauche"
-                className="shrink-0 h-7 w-7 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer"
+                className="shrink-0 h-6 w-6 rounded-md bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 shadow-xs flex items-center justify-center transition-all cursor-pointer"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
             )}
 
             {/* Main Tabs Container - Takes all flexible width between controls */}
             <div 
               ref={navScrollContainerRef}
+              role="tablist"
+              aria-label="Modules d'administration"
               className="flex-1 flex items-center gap-1 sm:gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden scroll-smooth py-0.5 px-0.5 min-w-0"
             >
               
               {/* Tab 1: Overview */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'overview'}
                 data-tab-id="overview"
                 onClick={() => setActiveTab('overview')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'overview'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -1120,39 +1288,45 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               {/* Tab 2: Slideshow Hero */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'slideshow'}
                 data-tab-id="slideshow"
                 onClick={() => setActiveTab('slideshow')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'slideshow'
                     ? 'bg-amber-400 text-slate-950 font-bold shadow-xs ring-1 ring-amber-300/50'
                     : 'text-amber-300 hover:text-white hover:bg-slate-800/70 border border-amber-400/40 bg-amber-950/20'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Éditeur Diaporama (Hero)</span>
+                <span>Éditeur Diaporama</span>
               </button>
 
               {/* Tab 3: Menus & Navigation */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'menus'}
                 data-tab-id="menus"
                 onClick={() => setActiveTab('menus')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'menus'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-amber-400/50'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
                 }`}
               >
                 <MenuIcon className="w-3.5 h-3.5 text-amber-400" />
-                <span>Sous-Menus & Navigation</span>
+                <span>Menus & Nav</span>
               </button>
 
               {/* Tab 4: Admissions */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'admissions'}
                 data-tab-id="admissions"
                 onClick={() => setActiveTab('admissions')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'admissions'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -1170,9 +1344,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               {/* Tab 5: News */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'news'}
                 data-tab-id="news"
                 onClick={() => setActiveTab('news')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'news'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -1188,9 +1364,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               {/* Tab 6: Agenda */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'events'}
                 data-tab-id="events"
                 onClick={() => setActiveTab('events')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'events'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -1206,9 +1384,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               {/* Tab 7: Media */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'media'}
                 data-tab-id="media"
                 onClick={() => setActiveTab('media')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'media'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -1221,9 +1401,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               {/* Tab 8: Messages */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'messages'}
                 data-tab-id="messages"
                 onClick={() => setActiveTab('messages')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'messages'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
@@ -1241,61 +1423,69 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               {/* Tab 9: System Settings */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'cms'}
                 data-tab-id="cms"
                 onClick={() => setActiveTab('cms')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'cms'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
                 }`}
               >
                 <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                <span>Paramètres & Configuration</span>
+                <span>Configuration</span>
               </button>
 
               {/* Tab 10: Access Control */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'users'}
                 data-tab-id="users"
                 onClick={() => setActiveTab('users')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'users'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
                 }`}
               >
                 <KeyRound className="w-3.5 h-3.5 text-amber-400" />
-                <span>Contrôle d'Accès & Équipe</span>
+                <span>Accès & Équipe</span>
               </button>
 
-              {/* Tab: Direction & Corps professoral */}
+              {/* Tab 11: Direction & Corps professoral */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'faculty'}
                 data-tab-id="faculty"
                 onClick={() => setActiveTab('faculty')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'faculty'
                     ? 'bg-blue-600 text-white font-bold shadow-xs ring-1 ring-blue-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
                 }`}
               >
                 <GraduationCap className="w-3.5 h-3.5 text-amber-400" />
-                <span>Direction & Professeurs</span>
+                <span>Professeurs</span>
               </button>
 
-              {/* Tab 11: WhatsApp Diagnostics & Test Page */}
+              {/* Tab 12: WhatsApp Diagnostics & Test Page */}
               <button
                 type="button"
+                role="tab"
+                aria-selected={activeTab === 'whatsapp'}
                 data-tab-id="whatsapp"
                 onClick={() => setActiveTab('whatsapp')}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
                   activeTab === 'whatsapp'
                     ? 'bg-emerald-600 text-white font-bold shadow-xs ring-1 ring-emerald-400/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
                 }`}
               >
                 <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Test & Diagnostic WhatsApp</span>
+                <span>WhatsApp</span>
               </button>
 
             </div>
@@ -1306,23 +1496,23 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 type="button"
                 onClick={() => scrollTabs('right')}
                 aria-label="Faire défiler les onglets vers la droite"
-                className="shrink-0 h-7 w-7 rounded-lg bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 shadow-sm flex items-center justify-center transition-all cursor-pointer"
+                className="shrink-0 h-6 w-6 rounded-md bg-slate-800/90 hover:bg-slate-700 text-amber-300 border border-slate-700 shadow-xs flex items-center justify-center transition-all cursor-pointer"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             )}
 
             {/* Clean Vertical Separator */}
-            <div className="h-6 w-px bg-slate-800 shrink-0 mx-0.5" />
+            <div className="h-5 w-px bg-slate-800 shrink-0 mx-0.5" />
 
-            {/* QUICK MODULE SELECTOR DROPDOWN (10 MODULES) */}
+            {/* QUICK MODULE SELECTOR DROPDOWN (12 MODULES) */}
             <div className="relative shrink-0" ref={modulesMenuRef}>
               <button
                 type="button"
                 onClick={() => setIsModulesMenuOpen(!isModulesMenuOpen)}
                 aria-expanded={isModulesMenuOpen}
                 aria-label="Ouvrir le menu d'accès rapide aux modules"
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-xs font-semibold text-slate-200 hover:text-white border border-slate-700/60 shadow-xs transition-all cursor-pointer whitespace-nowrap"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-800/90 hover:bg-slate-700/90 text-xs font-semibold text-slate-200 hover:text-white border border-slate-700/60 shadow-xs transition-all cursor-pointer whitespace-nowrap"
               >
                 <LayoutGrid className="w-3.5 h-3.5 text-amber-400" />
                 <span className="hidden sm:inline">Modules</span>
@@ -1331,13 +1521,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
               {/* Categorized Dropdown Menu */}
               {isModulesMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-76 sm:w-80 bg-slate-900/95 backdrop-blur-xl border border-slate-700/90 rounded-2xl shadow-2xl p-2.5 z-50 text-slate-100 space-y-2 animate-fade-in">
+                <div className="absolute right-0 top-full mt-1.5 w-76 sm:w-80 bg-slate-900/95 backdrop-blur-xl border border-slate-700/90 rounded-2xl shadow-2xl p-2.5 z-50 text-slate-100 space-y-2 animate-fade-in">
                   <div className="flex items-center justify-between pb-1.5 border-b border-white/10 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                     <span className="flex items-center gap-1.5 text-amber-300">
                       <LayoutGrid className="w-3.5 h-3.5" />
                       <span>Accès Rapide aux Modules</span>
                     </span>
-                    <span className="text-slate-400 font-mono text-[10px]">11 Modules</span>
+                    <span className="text-slate-400 font-mono text-[10px]">12 Modules</span>
                   </div>
 
                   <div className="max-h-72 overflow-y-auto space-y-2.5 pr-0.5">
@@ -2618,7 +2808,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
             TAB 4.5: MÉDIATHÈQUE & DIAPORAMA D'ACCUEIL (SUPER ADMIN)
         ========================================================================= */}
         {activeTab === 'media' && (
-          <MediaLibraryView initialSubTab={mediaInitialSubTab} onNavigate={onNavigate} />
+          <MediaLibraryView initialSubTab={mediaInitialSubTab === 'site-images' ? 'media' : mediaInitialSubTab} onNavigate={onNavigate} />
         )}
 
         {/* =========================================================================

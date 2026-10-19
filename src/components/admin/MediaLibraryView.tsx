@@ -23,8 +23,7 @@ import {
   Camera,
   Laptop,
   Smartphone,
-  Monitor,
-  Download
+  Monitor
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { MediaItem, HeroSlide, GalleryItem } from '../../types';
@@ -33,21 +32,18 @@ import { apiService } from '../../services/api';
 import { ImageUploadCompressor } from '../common/ImageUploadCompressor';
 import { SCHOOL_IMAGES } from '../../assets/images';
 import { DocumentManagerView } from './DocumentManagerView';
-import { SiteImagesManagerView } from './SiteImagesManagerView';
-import { downloadImageFile } from '../../utils/downloadHelper';
 
 interface MediaLibraryViewProps {
   onSelectImageForTarget?: (url: string) => void;
-  initialSubTab?: 'documents' | 'slideshow' | 'gallery' | 'media' | 'site-images';
+  initialSubTab?: 'documents' | 'slideshow' | 'gallery' | 'media';
   onNavigate?: (page: string, subSection?: string) => void;
 }
 
 export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
   onSelectImageForTarget,
-  initialSubTab = 'documents',
-  onNavigate
+  initialSubTab = 'documents'
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'documents' | 'slideshow' | 'gallery' | 'media' | 'site-images'>(initialSubTab);
+  const [activeSubTab, setActiveSubTab] = useState<'documents' | 'slideshow' | 'gallery' | 'media'>(initialSubTab);
   
   // Media items state
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
@@ -411,18 +407,6 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
             >
               Médiathèque ({mediaItems.length})
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveSubTab('site-images')}
-              className={`px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                activeSubTab === 'site-images'
-                  ? 'bg-amber-400 text-slate-950 shadow-xs ring-1 ring-amber-300'
-                  : 'text-amber-700 bg-amber-50 hover:bg-amber-100/80 border border-amber-200/60'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              <span>Photos Pages Clés (Histoire, Campus...)</span>
-            </button>
           </div>
 
           <button
@@ -747,26 +731,15 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
                 </div>
 
                 <div className="p-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleCopyUrl(media.url)}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 text-xs flex items-center gap-1 transition-colors cursor-pointer"
-                      title="Copier l'URL"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span className="text-[10px]">Copier</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => downloadImageFile(media.url, `${(media.title || 'media').toLowerCase().replace(/[^a-z0-9]/g, '_')}.jpg`)}
-                      className="p-1.5 rounded-lg text-slate-500 hover:text-blue-900 hover:bg-blue-50 text-xs flex items-center gap-1 transition-colors cursor-pointer"
-                      title="Télécharger l'image sur mon poste local"
-                    >
-                      <Download className="w-3.5 h-3.5 text-blue-900" />
-                      <span className="text-[10px]">Télécharger</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyUrl(media.url)}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200 text-xs flex items-center gap-1 transition-colors cursor-pointer"
+                    title="Copier l'URL"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span className="text-[10px]">Copier</span>
+                  </button>
 
                   <div className="flex items-center gap-1">
                     <button
@@ -803,13 +776,6 @@ export const MediaLibraryView: React.FC<MediaLibraryViewProps> = ({
           </div>
 
         </div>
-      )}
-
-      {/* =========================================================================
-          SUB-TAB 4 : PHOTOS DES PAGES CLÉS DU SITE (NOTRE HISTOIRE, CAMPUS, LABO...)
-      ========================================================================= */}
-      {activeSubTab === 'site-images' && (
-        <SiteImagesManagerView onNavigate={onNavigate} />
       )}
 
       {/* =========================================================================

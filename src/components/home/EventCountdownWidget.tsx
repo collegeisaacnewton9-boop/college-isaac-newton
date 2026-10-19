@@ -581,11 +581,8 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
                     )}
                   </div>
 
-                  {/* Title - Single line responsive */}
-                  <h3 
-                    className="font-serif text-base sm:text-lg lg:text-xl xl:text-2xl font-bold text-white tracking-tight leading-snug whitespace-nowrap overflow-hidden text-ellipsis max-w-full"
-                    title={activeEvent.title}
-                  >
+                  {/* Title */}
+                  <h3 className="font-serif text-lg sm:text-xl lg:text-2xl font-bold text-white tracking-tight leading-snug">
                     {activeEvent.title}
                   </h3>
 

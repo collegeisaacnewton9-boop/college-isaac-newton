@@ -111,14 +111,8 @@ export async function initDatabase(): Promise<boolean> {
           is_public BOOLEAN DEFAULT TRUE,
           image TEXT,
           created_at TIMESTAMPTZ DEFAULT NOW()
+        );
         ALTER TABLE school_events ADD COLUMN IF NOT EXISTS image TEXT;
-        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS academic_year TEXT DEFAULT '2026-2027';
-        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PUBLISHED';
-        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS indicated_duration TEXT;
-        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS display_order INTEGER DEFAULT 0;
-        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS event_type TEXT;
-        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS control_number INTEGER;
-        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS period_label TEXT;
       `);
 
       // 4. Table Contact Messages
@@ -232,25 +226,6 @@ export async function initDatabase(): Promise<boolean> {
           target_cycle TEXT,
           school_year TEXT NOT NULL DEFAULT '2026-2027',
           download_count INTEGER DEFAULT 0,
-          created_at TIMESTAMPTZ DEFAULT NOW(),
-          updated_at TIMESTAMPTZ DEFAULT NOW()
-        );
-      `);
-
-      // 12. Table Faculty Members (Direction & Corps professoral)
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS faculty_members (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          roles TEXT NOT NULL DEFAULT '[]',
-          subjects TEXT NOT NULL DEFAULT '[]',
-          categories TEXT NOT NULL DEFAULT '[]',
-          photo_url TEXT,
-          display_order INTEGER DEFAULT 1,
-          is_visible BOOLEAN DEFAULT TRUE,
-          biography TEXT,
-          email TEXT,
-          phone TEXT,
           created_at TIMESTAMPTZ DEFAULT NOW(),
           updated_at TIMESTAMPTZ DEFAULT NOW()
         );
@@ -1005,13 +980,6 @@ export async function dbGetEvents(): Promise<any[]> {
       audience: r.audience || 'ALL',
       isPublic: r.is_public !== false,
       image: r.image || '',
-      academicYear: r.academic_year || '2026-2027',
-      status: r.status || 'PUBLISHED',
-      indicatedDuration: r.indicated_duration || '',
-      displayOrder: r.display_order ?? 0,
-      eventType: r.event_type || '',
-      controlNumber: r.control_number || undefined,
-      periodLabel: r.period_label || '',
       createdAt: r.created_at,
     }));
   } catch (err: any) {
@@ -1025,11 +993,8 @@ export async function dbInsertEvent(evt: any): Promise<any | null> {
   if (!p || !isConnected) return null;
   try {
     const res = await p.query(`
-      INSERT INTO school_events (
-        id, title, description, start_date, end_date, location, category, audience, is_public, image,
-        academic_year, status, indicated_duration, display_order, event_type, control_number, period_label
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      INSERT INTO school_events (id, title, description, start_date, end_date, location, category, audience, is_public, image)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *
     `, [
       evt.id,
@@ -1041,14 +1006,7 @@ export async function dbInsertEvent(evt: any): Promise<any | null> {
       evt.category || 'Pédagogique',
       evt.audience || 'ALL',
       evt.isPublic !== false,
-      evt.image || null,
-      evt.academicYear || '2026-2027',
-      evt.status || 'PUBLISHED',
-      evt.indicatedDuration || null,
-      evt.displayOrder ?? 0,
-      evt.eventType || null,
-      evt.controlNumber || null,
-      evt.periodLabel || null
+      evt.image || null
     ]);
     const r = res.rows[0];
     return {
@@ -1062,13 +1020,6 @@ export async function dbInsertEvent(evt: any): Promise<any | null> {
       audience: r.audience,
       isPublic: r.is_public,
       image: r.image || '',
-      academicYear: r.academic_year || '2026-2027',
-      status: r.status || 'PUBLISHED',
-      indicatedDuration: r.indicated_duration || '',
-      displayOrder: r.display_order ?? 0,
-      eventType: r.event_type || '',
-      controlNumber: r.control_number || undefined,
-      periodLabel: r.period_label || '',
     };
   } catch (err: any) {
     console.error('[DB Insert Event Error]', err.message);
@@ -1090,15 +1041,8 @@ export async function dbUpdateEvent(id: string, evt: any): Promise<any | null> {
           category = COALESCE($6, category),
           audience = COALESCE($7, audience),
           is_public = COALESCE($8, is_public),
-          image = COALESCE($9, image),
-          academic_year = COALESCE($10, academic_year),
-          status = COALESCE($11, status),
-          indicated_duration = COALESCE($12, indicated_duration),
-          display_order = COALESCE($13, display_order),
-          event_type = COALESCE($14, event_type),
-          control_number = COALESCE($15, control_number),
-          period_label = COALESCE($16, period_label)
-      WHERE id = $17
+          image = COALESCE($9, image)
+      WHERE id = $10
       RETURNING *
     `, [
       evt.title,
@@ -1110,13 +1054,6 @@ export async function dbUpdateEvent(id: string, evt: any): Promise<any | null> {
       evt.audience,
       evt.isPublic !== undefined ? evt.isPublic : null,
       evt.image !== undefined ? evt.image : null,
-      evt.academicYear || null,
-      evt.status || null,
-      evt.indicatedDuration !== undefined ? evt.indicatedDuration : null,
-      evt.displayOrder !== undefined ? evt.displayOrder : null,
-      evt.eventType !== undefined ? evt.eventType : null,
-      evt.controlNumber !== undefined ? evt.controlNumber : null,
-      evt.periodLabel !== undefined ? evt.periodLabel : null,
       id
     ]);
     if (res.rows.length === 0) return null;
@@ -1132,13 +1069,6 @@ export async function dbUpdateEvent(id: string, evt: any): Promise<any | null> {
       audience: r.audience,
       isPublic: r.is_public,
       image: r.image || '',
-      academicYear: r.academic_year || '2026-2027',
-      status: r.status || 'PUBLISHED',
-      indicatedDuration: r.indicated_duration || '',
-      displayOrder: r.display_order ?? 0,
-      eventType: r.event_type || '',
-      controlNumber: r.control_number || undefined,
-      periodLabel: r.period_label || '',
     };
   } catch (err: any) {
     console.error('[DB Update Event Error]', err.message);
@@ -1780,36 +1710,23 @@ export async function dbIncrementDocumentDownload(id: string): Promise<number> {
   }
 }
 
-// ==========================================
-// DIRECTION & CORPS PROFESSORAL (FACULTY)
-// ==========================================
-
-export async function dbGetFacultyMembers(): Promise<any[] | null> {
+// --- FACULTY MEMBERS PERSISTENCE (POSTGRESQL) ---
+export async function dbGetFacultyMembers(): Promise<any[]> {
   const p = getDbPool();
-  if (!p || !isConnected) return null;
+  if (!p || !isConnected) return [];
   try {
-    const res = await p.query(
-      'SELECT * FROM faculty_members ORDER BY display_order ASC, name ASC'
-    );
-    if (!res.rows) return null;
-    return res.rows.map(row => ({
-      id: row.id,
-      name: row.name,
-      roles: typeof row.roles === 'string' ? safeJsonParse(row.roles, [row.roles]) : (row.roles || []),
-      subjects: typeof row.subjects === 'string' ? safeJsonParse(row.subjects, [row.subjects]) : (row.subjects || []),
-      categories: typeof row.categories === 'string' ? safeJsonParse(row.categories, [row.categories]) : (row.categories || ['enseignant']),
-      photoUrl: row.photo_url || '',
-      displayOrder: row.display_order ?? 1,
-      isVisible: row.is_visible !== false,
-      biography: row.biography || '',
-      email: row.email || '',
-      phone: row.phone || '',
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
+    const res = await p.query('SELECT data FROM site_settings WHERE id = $1', ['faculty_members']);
+    if (res.rows.length > 0) {
+      let data = res.rows[0].data;
+      if (typeof data === 'string') {
+        try { data = JSON.parse(data); } catch {}
+      }
+      return Array.isArray(data) ? data : [];
+    }
+    return [];
   } catch (err: any) {
     console.error('[DB Get Faculty Error]', err.message);
-    return null;
+    return [];
   }
 }
 
@@ -1817,39 +1734,18 @@ export async function dbSaveFacultyMember(member: any): Promise<boolean> {
   const p = getDbPool();
   if (!p || !isConnected) return false;
   try {
-    const rolesStr = JSON.stringify(Array.isArray(member.roles) ? member.roles : (member.roles ? [member.roles] : []));
-    const subjectsStr = JSON.stringify(Array.isArray(member.subjects) ? member.subjects : (member.subjects ? [member.subjects] : []));
-    const categoriesStr = JSON.stringify(Array.isArray(member.categories) ? member.categories : (member.categories ? [member.categories] : ['enseignant']));
-
+    const current = await dbGetFacultyMembers();
+    const idx = current.findIndex((m: any) => m.id === member.id);
+    if (idx >= 0) {
+      current[idx] = member;
+    } else {
+      current.push(member);
+    }
     await p.query(
-      `INSERT INTO faculty_members (
-        id, name, roles, subjects, categories, photo_url, display_order, is_visible, biography, email, phone, created_at, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
-      ON CONFLICT (id) DO UPDATE SET
-        name = $2,
-        roles = $3,
-        subjects = $4,
-        categories = $5,
-        photo_url = $6,
-        display_order = $7,
-        is_visible = $8,
-        biography = $9,
-        email = $10,
-        phone = $11,
-        updated_at = NOW()`,
-      [
-        member.id,
-        member.name,
-        rolesStr,
-        subjectsStr,
-        categoriesStr,
-        member.photoUrl || '',
-        member.displayOrder ?? 1,
-        member.isVisible !== false,
-        member.biography || '',
-        member.email || '',
-        member.phone || '',
-      ]
+      `INSERT INTO site_settings (id, data, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
+      ['faculty_members', JSON.stringify(current)]
     );
     return true;
   } catch (err: any) {
@@ -1862,7 +1758,14 @@ export async function dbDeleteFacultyMember(id: string): Promise<boolean> {
   const p = getDbPool();
   if (!p || !isConnected) return false;
   try {
-    await p.query('DELETE FROM faculty_members WHERE id = $1', [id]);
+    const current = await dbGetFacultyMembers();
+    const filtered = current.filter((m: any) => m.id !== id);
+    await p.query(
+      `INSERT INTO site_settings (id, data, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
+      ['faculty_members', JSON.stringify(filtered)]
+    );
     return true;
   } catch (err: any) {
     console.error('[DB Delete Faculty Error]', err.message);
@@ -1874,7 +1777,18 @@ export async function dbUpdateFacultyVisibility(id: string, isVisible: boolean):
   const p = getDbPool();
   if (!p || !isConnected) return false;
   try {
-    await p.query('UPDATE faculty_members SET is_visible = $1, updated_at = NOW() WHERE id = $2', [isVisible, id]);
+    const current = await dbGetFacultyMembers();
+    const target = current.find((m: any) => m.id === id);
+    if (target) {
+      target.isVisible = isVisible;
+      target.updatedAt = new Date().toISOString();
+      await p.query(
+        `INSERT INTO site_settings (id, data, updated_at)
+         VALUES ($1, $2, NOW())
+         ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
+        ['faculty_members', JSON.stringify(current)]
+      );
+    }
     return true;
   } catch (err: any) {
     console.error('[DB Update Faculty Visibility Error]', err.message);
@@ -1882,13 +1796,6 @@ export async function dbUpdateFacultyVisibility(id: string, isVisible: boolean):
   }
 }
 
-function safeJsonParse(str: string, fallback: any) {
-  try {
-    return JSON.parse(str);
-  } catch {
-    return fallback;
-  }
-}
 
 
 

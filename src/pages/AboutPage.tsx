@@ -8,14 +8,11 @@ import {
   Cpu, 
   BookOpen, 
   Compass,
-  ArrowRight,
-  Download
+  ArrowRight
 } from 'lucide-react';
 import { SCHOOL_IMAGES } from '../assets/images';
 import { SCHOOL_INFO } from '../data/mockData';
 import { ContentEditable } from '../components/common/ContentEditable';
-import { ImageEditable } from '../components/common/ImageEditable';
-import { downloadImageFile } from '../utils/downloadHelper';
 import { User } from '../types';
 
 interface AboutPageProps {
@@ -130,44 +127,17 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate, currentUser })
 
           <div className="lg:col-span-6">
             <div className="relative rounded-3xl overflow-hidden shadow-xl border border-slate-200">
-              <ImageEditable
-                contentKey="about.campus.image"
-                defaultImage={SCHOOL_IMAGES.heroCampus}
-                alt="Bâtiment principal du Collège Isaac Newton - Notre Histoire & Fondation"
-                className="w-full h-full object-cover"
-                containerClassName="relative aspect-video w-full overflow-hidden bg-slate-900"
-                currentUser={currentUser}
-                label="Modifier la photo Notre Histoire & Fondation"
-                recommendedAspect="Format 16:9 recommandé (Résolution max 1280px)"
-              />
-              <div className="p-4 bg-slate-900 text-white text-xs flex items-center justify-between gap-3">
-                <div className="space-y-0.5 min-w-0">
-                  <ContentEditable
-                    contentKey="about.campus.caption"
-                    defaultContent="Campus Principal du Collège Isaac Newton (Delmas 50, Haïti)"
-                    as="p"
-                    className="font-semibold text-amber-300 truncate"
-                    currentUser={currentUser}
-                    multiline={false}
-                  />
-                  <ContentEditable
-                    contentKey="about.campus.subcaption"
-                    defaultContent="Un cadre d'étude moderne, sécurisé et aéré propice à la sérénité des apprentissages"
-                    as="p"
-                    className="text-slate-300 text-[11px] line-clamp-1"
-                    currentUser={currentUser}
-                    multiline={false}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => downloadImageFile(SCHOOL_IMAGES.heroCampus, 'college_isaac_newton_histoire_campus.jpg')}
-                  className="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white text-[11px] font-semibold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer border border-white/15"
-                  title="Télécharger l'image originale sur votre poste local"
-                >
-                  <Download className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden sm:inline">Télécharger</span>
-                </button>
+              <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+                <img
+                  src={SCHOOL_IMAGES.heroCampus}
+                  alt="Bâtiment principal du Collège Isaac Newton"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="p-4 bg-slate-900 text-white text-xs">
+                <p className="font-semibold text-amber-300">Campus Principal du Collège Isaac Newton (Delmas 50, Haïti)</p>
+                <p className="text-slate-300 text-[11px]">Un cadre d'étude moderne, sécurisé et aéré propice à la sérénité des apprentissages</p>
               </div>
             </div>
           </div>
@@ -297,18 +267,6 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate, currentUser })
               Conçoit les ateliers technologiques, l'initiation au codage et l'utilisation pédagogique des ordinateurs.
             </p>
           </div>
-        </div>
-
-        <div className="text-center pt-4">
-          <button
-            type="button"
-            onClick={() => onNavigate('faculty')}
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-blue-900 text-white hover:bg-blue-800 text-xs font-bold transition-colors shadow-sm cursor-pointer"
-          >
-            <Users className="w-4 h-4 text-amber-400" />
-            <span>Découvrir la Direction & le Corps professoral complet</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
         </div>
       </section>
 

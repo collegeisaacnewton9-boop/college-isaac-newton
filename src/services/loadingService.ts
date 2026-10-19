@@ -88,30 +88,12 @@ class LoadingService {
 export const loadingService = new LoadingService();
 
 /**
- * AppFetch: Wrapper around native fetch that drives the global loading bar
- * and automatically attaches authentication headers for protected endpoints.
+ * AppFetch: Wrapper around native fetch that drives the global loading bar.
  */
 export async function appFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   loadingService.start();
   try {
-    const options: RequestInit = { ...init };
-    const headers = new Headers(options.headers || {});
-
-    // Injection automatique du jeton d'authentification Bearer
-    try {
-      if (typeof window !== 'undefined') {
-        const userRaw = localStorage.getItem('cin_auth_user_v1');
-        if (userRaw) {
-          const user = JSON.parse(userRaw);
-          if (user && user.token && !headers.has('Authorization')) {
-            headers.set('Authorization', `Bearer ${user.token}`);
-          }
-        }
-      }
-    } catch {}
-
-    options.headers = headers;
-    const res = await fetch(input, options);
+    const res = await fetch(input, init);
     return res;
   } finally {
     loadingService.stop();

@@ -88,26 +88,12 @@ export const ContentEditable: React.FC<ContentEditableProps> = ({
     }
   };
 
-  // Helper de sécurité : Nettoyage anti-XSS des balises et scripts malveillants
-  const sanitizeHtmlContent = (dirty: string): string => {
-    if (!dirty || typeof dirty !== 'string') return '';
-    return dirty
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-      .replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-      .replace(/<embed\b[^>]*>/gi, '')
-      .replace(/\s*on\w+\s*=\s*(['"][^'"]*['"]|[^\s>]+)/gi, '')
-      .replace(/javascript:/gi, 'blocked:');
-  };
-
-  const safeContent = sanitizeHtmlContent(currentContent);
-
   // Plain read-only render for visitors and non-admins
   if (!isEditableNow) {
     return (
       <Component
         className={className}
-        dangerouslySetInnerHTML={{ __html: safeContent }}
+        dangerouslySetInnerHTML={{ __html: currentContent }}
       />
     );
   }
@@ -140,7 +126,7 @@ export const ContentEditable: React.FC<ContentEditableProps> = ({
             ? 'border-b border-dotted border-amber-400/60'
             : ''
         }`}
-        dangerouslySetInnerHTML={{ __html: safeContent }}
+        dangerouslySetInnerHTML={{ __html: currentContent }}
       />
 
       {/* Floating Hover Badge indicating inline edit capability */}

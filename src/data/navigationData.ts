@@ -38,7 +38,7 @@ export const DEFAULT_NAVIGATION_MENU: NavigationMenuItem[] = [
         label: 'Direction & Corps professoral', 
         subSection: 'equipe', 
         iconName: 'Users', 
-        description: 'Organigramme, direction des études et corps enseignant',
+        description: 'Dirigé par M. Orphe Jean Marie, Directeur fondateur',
         isActive: true,
         order: 3,
       },
@@ -236,8 +236,7 @@ export const DEFAULT_NAVIGATION_MENU: NavigationMenuItem[] = [
 ];
 
 export const AVAILABLE_TARGET_PAGES = [
-  { id: 'college', label: 'Le Collège (Histoire, Mission, Campus)' },
-  { id: 'faculty', label: 'Direction & Corps professoral (Organigramme & Équipe)' },
+  { id: 'college', label: 'Le Collège (Histoire, Mission, Équipe, Campus)' },
   { id: 'programs', label: 'Programmes Académiques (Cycles Préscolaire à Secondaire)' },
   { id: 'admissions', label: 'Admissions & Inscriptions (Procédure, Tarifs, FAQ)' },
   { id: 'pre-registration', label: 'Formulaire de Préinscription en ligne' },

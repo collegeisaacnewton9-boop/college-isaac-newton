@@ -169,7 +169,8 @@ app.use((req, res, next) => {
   }
 
   // A. Détection et blocage immédiat des attaques par Directory Traversal
-  if (normalizedPath.includes('..') || normalizedPath.includes('/.') || normalizedPath.includes('\\')) {
+  const isViteDevDep = normalizedPath.startsWith('/node_modules/.vite/');
+  if (normalizedPath.includes('..') || normalizedPath.includes('\\') || (normalizedPath.includes('/.') && !isViteDevDep)) {
     return res.status(403).json({ 
       error: 'Accès interdit : tentative de traversée de chemin système bloquée par le pare-feu.',
       code: 'SECURITY_PATH_TRAVERSAL_BLOCKED'

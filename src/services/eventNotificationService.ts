@@ -162,8 +162,24 @@ export const eventNotificationService = {
             },
           },
         });
+      } else {
+        toast.info(`⏰ Événement à venir : ${event.title}`, {
+          description: `${isOngoing ? 'En cours aujourd’hui sur le campus' : `Début prévu : ${timeRemainingFormatted}`}. Retrouvez tous les détails et consignes.`,
+          duration: 10000,
+          action: {
+            label: 'Consulter l’événement',
+            onClick: () => {
+              if (options?.onSendReminder) {
+                options.onSendReminder(event);
+              } else if (options?.onQuickUpdate) {
+                options.onQuickUpdate(event);
+              } else {
+                this.openLastMinuteModal(event, 'reminder');
+              }
+            },
+          },
+        });
       }
-      // Note: Visiteurs et utilisateurs déconnectés ne reçoivent aucune notification intrusive toast.info
     });
 
     return alerts;

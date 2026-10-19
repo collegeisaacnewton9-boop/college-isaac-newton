@@ -50,19 +50,6 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
       }
       break;
 
-    case 'faculty':
-      items.push({ 
-        label: 'Le Collège', 
-        page: 'college',
-        canonicalPath: '/college' 
-      });
-      items.push({ 
-        label: 'Direction & Corps professoral', 
-        isCurrent: true, 
-        canonicalPath: '/faculty' 
-      });
-      break;
-
     case 'programs':
       items.push({ 
         label: 'Programmes Académiques', 

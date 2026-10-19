@@ -21,7 +21,6 @@ import { toast } from 'sonner';
 import { DocumentFile } from '../../types';
 import { apiService } from '../../services/api';
 import { INITIAL_DOCUMENTS } from '../../data/mockData';
-import { generateValidOfficialPdf, triggerPdfDownload } from '../../utils/pdfGenerator';
 
 interface DocumentManagerViewProps {
   onSelectDocument?: (doc: DocumentFile) => void;
@@ -184,43 +183,6 @@ export const DocumentManagerView: React.FC<DocumentManagerViewProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleDownloadDocument = async (doc: DocumentFile, e: React.MouseEvent) => {
-    e.preventDefault();
-    try {
-      await apiService.recordDocumentDownload(doc.id);
-      setDocuments(prev => prev.map(d => d.id === doc.id ? { ...d, downloadCount: (d.downloadCount || 0) + 1 } : d));
-    } catch {}
-
-    const cleanFileName = `${doc.title.replace(/[^a-zA-Z0-9_\u00C0-\u017F-]/g, '_')}.pdf`;
-
-    if (doc.fileUrl && !doc.fileUrl.startsWith('#')) {
-      const link = document.createElement('a');
-      link.href = doc.fileUrl;
-      link.download = cleanFileName;
-      link.target = '_blank';
-      link.rel = 'noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        try {
-          document.body.removeChild(link);
-        } catch {}
-      }, 300);
-      toast.success(`Téléchargement de « ${doc.title} » initié`);
-      return;
-    }
-
-    const pdfBytes = generateValidOfficialPdf({
-      title: doc.title,
-      subtitle: doc.description || 'Collège Isaac Newton - Document Administratif',
-      category: doc.category,
-      cycle: doc.targetCycle || 'Tous les cycles',
-      schoolYear: doc.schoolYear,
-    });
-    triggerPdfDownload(pdfBytes, cleanFileName);
-    toast.success(`Téléchargement officiel de « ${doc.title} » réussi`);
   };
 
   const filteredDocuments = documents.filter(doc => {
@@ -403,26 +365,17 @@ export const DocumentManagerView: React.FC<DocumentManagerViewProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-                  {doc.fileUrl && !doc.fileUrl.startsWith('#') && (
-                    <a
-                      href={doc.fileUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-2 rounded-lg text-slate-600 hover:text-blue-900 hover:bg-blue-50 transition-colors cursor-pointer"
-                      title="Ouvrir / Prévisualiser le document"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </a>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={(e) => handleDownloadDocument(doc, e)}
+                  <a
+                    href={doc.fileUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    download={doc.title}
+                    onClick={() => apiService.recordDocumentDownload(doc.id)}
                     className="p-2 rounded-lg text-slate-600 hover:text-blue-900 hover:bg-blue-50 transition-colors cursor-pointer"
                     title="Télécharger le document"
                   >
                     <Download className="w-4 h-4" />
-                  </button>
+                  </a>
 
                   <button
                     type="button"
@@ -557,16 +510,7 @@ export const DocumentManagerView: React.FC<DocumentManagerViewProps> = ({
                     onChange={handleFileChange}
                   />
                 </div>
-                {formFileSize ? (
-                  <div className="mt-1.5 p-1.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center justify-between">
-                    <span className="text-[11px] font-medium">Poids du document PDF sélectionné :</span>
-                    <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 rounded border border-blue-300">
-                      {formFileSize}
-                    </span>
-                  </div>
-                ) : (
-                  <p className="text-2xs text-slate-400 mt-1">Format recommandé : PDF certifié (Max 25 Mo).</p>
-                )}
+                <p className="text-2xs text-slate-400 mt-1">Format recommandé : PDF certifié (Max 25 Mo).</p>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">

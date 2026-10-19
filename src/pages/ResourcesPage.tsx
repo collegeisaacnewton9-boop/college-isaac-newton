@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   Download, 
   FileText, 
@@ -8,13 +8,10 @@ import {
   ShieldCheck, 
   Bell, 
   FileDown,
-  ArrowRight,
-  Eye
+  ArrowRight
 } from 'lucide-react';
 import { INITIAL_DOCUMENTS, SCHOOL_INFO } from '../data/mockData';
-import { User, DocumentFile } from '../types';
-import { apiService } from '../services/api';
-import { generateValidOfficialPdf, triggerPdfDownload } from '../utils/pdfGenerator';
+import { User } from '../types';
 
 interface ResourcesPageProps {
   onOpenAuth: () => void;
@@ -24,53 +21,10 @@ interface ResourcesPageProps {
 
 export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onOpenAuth, onNavigate }) => {
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
-  const [documents, setDocuments] = useState<DocumentFile[]>(INITIAL_DOCUMENTS);
 
-  useEffect(() => {
-    apiService.getDocuments()
-      .then((docs) => {
-        if (docs && Array.isArray(docs) && docs.length > 0) {
-          setDocuments(docs);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const handleDownload = async (doc: DocumentFile) => {
-    setDownloadSuccess(doc.title);
-    setTimeout(() => setDownloadSuccess(null), 4000);
-
-    try {
-      await apiService.recordDocumentDownload(doc.id);
-    } catch {}
-
-    const cleanFileName = `${doc.title.replace(/[^a-zA-Z0-9_\u00C0-\u017F-]/g, '_')}.pdf`;
-
-    if (doc.fileUrl && !doc.fileUrl.startsWith('#')) {
-      const link = document.createElement('a');
-      link.href = doc.fileUrl;
-      link.download = cleanFileName;
-      link.target = '_blank';
-      link.rel = 'noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        try {
-          document.body.removeChild(link);
-        } catch {}
-      }, 300);
-      return;
-    }
-
-    // Official compliant PDF generation fallback
-    const pdfBytes = generateValidOfficialPdf({
-      title: doc.title,
-      subtitle: doc.description || 'Collège Isaac Newton - Document Officiel',
-      category: doc.category,
-      cycle: doc.targetCycle || 'Tous les cycles',
-      schoolYear: doc.schoolYear,
-    });
-    triggerPdfDownload(pdfBytes, cleanFileName);
+  const handleDownload = (docTitle: string) => {
+    setDownloadSuccess(docTitle);
+    setTimeout(() => setDownloadSuccess(null), 3500);
   };
 
   return (
@@ -109,7 +63,7 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onOpenAuth, onNavi
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {documents.map((doc) => (
+          {INITIAL_DOCUMENTS.map((doc) => (
             <div
               key={doc.id}
               className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:border-blue-900/30 transition-all flex flex-col justify-between space-y-4"
@@ -135,27 +89,13 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onOpenAuth, onNavi
                 )}
               </div>
 
-              <div className="flex items-center gap-2 pt-1">
-                {doc.fileUrl && !doc.fileUrl.startsWith('#') && (
-                  <a
-                    href={doc.fileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:text-blue-900 hover:bg-blue-50 transition-colors"
-                    title="Ouvrir / Prévisualiser le document"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </a>
-                )}
-                <button
-                  type="button"
-                  onClick={() => handleDownload(doc)}
-                  className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-50 hover:bg-blue-900 hover:text-white text-slate-700 text-xs font-semibold transition-colors border border-slate-200 cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Télécharger</span>
-                </button>
-              </div>
+              <button
+                onClick={() => handleDownload(doc.title)}
+                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-slate-50 hover:bg-blue-900 hover:text-white text-slate-700 text-xs font-semibold transition-colors border border-slate-200"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Télécharger le document</span>
+              </button>
             </div>
           ))}
         </div>

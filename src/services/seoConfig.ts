@@ -61,7 +61,6 @@ export function getPageSEO(page: string, selectedArticleId?: string | null): Pag
 
   switch (page) {
     case 'about':
-    case 'college':
       return {
         title: 'Notre Établissement & Philosophie | Collège Isaac Newton - Delmas 50',
         description: 'Découvrez l’histoire, les valeurs d’excellence, de discipline et l’équipe de direction du Collège Isaac Newton à Delmas 50, Port-au-Prince.',
@@ -69,16 +68,6 @@ export function getPageSEO(page: string, selectedArticleId?: string | null): Pag
         canonicalPath: '/a-propos',
         ogImage: DEFAULT_IMAGE,
         ogImageAlt: 'Campus principal du Collège Isaac Newton',
-      };
-
-    case 'faculty':
-      return {
-        title: 'Direction & Corps professoral | Collège Isaac Newton - Delmas 50',
-        description: 'Découvrez l’équipe de direction, d’administration et le corps professoral du Collège Isaac Newton ainsi que l’organigramme institutionnel.',
-        keywords: ['direction', 'corps professoral', 'enseignants', 'collège isaac newton', 'organigramme', 'delmas 50'],
-        canonicalPath: '/direction-corps-professoral',
-        ogImage: DEFAULT_IMAGE,
-        ogImageAlt: 'Direction et corps professoral du Collège Isaac Newton',
       };
 
     case 'programs':

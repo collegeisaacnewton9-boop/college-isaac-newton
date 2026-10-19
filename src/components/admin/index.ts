@@ -6,7 +6,4 @@ export * from './MediaLibraryView';
 export * from './SlideshowEditorView';
 export * from './MenuEditorView';
 export * from './DocumentManagerView';
-export * from './WhatsAppGatewaySettings';
-export * from './WhatsAppDiagnosticView';
-export * from './FacultyManagerView';
 

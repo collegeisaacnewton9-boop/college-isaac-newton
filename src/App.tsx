@@ -190,30 +190,35 @@ export default function App() {
         </div>
       )}
 
-      {/* Top Utility Ribbon */}
-      <TopUtilityBar
-        currentLang={currentLang}
-        onLangChange={handleLangChange}
-        onNavigate={handleNavigate}
-      />
+      {/* Public Header Navigation - Omitted on Admin Dashboard to maximize vertical presence */}
+      {currentPage !== 'admin' && (
+        <>
+          {/* Top Utility Ribbon */}
+          <TopUtilityBar
+            currentLang={currentLang}
+            onLangChange={handleLangChange}
+            onNavigate={handleNavigate}
+          />
 
-      {/* Fixed Sticky Header */}
-      <Header
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        currentUser={currentUser}
-        onOpenAuth={() => setIsAuthOpen(true)}
-        onSelectArticle={handleSelectArticle}
-        onLogout={handleLogout}
-      />
+          {/* Fixed Sticky Header */}
+          <Header
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            currentUser={currentUser}
+            onOpenAuth={() => setIsAuthOpen(true)}
+            onSelectArticle={handleSelectArticle}
+            onLogout={handleLogout}
+          />
 
-      {/* Dynamic Breadcrumb Navigation Trail & SEO Structured Data */}
-      <Breadcrumbs
-        currentPage={currentPage}
-        currentSubSection={currentSubSection}
-        selectedArticleId={selectedArticleId}
-        onNavigate={handleNavigate}
-      />
+          {/* Dynamic Breadcrumb Navigation Trail & SEO Structured Data */}
+          <Breadcrumbs
+            currentPage={currentPage}
+            currentSubSection={currentSubSection}
+            selectedArticleId={selectedArticleId}
+            onNavigate={handleNavigate}
+          />
+        </>
+      )}
 
       {/* Main Page Content */}
       <main className="flex-1">
@@ -326,11 +331,13 @@ export default function App() {
         )}
       </main>
 
-      {/* Institutional Footer */}
-      <Footer
-        onNavigate={handleNavigate}
-        onOpenAuth={() => setIsAuthOpen(true)}
-      />
+      {/* Institutional Footer (Public pages only) */}
+      {currentPage !== 'admin' && (
+        <Footer
+          onNavigate={handleNavigate}
+          onOpenAuth={() => setIsAuthOpen(true)}
+        />
+      )}
 
       {/* Auth & Role Switcher Modal */}
       <AuthModal

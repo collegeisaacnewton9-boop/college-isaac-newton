@@ -29,8 +29,7 @@ import {
   Trophy,
   Download,
   Award,
-  HeartHandshake,
-  LogOut
+  HeartHandshake
 } from 'lucide-react';
 import { SchoolLogo } from '../ui/SchoolLogo';
 import { User, NavigationMenuItem } from '../../types';
@@ -53,7 +52,6 @@ export const Header: React.FC<HeaderProps> = ({
   onNavigate,
   currentUser,
   onOpenAuth,
-  onLogout,
 }) => {
   const [navItems, setNavItems] = useState<NavigationMenuItem[]>(DEFAULT_NAVIGATION_MENU);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -316,31 +314,18 @@ export const Header: React.FC<HeaderProps> = ({
               
               {/* User Session / Connexion trigger */}
               {currentUser ? (
-                <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-0.5 border border-slate-200/90 shadow-2xs">
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('admin')}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs sm:text-sm font-medium text-slate-700 hover:text-blue-950 hover:bg-white rounded-lg transition-colors cursor-pointer"
-                    title={`Connecté en tant que ${currentUser.fullName} · Ouvrir le panneau`}
-                  >
-                    <UserCircle className="w-4 h-4 text-blue-900 shrink-0" />
-                    <span className="hidden xl:inline max-w-[110px] truncate font-semibold">{currentUser.fullName}</span>
-                    <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-blue-900 text-white uppercase tracking-wider">
-                      {currentUser.role}
-                    </span>
-                  </button>
-                  {onLogout && (
-                    <button
-                      type="button"
-                      onClick={onLogout}
-                      className="p-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                      title="Déconnexion sécurisée de la session"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span className="sr-only">Se déconnecter</span>
-                    </button>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('admin')}
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 hover:text-blue-950 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors cursor-pointer"
+                  title={`Connecté en tant que ${currentUser.fullName}`}
+                >
+                  <UserCircle className="w-4 h-4 text-blue-900" />
+                  <span className="hidden xl:inline max-w-[110px] truncate">{currentUser.fullName}</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-900 text-white uppercase tracking-wider">
+                    {currentUser.role}
+                  </span>
+                </button>
               ) : (
                 <button
                   type="button"
@@ -546,51 +531,17 @@ export const Header: React.FC<HeaderProps> = ({
                     transition={{ delay: 0.22, duration: 0.24 }}
                     className="pt-4 space-y-2.5"
                   >
-                    {currentUser ? (
-                      <div className="space-y-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setMobileMenuOpen(false);
-                            onNavigate('admin');
-                          }}
-                          className="w-full flex items-center justify-between py-2.5 px-3.5 rounded-xl bg-blue-50 text-blue-950 text-xs sm:text-sm font-semibold border border-blue-200 transition-colors cursor-pointer"
-                        >
-                          <div className="flex items-center gap-2">
-                            <UserCircle className="w-4 h-4 text-blue-900" />
-                            <span className="truncate">{currentUser.fullName}</span>
-                          </div>
-                          <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-blue-900 text-white">
-                            {currentUser.role}
-                          </span>
-                        </button>
-                        {onLogout && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMobileMenuOpen(false);
-                              onLogout();
-                            }}
-                            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition-colors cursor-pointer"
-                          >
-                            <LogOut className="w-3.5 h-3.5" />
-                            <span>Se déconnecter (Mode Déconnexion)</span>
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMobileMenuOpen(false);
-                          onOpenAuth();
-                        }}
-                        className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-100 text-slate-800 text-sm font-semibold hover:bg-slate-200 transition-colors cursor-pointer"
-                      >
-                        <UserCircle className="w-5 h-5 text-blue-900" />
-                        <span>Espace Utilisateur & Connexion</span>
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        onOpenAuth();
+                      }}
+                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-slate-100 text-slate-800 text-sm font-semibold hover:bg-slate-200 transition-colors cursor-pointer"
+                    >
+                      <UserCircle className="w-5 h-5 text-blue-900" />
+                      <span>{currentUser ? `Mon Espace (${currentUser.role})` : 'Espace Utilisateur & Connexion'}</span>
+                    </button>
 
                     <button
                       type="button"
