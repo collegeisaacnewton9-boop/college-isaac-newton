@@ -365,6 +365,54 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       // Export capabilities
       assert.ok(calendarCode.includes('getGoogleCalendarUrl'), 'Must provide Google Calendar export');
       assert.ok(calendarCode.includes('handleExportIcs'), 'Must provide .ics calendar export');
+      assert.ok(calendarCode.includes('onOpenPrintModal'), 'Must support onOpenPrintModal callback for official PDF and print modal');
+    });
+
+    it('should generate a dedicated official vector PDF matching 2026-2027 reference', async () => {
+      const { calendarPdfService, OFFICIAL_CONTROLS_2026_2027, OFFICIAL_STATE_EXAMS_AND_FEASTS } = await import('../src/services/calendarPdfService.ts');
+      
+      // Verify official controls reference
+      assert.strictEqual(OFFICIAL_CONTROLS_2026_2027.length, 4, 'Must have 4 academic controls');
+      assert.strictEqual(OFFICIAL_CONTROLS_2026_2027[3].period, 'Du 19 avril au 4 juin 2027', '4th control period must be 19 avril-4 juin');
+      assert.strictEqual(OFFICIAL_CONTROLS_2026_2027[3].duration, '35 jours', '4th control duration must be 35 jours');
+      assert.strictEqual(OFFICIAL_CONTROLS_2026_2027[3].exams, 'Du 31 mai au 4 juin 2027', '4th control exams must be 31 mai-4 juin');
+
+      // Verify official feasts & state exams
+      const philosophers = OFFICIAL_STATE_EXAMS_AND_FEASTS.find(f => f.title.includes('philosophes'));
+      assert.ok(philosophers?.date.includes('22 Janvier 2027'), 'Fête des philosophes must be 22 Janvier 2027');
+
+      const professors = OFFICIAL_STATE_EXAMS_AND_FEASTS.find(f => f.title.includes('professeurs'));
+      assert.ok(professors?.date.includes('14 Mai 2027'), 'Fête des professeurs must be 14 Mai 2027');
+
+      const collegeFeast = OFFICIAL_STATE_EXAMS_AND_FEASTS.find(f => f.title.includes('Collège'));
+      assert.ok(collegeFeast?.date.includes('28 Mai 2027'), 'Fête du Collège must be 28 Mai 2027');
+
+      const exam9AF = OFFICIAL_STATE_EXAMS_AND_FEASTS.find(f => f.title.includes('9e A.F.'));
+      assert.ok(exam9AF?.date.includes('14 au 17 Juin 2027'), '9e AF exam must be 14-17 Juin 2027');
+
+      const examNS4 = OFFICIAL_STATE_EXAMS_AND_FEASTS.find(f => f.title.includes('NS4'));
+      assert.ok(examNS4?.date.includes('28 Juin au 1er Juil. 2027'), 'NS4 exam must be 28 Juin-1er Juillet 2027');
+
+      // Generate PDF
+      const result = await calendarPdfService.generateCalendarPdf([], {
+        paperFormat: 'A4',
+        academicYear: '2026-2027',
+      });
+
+      assert.ok(result.pdfBytes.length > 1000, 'PDF buffer must be generated');
+      assert.strictEqual(result.filename, 'Calendrier-College-Isaac-Newton-2026-2027.pdf', 'Filename must match convention');
+      assert.ok(result.pageCount >= 2, 'Must have at least 2 pages (summary + chronological)');
+    });
+
+    it('should have dedicated print CSS that isolates official document and hides web chrome', async () => {
+      const fs = await import('fs');
+      const cssCode = fs.readFileSync('src/index.css', 'utf-8');
+
+      assert.ok(cssCode.includes('@media print'), 'Must include @media print stylesheet block');
+      assert.ok(cssCode.includes('cin-print-modal-open'), 'Must manage cin-print-modal-open isolation class');
+      assert.ok(cssCode.includes('#cin-official-print-document'), 'Must style #cin-official-print-document');
+      assert.ok(cssCode.includes('header,'), 'Must hide header in print');
+      assert.ok(cssCode.includes('footer,'), 'Must hide footer in print');
     });
   });
 

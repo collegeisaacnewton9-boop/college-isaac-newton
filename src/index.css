@@ -75,3 +75,92 @@
     border: none !important;
   }
 }
+
+/* ==========================================================================
+   OFFICIAL PRINT STYLES - COLLÈGE ISAAC NEWTON
+   Garantit une impression papier et un export "Enregistrer au format PDF"
+   100% propre, sans éléments d'interface web (menus, boutons, scrollbars).
+   ========================================================================== */
+@media print {
+  @page {
+    size: auto;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  /* Cache systématiquement les éléments de l'interface globale */
+  header,
+  footer,
+  nav,
+  aside,
+  .print\:hidden,
+  button,
+  input,
+  select,
+  .leaflet-container,
+  #hubspot-messages-iframe-container {
+    display: none !important;
+  }
+
+  /* Lorsque la modale d'impression officielle est ouverte */
+  body.cin-print-modal-open {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body.cin-print-modal-open > div:not(.cin-print-modal-root) {
+    display: none !important;
+  }
+
+  /* Déverrouille les conteneurs scrollables et fixes de la modale */
+  .cin-print-modal-overlay {
+    position: static !important;
+    inset: auto !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  .cin-print-modal-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+    display: block !important;
+  }
+
+  .cin-print-modal-scroll {
+    overflow: visible !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  #cin-official-print-document {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Évite les coupures indésirables */
+  tr, .avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+}

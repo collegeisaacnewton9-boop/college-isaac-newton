@@ -34,6 +34,7 @@ export type AcademicGroupFilter = 'ALL' | 'EXAMENS' | 'VACANCES' | 'ACTIVITES';
 interface InteractiveCalendarProps {
   events: SchoolEvent[];
   onNavigateToResources?: () => void;
+  onOpenPrintModal?: () => void;
   selectedGroupFilter?: AcademicGroupFilter;
   onGroupFilterChange?: (group: AcademicGroupFilter) => void;
 }
@@ -130,6 +131,7 @@ function getGoogleCalendarUrl(event: SchoolEvent): string {
 export const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({ 
   events,
   onNavigateToResources,
+  onOpenPrintModal,
   selectedGroupFilter,
   onGroupFilterChange,
 }) => {
@@ -479,15 +481,15 @@ export const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
             </div>
 
             {/* Calendrier PDF Officiel */}
-            {onNavigateToResources && (
+            {(onOpenPrintModal || onNavigateToResources) && (
               <button
                 type="button"
-                onClick={onNavigateToResources}
+                onClick={onOpenPrintModal || onNavigateToResources}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 hover:text-blue-900 hover:bg-slate-50 text-xs font-semibold transition-colors cursor-pointer shrink-0"
-                title="Télécharger le calendrier officiel en PDF"
+                title="Consulter et télécharger le calendrier officiel en PDF"
               >
                 <Download className="w-3.5 h-3.5 text-blue-900" />
-                <span className="hidden sm:inline">PDF</span>
+                <span className="hidden sm:inline">Calendrier PDF</span>
               </button>
             )}
           </div>
@@ -1060,11 +1062,12 @@ export const InteractiveCalendar: React.FC<InteractiveCalendarProps> = ({
               <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={onOpenPrintModal || (() => window.print())}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition-colors cursor-pointer"
+                  title="Ouvrir la version imprimable du calendrier"
                 >
                   <Printer className="w-3.5 h-3.5" />
-                  <span>Imprimer</span>
+                  <span>Version Imprimable</span>
                 </button>
 
                 <a
