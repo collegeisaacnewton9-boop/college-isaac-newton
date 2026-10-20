@@ -2143,6 +2143,25 @@ export const apiService = {
     }
     return await res.json();
   },
+
+  async analyzeDashboardData(stats: any): Promise<{
+    summary: string;
+    admissionsInsight: string;
+    recommendations: string[];
+    generatedAt: string;
+    source: string;
+  }> {
+    const res = await appFetch('/api/admin/analyze-data', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stats }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || 'Erreur lors de l’analyse décisionnelle.');
+    }
+    return await res.json();
+  },
 };
 
 export const { processImage, compressImage, isImageOver500Kb, formatFileSize } = apiService;

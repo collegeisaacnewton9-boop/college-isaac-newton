@@ -293,6 +293,40 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       const appCode = fs.readFileSync('src/App.tsx', 'utf-8');
       assert.ok(appCode.includes("currentPage !== 'admin'"), 'Public header and footer must be omitted on admin page');
     });
+
+    it('should configure auto-refresh with 60s default and document.hidden polling suspension', async () => {
+      const fs = await import('fs');
+      const adminCode = fs.readFileSync('src/pages/AdminDashboardPage.tsx', 'utf-8');
+
+      // 60 seconds default delay (60000ms)
+      assert.ok(adminCode.includes('60000'), 'Auto-refresh must default to 60000ms (60 seconds)');
+      assert.ok(adminCode.includes('AUTO_REFRESH_INTERVAL_MS = 60000'), 'Must define AUTO_REFRESH_INTERVAL_MS = 60000');
+
+      // Polling suspended via document.hidden
+      assert.ok(adminCode.includes('document.hidden'), 'Must suspend polling when document.hidden is true');
+      assert.ok(adminCode.includes('visibilitychange'), 'Must listen to visibilitychange to resume polling');
+
+      // Visual indicator
+      assert.ok(adminCode.includes('Auto 60s'), 'Must display 60s auto-refresh indicator');
+    });
+
+    it('should place Gemini AI analysis behind explicit user action with button Analyser les données', async () => {
+      const fs = await import('fs');
+      const adminCode = fs.readFileSync('src/pages/AdminDashboardPage.tsx', 'utf-8');
+
+      // Explicit user action button
+      assert.ok(adminCode.includes('Analyser les données'), 'Must provide explicit Analyser les données button');
+      assert.ok(adminCode.includes('handleRunAiAnalysis'), 'Must bind analysis to explicit user handler');
+
+      // Initial mount must not trigger Gemini
+      const initialMountEffect = adminCode.match(/useEffect\(\(\)\s*=>\s*\{\s*loadData\(\);\s*\}\s*,\s*\[\]\)/);
+      assert.ok(initialMountEffect, 'Initial mount effect must only call loadData() and not Gemini');
+
+      // Backend endpoint test
+      const serverCode = fs.readFileSync('server.ts', 'utf-8');
+      assert.ok(serverCode.includes('/api/admin/analyze-data'), 'Server must provide /api/admin/analyze-data endpoint');
+      assert.ok(serverCode.includes('gemini-3.8-flash'), 'Must use official gemini-3.8-flash model');
+    });
   });
 
   describe('Calendrier scolaire & Agenda officiel - Ergonomie, Structure & Filtres', () => {

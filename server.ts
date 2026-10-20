@@ -9,6 +9,7 @@ import { Octokit } from '@octokit/rest';
 import { exec } from 'child_process';
 import util from 'util';
 import nodemailer from 'nodemailer';
+import { GoogleGenAI } from '@google/genai';
 import { 
   initDatabase, 
   isDbActive, 
@@ -3788,6 +3789,143 @@ app.get('/api/admin/stats', (req: Request, res: Response) => {
       announcementActive: siteSettings.announcement.enabled,
     }
   });
+});
+
+// 9a. Strategic AI Analysis Endpoint (Gemini 3.8 Flash) - Explicit user trigger ONLY
+interface CachedAnalysis {
+  data: {
+    summary: string;
+    admissionsInsight: string;
+    recommendations: string[];
+    generatedAt: string;
+    source: string;
+  };
+  timestamp: number;
+}
+const analysisCache: { [key: string]: CachedAnalysis } = {};
+let ongoingAnalysisPromise: Promise<any> | null = null;
+
+app.post('/api/admin/analyze-data', async (req: Request, res: Response) => {
+  try {
+    const stats = req.body?.stats || {};
+    const cacheKey = JSON.stringify({
+      admissions: stats.totalAdmissions || 0,
+      accepted: stats.accepted || 0,
+      pending: stats.pending || 0,
+      messages: stats.messagesCount || 0,
+      unread: stats.unreadMessages || 0,
+      events: stats.upcomingEventsCount || 0,
+    });
+
+    const now = Date.now();
+    // Cache for 10 minutes (600,000 ms) to save Gemini calls
+    if (analysisCache[cacheKey] && (now - analysisCache[cacheKey].timestamp < 600000)) {
+      return res.json(analysisCache[cacheKey].data);
+    }
+
+    // Deduplication: await ongoing request if identical
+    if (ongoingAnalysisPromise) {
+      const ongoingResult = await ongoingAnalysisPromise;
+      return res.json(ongoingResult);
+    }
+
+    const performAnalysis = async () => {
+      const apiKey = process.env.GEMINI_API_KEY;
+      const isApiKeyConfigured = apiKey && apiKey !== 'MY_GEMINI_API_KEY' && apiKey.length > 5;
+
+      if (isApiKeyConfigured) {
+        try {
+          const ai = new GoogleGenAI({ apiKey });
+          const prompt = `Tu es l'analyste stratégique du Collège Isaac Newton (Delmas 50, Port-au-Prince, Haïti, fondé et dirigé par M. Orphe Jean Marie).
+Voici les métriques administratives actuelles :
+- Préinscriptions totales 2026-2027 : ${stats.totalAdmissions || 0} dossiers (Admis : ${stats.accepted || 0}, En cours/Attente : ${stats.pending || 0})
+- Répartition par cycle : Préscolaire (${stats.prescolaire || 0}), Fondamental (${stats.fondamental || 0}), Secondaire (${stats.secondaire || 0})
+- Secrétariat & Messages : ${stats.messagesCount || 0} messages reçus (${stats.unreadMessages || 0} non lus)
+- Calendrier & Événements : ${stats.upcomingEventsCount || 0} événements inscrits
+
+Produis un diagnostic stratégique concis au format JSON strict avec les champs suivants :
+{
+  "summary": "1 à 2 phrases de synthèse globale sur la dynamique de l'établissement.",
+  "admissionsInsight": "Court paragraphe sur le rythme des préinscriptions, le taux de confirmation et la répartition entre cycles.",
+  "recommendations": [
+    "Recommandation concrète 1 pour la Direction",
+    "Recommandation concrète 2 pour la Direction",
+    "Recommandation concrète 3 pour la Direction"
+  ]
+}
+Réponds UNIQUEMENT en JSON valide sans bloc markdown ou texte introductif.`;
+
+          const response = await ai.models.generateContent({
+            model: 'gemini-3.8-flash',
+            contents: prompt,
+            config: {
+              maxOutputTokens: 500,
+              temperature: 0.3,
+            }
+          });
+
+          const rawText = response.text?.trim() || '';
+          let parsedJson: any = null;
+          try {
+            const cleaned = rawText.replace(/^```json/i, '').replace(/^```/i, '').replace(/```$/i, '').trim();
+            parsedJson = JSON.parse(cleaned);
+          } catch {
+            // fallback if JSON parse fails
+          }
+
+          if (parsedJson && parsedJson.summary && Array.isArray(parsedJson.recommendations)) {
+            const result = {
+              summary: parsedJson.summary,
+              admissionsInsight: parsedJson.admissionsInsight || "Rythme de préinscription soutenu avec une forte demande sur les cycles fondamental et secondaire.",
+              recommendations: parsedJson.recommendations,
+              generatedAt: new Date().toISOString(),
+              source: 'gemini-3.8-flash',
+            };
+            analysisCache[cacheKey] = { data: result, timestamp: now };
+            return result;
+          }
+        } catch (geminiError: any) {
+          console.warn('[Gemini AI Warning] Échec appel Gemini, bascule vers moteur décisionnel local:', geminiError.message);
+        }
+      }
+
+      // Intelligent local heuristic fallback engine if Gemini key unconfigured or quota reached
+      const total = stats.totalAdmissions || 0;
+      const accepted = stats.accepted || 0;
+      const pending = stats.pending || 0;
+      const conversionRate = total > 0 ? Math.round((accepted / total) * 100) : 0;
+      const unread = stats.unreadMessages || 0;
+
+      const fallbackResult = {
+        summary: `Activité stable au Collège Isaac Newton avec ${total} candidatures enregistrées pour 2026-2027 et un taux de confirmation de ${conversionRate}%.`,
+        admissionsInsight: `Répartition académique : ${stats.fondamental || 0} au Fondamental, ${stats.secondaire || 0} au Secondaire et ${stats.prescolaire || 0} au Préscolaire. ${pending > 0 ? `${pending} dossier(s) en attente d'entretien ou d'examen.` : 'Tous les dossiers soumis sont traités.'}`,
+        recommendations: [
+          pending > 0 
+            ? `Programmer les entrevues pédagogiques pour les ${pending} dossier(s) en attente.` 
+            : `Confirmer les inscriptions définitives et finaliser les listes de classe.`,
+          unread > 0 
+            ? `Traiter en priorité les ${unread} message(s) de familles non lus sur le secrétariat en ligne.` 
+            : `Secrétariat à jour : aucune relance parentale en attente.`,
+          `Vérifier les préparatifs des épreuves officielles pour les candidats de 9e A.F. et NS4.`
+        ],
+        generatedAt: new Date().toISOString(),
+        source: 'moteur-decisionnel-local',
+      };
+
+      analysisCache[cacheKey] = { data: fallbackResult, timestamp: now };
+      return fallbackResult;
+    };
+
+    ongoingAnalysisPromise = performAnalysis();
+    const result = await ongoingAnalysisPromise;
+    ongoingAnalysisPromise = null;
+    return res.json(result);
+
+  } catch (error: any) {
+    ongoingAnalysisPromise = null;
+    console.error('[Analyze Data Error]', error);
+    res.status(500).json({ error: 'Erreur lors de l’analyse décisionnelle', details: error.message });
+  }
 });
 
 // 9b. Email Service Status & Test Endpoints

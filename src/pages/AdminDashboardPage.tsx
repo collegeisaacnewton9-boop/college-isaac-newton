@@ -437,9 +437,97 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     }
   };
 
+  // Configuration du rafraîchissement automatique (Délai par défaut : 60 secondes, suspendu si l'onglet est masqué)
+  const AUTO_REFRESH_INTERVAL_MS = 60000;
+  const [autoRefreshIntervalMs, setAutoRefreshIntervalMs] = useState(AUTO_REFRESH_INTERVAL_MS);
+  const [isAutoRefreshActive, setIsAutoRefreshActive] = useState(true);
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<Date>(new Date());
+  const isRefreshingRef = useRef(false);
+
+  // Analyse Décisionnelle IA (Déclenchement EXCLUSIF sur action utilisateur - aucun appel au chargement)
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<{
+    summary: string;
+    admissionsInsight: string;
+    recommendations: string[];
+    generatedAt: string;
+    source: string;
+  } | null>(null);
+
+  const handleRunAiAnalysis = async () => {
+    setIsAnalyzing(true);
+    try {
+      const statsPayload = {
+        totalAdmissions: admissions.length,
+        accepted: admissions.filter(a => a.status === 'ACCEPTED').length,
+        pending: admissions.filter(a => a.status === 'PENDING' || a.status === 'UNDER_REVIEW').length,
+        prescolaire: admissions.filter(a => a.cycle === 'PRESCOLAIRE' || a.targetLevel?.toLowerCase().includes('préscolaire')).length,
+        fondamental: admissions.filter(a => a.cycle?.includes('FONDAMENTAL') || a.targetLevel?.toLowerCase().includes('fondamentale')).length,
+        secondaire: admissions.filter(a => a.cycle === 'SECONDAIRE' || a.targetLevel?.toLowerCase().includes('secondaire')).length,
+        messagesCount: messages.length,
+        unreadMessages: messages.filter(m => m.status === 'NEW').length,
+        upcomingEventsCount: events.length,
+      };
+      const result = await apiService.analyzeDashboardData(statsPayload);
+      setAiAnalysisResult(result);
+      toast.success('Analyse décisionnelle générée avec succès', {
+        description: `Source : ${result.source === 'gemini-3.8-flash' ? 'Modèle Google Gemini 3.8 Flash' : 'Moteur analytique décisionnel'}`,
+      });
+    } catch (err: any) {
+      toast.error('Erreur d’analyse', { description: err.message || 'Impossible d’exécuter l’analyse' });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const safeLoadData = useCallback(async () => {
+    // Suspendre si l'onglet est masqué ou si un rechargement est déjà en cours
+    if (typeof document !== 'undefined' && document.hidden) {
+      return;
+    }
+    if (isRefreshingRef.current) {
+      return;
+    }
+    isRefreshingRef.current = true;
+    try {
+      await loadData();
+      setLastRefreshedAt(new Date());
+    } finally {
+      isRefreshingRef.current = false;
+    }
+  }, []);
+
+  // Chargement initial des données au montage (n'exécute JAMAIS Gemini)
   useEffect(() => {
     loadData();
   }, []);
+
+  // Hook de rafraîchissement automatique : 60s par défaut + suspension intelligente via document.hidden
+  useEffect(() => {
+    if (!isAutoRefreshActive || autoRefreshIntervalMs <= 0) return;
+
+    const timer = setInterval(() => {
+      // Vérification explicite : suspendre le polling quand l'onglet est masqué ou inactif
+      if (!document.hidden) {
+        safeLoadData();
+      }
+    }, autoRefreshIntervalMs);
+
+    // Reprendre ou réactualiser dès que l'onglet redevient visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isAutoRefreshActive) {
+        safeLoadData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAutoRefreshActive, autoRefreshIntervalMs, safeLoadData]);
+
 
   // Automated notification system for events within 48h
   useEffect(() => {
@@ -1025,17 +1113,26 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </button>
               )}
 
-              {/* 2. Refresh Data */}
-              <button
-                type="button"
-                onClick={loadData}
-                disabled={isLoading}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-semibold transition-all border border-slate-700/80 shadow-xs cursor-pointer"
-                title="Actualiser les données du tableau de bord"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-amber-400' : 'text-slate-400'}`} />
-                <span className="hidden md:inline">Actualiser</span>
-              </button>
+              {/* 2. Refresh Data & Auto-Refresh Indicator (60s with document.hidden suspension) */}
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={loadData}
+                  disabled={isLoading}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white text-xs font-semibold transition-all border border-slate-700/80 shadow-xs cursor-pointer"
+                  title="Actualiser les données du tableau de bord"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-amber-400' : 'text-slate-400'}`} />
+                  <span className="hidden md:inline">Actualiser</span>
+                </button>
+                <div
+                  className="hidden sm:inline-flex items-center gap-1 px-1.5 py-1 rounded-md bg-slate-900/60 border border-slate-700/60 text-[10px] font-mono text-slate-300"
+                  title="Rafraîchissement automatique toutes les 60 secondes (suspendu intelligemment lorsque l'onglet est masqué)"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Auto 60s</span>
+                </div>
+              </div>
 
               {/* 3. Alerts Button (Only visible if imminentAlerts > 0) */}
               {imminentAlerts.length > 0 && (
@@ -1137,6 +1234,23 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                           </div>
                         </button>
                       )}
+
+                      {/* Analyser les données IA (Action explicite utilisateur) */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('overview');
+                          setIsToolsMenuOpen(false);
+                          handleRunAiAnalysis();
+                        }}
+                        className="w-full text-left p-2 rounded-lg flex items-center gap-2.5 text-xs text-slate-200 hover:bg-slate-800/80 hover:text-white transition-colors cursor-pointer"
+                      >
+                        <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+                        <div>
+                          <div className="font-semibold text-white">Analyser les données (IA)</div>
+                          <div className="text-[10px] text-slate-400">Diagnostic décisionnel pour la Direction</div>
+                        </div>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1884,6 +1998,79 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 </div>
               </div>
 
+            </div>
+
+            {/* MODULE D'ANALYSE DÉCISIONNELLE & IA (DÉCLENCHÉ EXCLUSIVEMENT PAR ACTION UTILISATEUR) */}
+            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-xl p-3 sm:p-4 border border-indigo-500/30 shadow-xs space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-300 flex items-center justify-center shrink-0 border border-indigo-400/30">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-sans font-bold text-white text-xs sm:text-sm tracking-tight flex items-center gap-2">
+                      <span>Analyse Stratégique & Décisionnelle</span>
+                      <span className="px-1.5 py-0.2 rounded text-[9.5px] font-mono bg-indigo-500/30 text-indigo-200 border border-indigo-400/30">
+                        {aiAnalysisResult ? (aiAnalysisResult.source === 'gemini-3.8-flash' ? 'Google Gemini 3.8 Flash' : 'Moteur Décisionnel') : 'À la demande'}
+                      </span>
+                    </h3>
+                    <p className="text-[11px] text-slate-300">
+                      Rapport synthétique pour la Direction sur les candidatures 2026-2027, la charge du secrétariat et les priorités académiques.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="shrink-0 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleRunAiAnalysis}
+                    disabled={isAnalyzing}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-semibold text-xs transition-colors cursor-pointer shadow-xs"
+                    title="Lancer l'analyse des données (action explicite utilisateur)"
+                  >
+                    <Sparkles className={`w-3.5 h-3.5 text-amber-300 ${isAnalyzing ? 'animate-spin' : ''}`} />
+                    <span>{isAnalyzing ? 'Analyse en cours...' : (aiAnalysisResult ? 'Réanalyser les données' : 'Analyser les données')}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Résultat de l'analyse IA (affiché uniquement après clic) */}
+              {aiAnalysisResult ? (
+                <div className="pt-2 border-t border-white/10 space-y-2 text-xs">
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-slate-200">
+                    <strong className="text-amber-300 font-semibold block mb-0.5">Synthèse Direction :</strong>
+                    <p className="leading-relaxed text-[11.5px]">{aiAnalysisResult.summary}</p>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white/5 border border-white/10 text-slate-200">
+                    <strong className="text-blue-300 font-semibold block mb-0.5">Focus Admissions & Effectifs :</strong>
+                    <p className="leading-relaxed text-[11.5px]">{aiAnalysisResult.admissionsInsight}</p>
+                  </div>
+                  {aiAnalysisResult.recommendations && aiAnalysisResult.recommendations.length > 0 && (
+                    <div className="space-y-1">
+                      <strong className="text-emerald-300 font-semibold text-[10.5px] uppercase tracking-wider block">
+                        Recommandations Prioritaires :
+                      </strong>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {aiAnalysisResult.recommendations.map((rec, idx) => (
+                          <div key={idx} className="p-2 rounded-lg bg-white/5 border border-white/10 text-slate-200 text-[11px] flex items-start gap-1.5">
+                            <span className="font-mono text-amber-400 font-bold shrink-0">{idx + 1}.</span>
+                            <span className="leading-snug">{rec}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1 font-mono">
+                    <span>Généré le {new Date(aiAnalysisResult.generatedAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}</span>
+                    <span>Modèle : {aiAnalysisResult.source}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[11px] text-slate-400 bg-white/5 rounded-lg p-2.5 border border-white/5 flex items-center justify-between">
+                  <span>Aucune analyse en cache. Cliquez sur <strong>« Analyser les données »</strong> pour lancer la synthèse IA sécurisée.</span>
+                  <span className="text-[10px] font-mono text-indigo-300">0 appel automatique</span>
+                </div>
+              )}
             </div>
 
             {/* Quick Actions Shortcuts for Director */}
