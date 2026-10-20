@@ -14,8 +14,7 @@
     "status": "PUBLISHED",
     "audience": "ALL",
     "isPublic": true,
-    "displayOrder": 1,
-    "updatedAt": "2026-10-20T09:42:09.381Z"
+    "displayOrder": 1
   },
   {
     "id": "evt-rentree",
