@@ -318,33 +318,24 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.ok(eventsPageCode.includes('apiService.getEvents()'), 'Must load events dynamically from apiService');
     });
 
-    it('should cleanly organize official dates without redundant stacked blocks before calendar', async () => {
+    it('should present interactive calendar directly under header without redundant stacked benchmark blocks', async () => {
       const fs = await import('fs');
       const eventsPageCode = fs.readFileSync('src/pages/EventsPage.tsx', 'utf-8');
 
-      // Ensure calendar is presented immediately without duplicate giant banners
-      const calendarIndex = eventsPageCode.indexOf('<InteractiveCalendar');
-      const controlsIndex = eventsPageCode.indexOf('Structure des 4 Contrôles Académiques');
-      
-      assert.ok(calendarIndex > 0, 'InteractiveCalendar must be rendered on the page');
-      assert.ok(controlsIndex > 0, 'Official 4 controls reference section must be preserved');
+      // Ensure calendar is presented immediately without duplicate giant banners or redundant stacked sections
+      assert.ok(eventsPageCode.includes('<InteractiveCalendar'), 'InteractiveCalendar must be rendered on the page');
       assert.ok(
-        calendarIndex < controlsIndex,
-        'InteractiveCalendar must be positioned high up so calendar is immediately visible on laptop viewports'
+        !eventsPageCode.includes('Structure des 4 Contrôles Académiques'),
+        'Redundant stacked section Structure des 4 Contrôles Académiques must be removed from web page'
       );
-
-      // All 4 official controls preserved
-      assert.ok(eventsPageCode.includes('1er Contrôle'), '1er Contrôle must be present');
-      assert.ok(eventsPageCode.includes('2e Contrôle'), '2e Contrôle must be present');
-      assert.ok(eventsPageCode.includes('3e Contrôle'), '3e Contrôle must be present');
-      assert.ok(eventsPageCode.includes('4e Contrôle'), '4e Contrôle must be present');
-
-      // Official State Exams & Holidays preserved
-      assert.ok(eventsPageCode.includes('Examens officiels de 9e A.F.'), '9e AF exam must be present');
-      assert.ok(eventsPageCode.includes('Examens officiels de NS4'), 'NS4 exam must be present');
-      assert.ok(eventsPageCode.includes('Vacances de Noël'), 'Noel holidays must be present');
-      assert.ok(eventsPageCode.includes('Vacances de Carnaval'), 'Carnaval holidays must be present');
-      assert.ok(eventsPageCode.includes('Vacances de Pâques'), 'Paques holidays must be present');
+      assert.ok(
+        eventsPageCode.includes('Modalités Pratiques & Fonctionnement de l’Agenda'),
+        'Practical guidelines section must be preserved'
+      );
+      assert.ok(
+        eventsPageCode.includes('OfficialCalendarPrintModal'),
+        'Official certified print modal must be integrated'
+      );
     });
 
     it('should provide compact, intuitive calendar filter bar, navigation, and export features', async () => {
