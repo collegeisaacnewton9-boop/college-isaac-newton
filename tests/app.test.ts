@@ -716,6 +716,32 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.ok(module.ResponsiveLazyImage);
     });
   });
+
+  describe('Fiche Officielle des Pièces d\'Admission & Règlement 2026-2027', () => {
+    it('should provide complete official requirements matching physical school document', async () => {
+      const { DEFAULT_ADMISSION_REQUIREMENTS } = await import('../src/data/mockData.ts');
+      assert.strictEqual(DEFAULT_ADMISSION_REQUIREMENTS.academicYear, '2026-2027');
+      assert.strictEqual(DEFAULT_ADMISSION_REQUIREMENTS.registrationFee, '3 000 gourdes');
+      assert.ok(DEFAULT_ADMISSION_REQUIREMENTS.openingHours.includes('8h'));
+      assert.ok(DEFAULT_ADMISSION_REQUIREMENTS.presenceRequiredNotice.includes("L'enfant doit"));
+      
+      // Fondamentale
+      assert.strictEqual(DEFAULT_ADMISSION_REQUIREMENTS.fondamentaleDocuments.length, 5);
+      assert.ok(DEFAULT_ADMISSION_REQUIREMENTS.fondamentaleDocuments[0].includes('Acte de naissance'));
+      assert.ok(DEFAULT_ADMISSION_REQUIREMENTS.fondamentaleDocuments[2].includes('Deux (2) Photos'));
+      
+      // Secondaire
+      assert.strictEqual(DEFAULT_ADMISSION_REQUIREMENTS.secondaireDocuments.length, 5);
+      
+      // Additionnelles
+      assert.strictEqual(DEFAULT_ADMISSION_REQUIREMENTS.additionalDocuments.length, 4);
+      const addDocs = DEFAULT_ADMISSION_REQUIREMENTS.additionalDocuments.join(' ');
+      assert.ok(addDocs.includes('NS2'));
+      assert.ok(addDocs.includes('9ème A.F') || addDocs.includes('9e'));
+      assert.ok(addDocs.includes('NISU'));
+    });
+  });
 });
+
 
 

@@ -358,17 +358,17 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
               </span>
             </div>
             <p className="text-[11px] sm:text-xs text-amber-900 leading-relaxed">
-              La préinscription en ligne réserve une place temporaire. <strong>L'inscription définitive sera officialisée uniquement sur présentation physique des pièces obligatoires</strong> au secrétariat du Collège Isaac Newton (Delmas 50, rue Dominique #2) :
+              La préinscription en ligne réserve une place temporaire. <strong>L'inscription définitive sera officialisée uniquement sur présentation physique des pièces obligatoires</strong> au secrétariat du Collège Isaac Newton (Delmas 50 no 2 bis, Téls : 3721-1818 / 3316-0934) :
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-slate-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-1 text-slate-800">
               <div className="flex items-start gap-2 p-2 rounded-lg bg-white/90 border border-amber-200 shadow-2xs">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
                   <div className="flex items-center gap-1">
-                    <strong className="text-[11px] text-slate-900">Extrait d'acte de naissance</strong>
+                    <strong className="text-[11px] text-slate-900">Acte de naissance ou extrait</strong>
                     <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1 py-0.2 rounded border border-rose-200">Requis</span>
                   </div>
-                  <p className="text-[10px] text-slate-500">Original ou copie légalisée conforme</p>
+                  <p className="text-[10px] text-slate-500">Original et copie des archives</p>
                 </div>
               </div>
 
@@ -376,10 +376,10 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
                   <div className="flex items-center gap-1">
-                    <strong className="text-[11px] text-slate-900">Bulletins scolaires des 2 ans</strong>
+                    <strong className="text-[11px] text-slate-900">Carnet scolaire (dernier établ.)</strong>
                     <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1 py-0.2 rounded border border-rose-200">Requis</span>
                   </div>
-                  <p className="text-[10px] text-slate-500">Bulletins originaux des deux dernières années</p>
+                  <p className="text-[10px] text-slate-500">Original du dernier établissement</p>
                 </div>
               </div>
 
@@ -387,10 +387,10 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
                   <div className="flex items-center gap-1">
-                    <strong className="text-[11px] text-slate-900">Certificat de passage officiel</strong>
-                    <span className="text-[9px] font-bold text-amber-800 bg-amber-50 px-1 py-0.2 rounded border border-amber-200">Si classe sup.</span>
+                    <strong className="text-[11px] text-slate-900">Deux (2) photos d'identité</strong>
+                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1 py-0.2 rounded border border-rose-200">Requis</span>
                   </div>
-                  <p className="text-[10px] text-slate-500">Signé et timbré par la direction précédente</p>
+                  <p className="text-[10px] text-slate-500">Date récente, tenue correcte</p>
                 </div>
               </div>
 
@@ -398,10 +398,32 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                 <div>
                   <div className="flex items-center gap-1">
-                    <strong className="text-[11px] text-slate-900">4 photos d'identité récentes</strong>
-                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1 py-0.2 rounded border border-rose-200">Requis</span>
+                    <strong className="text-[11px] text-slate-900">Frais d'inscription : 3 000 gdes</strong>
+                    <span className="text-[9px] font-bold text-blue-700 bg-blue-50 px-1 py-0.2 rounded border border-blue-200">3 000 gdes</span>
                   </div>
-                  <p className="text-[10px] text-slate-500">Format passeport (fond blanc ou clair)</p>
+                  <p className="text-[10px] text-slate-500">Payables à la caisse du secrétariat</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-white/90 border border-amber-200 shadow-2xs">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="flex items-center gap-1">
+                    <strong className="text-[11px] text-slate-900">Pièce d'identité responsable</strong>
+                    <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1 py-0.2 rounded border border-rose-200">CIN/NIF</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500">CIN ou NIF du parent/tuteur</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-amber-100/80 border border-amber-300 shadow-2xs">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-800 shrink-0 mt-0.5" />
+                <div>
+                  <div className="flex items-center gap-1">
+                    <strong className="text-[11px] text-amber-950">Présence obligatoire</strong>
+                    <span className="text-[9px] font-bold text-amber-900 bg-amber-200 px-1 py-0.2 rounded">Important</span>
+                  </div>
+                  <p className="text-[10px] text-amber-900 font-medium">L'enfant doit être présent lors de l'inscription</p>
                 </div>
               </div>
             </div>

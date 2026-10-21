@@ -14,34 +14,34 @@
   "admissionRequirements": {
     "academicYear": "2026-2027",
     "registrationFee": "3 000 gourdes",
-    "openingHours": "Du lundi au vendredi, de 8 h à 15 h",
-    "presenceRequiredNotice": "L'enfant doit être présent lors de l'inscription.",
+    "openingHours": "Du lundi au vendredi de 8h à 3h (8h00 - 15h00)",
+    "presenceRequiredNotice": "L'enfant doit obligatoirement être présent lors de l'inscription.",
     "levelsConcerned": [
       "Préscolaire",
-      "Fondamental : 1er, 2e et 3e cycles",
+      "Fondamental (1er Cycle, 2ème Cycle, 3ème Cycle)",
       "Secondaire"
     ],
     "fondamentaleDocuments": [
-      "Acte de naissance ou extrait des archives : original et copie.",
-      "Carnet scolaire du dernier établissement : original.",
-      "Deux photos d’identité récentes.",
-      "Frais d’inscription : 3 000 gourdes.",
-      "Pièce d’identité de la personne responsable : CIN ou NIF."
+      "Acte de naissance ou extrait des archives (Original et copie)",
+      "Carnet scolaire du dernier établissement (Original)",
+      "Deux (2) Photos d'identité (date récente)",
+      "Frais d'inscription : 3 000 gdes",
+      "Pièces d'identité de la personne responsable (CIN/NIF)"
     ],
     "secondaireDocuments": [
-      "Acte de naissance ou extrait des archives : original et copie.",
-      "Carnet scolaire du dernier établissement : original.",
-      "Deux photos d’identité récentes.",
-      "Frais d’inscription : 3 000 gourdes.",
-      "Pièce d’identité de la personne responsable : CIN ou NIF."
+      "Acte de naissance ou extrait des archives (Original et copie)",
+      "Carnet scolaire du dernier établissement (Original)",
+      "Deux (2) Photos d'identité (date récente)",
+      "Frais d'inscription : 3 000 gdes",
+      "Pièces d'identité de la personne responsable (CIN/NIF)"
     ],
     "additionalDocuments": [
-      "Relevé de notes NS2 et NS3.",
-      "Fiche de 9e A.F.",
-      "Attestation 9ème A.F.",
-      "N.S.U et code de l’école."
+      "Relevé de Notes NS2 et NS3",
+      "Fiche 9ème A.F",
+      "Attestation 9ème A.F",
+      "NISU et le code de l'école"
     ],
-    "updatedAt": "2026-10-18T08:30:00.000Z"
+    "updatedAt": "2026-10-21T10:30:00.000Z"
   },
   "contactInfo": {
     "email": "collegeisaacnewton9@gmail.com",

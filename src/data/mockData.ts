@@ -4,10 +4,11 @@ import {
   SchoolEvent, 
   GalleryItem, 
   DocumentFile, 
-  AdmissionApplication,
-  User,
-  Testimonial,
-  AcademicCyclesRecord
+  AdmissionApplication, 
+  User, 
+  Testimonial, 
+  AcademicCyclesRecord,
+  AdmissionRequirementsConfig
 } from '../types';
 
 export const SCHOOL_INFO = {
@@ -774,6 +775,18 @@ export const FAQS = [
     answer: "L'admission s'effectue sur examen du dossier scolaire précédent (bulletins de notes et certificat de passage officiel), complété par un test d'aptitude pédagogique et un entretien d'orientation avec la famille et l'élève."
   },
   {
+    question: "Quels sont les frais d'inscription et les pièces à apporter au secrétariat ?",
+    answer: "Les frais d'inscription s'élèvent à 3 000 Gourdes. Pour la section fondamentale et secondaire : acte de naissance ou extrait des archives (original et copie), carnet scolaire du dernier établissement (original), deux (2) photos d'identité récentes, pièces d'identité de la personne responsable (CIN/NIF). Pour le secondaire, pièces additionnelles : relevés de notes NS2/NS3, fiche 9e A.F., attestation 9e A.F., NISU et code de l'école."
+  },
+  {
+    question: "L'enfant doit-il obligatoirement être présent lors de l'inscription ?",
+    answer: "Oui, la présence de l'enfant est impérative lors de l'inscription physique au secrétariat (Delmas 50 no 2 bis) afin de procéder à l'entretien de premier contact et à l'évaluation diagnostique."
+  },
+  {
+    question: "Quels sont les horaires d'accueil du secrétariat d'admission ?",
+    answer: "Le secrétariat vous accueille du lundi au vendredi de 8h00 à 15h00 (8h à 3h) à Delmas 50 no 2 bis, Port-au-Prince. Vous pouvez également nous joindre directement au 3721-1818 ou au 3316-0934."
+  },
+  {
     question: "Comment se déroule la formation au laboratoire informatique ?",
     answer: "Chaque élève suit un cursus structuré hebdomadaire dans notre laboratoire climatisé. Dès le cycle fondamental, ils s'initient à la dactylographie, aux outils bureautiques, à la recherche documentaire critique, puis à l'algorithmie et aux sciences numériques au secondaire."
   },
@@ -790,6 +803,39 @@ export const FAQS = [
     answer: "Les cours débutent à 07h30 précises avec le rassemblement civique matinal et se terminent généralement à 14h00 pour le fondamental et 15h00 pour le secondaire, suivis d'ateliers périscolaires d'aide aux devoirs et de clubs."
   }
 ];
+
+export const DEFAULT_ADMISSION_REQUIREMENTS: AdmissionRequirementsConfig = {
+  academicYear: '2026-2027',
+  registrationFee: '3 000 gourdes',
+  openingHours: 'Du lundi au vendredi de 8h à 3h (8h00 - 15h00)',
+  presenceRequiredNotice: "L'enfant doit obligatoirement être présent lors de l'inscription.",
+  levelsConcerned: [
+    'Préscolaire',
+    'Fondamental (1er Cycle - 2ème Cycle - 3ème Cycle)',
+    'Secondaire'
+  ],
+  fondamentaleDocuments: [
+    'Acte de naissance ou extrait des archives (Original et copie)',
+    'Carnet scolaire du dernier établissement (Original)',
+    'Deux (2) Photos d\'identité (date récente)',
+    'Frais d\'inscription : 3000gdes',
+    'Pièces d\'identité de la personne responsable (CIN/NIF)'
+  ],
+  secondaireDocuments: [
+    'Acte de naissance ou extrait des archives (Original et copie)',
+    'Carnet scolaire du dernier établissement (Original)',
+    'Deux (2) Photos d\'identité (date récente)',
+    'Frais d\'inscription : 3000gdes',
+    'Pièces d\'identité de la personne responsable (CIN/NIF)'
+  ],
+  additionalDocuments: [
+    'Relevé de Notes NS2 et NS3',
+    'Fiche 9ème A.F',
+    'Attestation 9ème A.F',
+    'NISU et le code de l\'école'
+  ],
+  updatedAt: '2026-10-21T08:00:00.000Z'
+};
 
 export const SCHOOL_VALUES = [
   {

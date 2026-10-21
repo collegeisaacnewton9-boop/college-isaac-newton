@@ -20,44 +20,14 @@ import {
 import { SiteSettings, AdmissionRequirementsConfig, User } from '../../types';
 import { apiService } from '../../services/api';
 import { toast } from 'sonner';
+import { DEFAULT_ADMISSION_REQUIREMENTS } from '../../data/mockData';
 
 interface AdmissionsRequirementsEditorViewProps {
   currentUser?: User | null;
   onNavigateToPublicAdmissions?: () => void;
 }
 
-const DEFAULT_REQUIREMENTS: AdmissionRequirementsConfig = {
-  academicYear: '2026-2027',
-  registrationFee: '3 000 gourdes',
-  openingHours: 'Du lundi au vendredi, de 8 h à 15 h',
-  presenceRequiredNotice: "L'enfant doit être présent lors de l'inscription.",
-  levelsConcerned: [
-    'Préscolaire',
-    'Fondamental : 1er, 2e et 3e cycles',
-    'Secondaire'
-  ],
-  fondamentaleDocuments: [
-    'Acte de naissance ou extrait des archives : original et copie.',
-    'Carnet scolaire du dernier établissement : original.',
-    'Deux photos d’identité récentes.',
-    'Frais d’inscription : 3 000 gourdes.',
-    'Pièce d’identité de la personne responsable : CIN ou NIF.'
-  ],
-  secondaireDocuments: [
-    'Acte de naissance ou extrait des archives : original et copie.',
-    'Carnet scolaire du dernier établissement : original.',
-    'Deux photos d’identité récentes.',
-    'Frais d’inscription : 3 000 gourdes.',
-    'Pièce d’identité de la personne responsable : CIN ou NIF.'
-  ],
-  additionalDocuments: [
-    'Relevé de notes NS2 et NS3.',
-    'Fiche de 9e A.F.',
-    'Attestation 9ème A.F.',
-    'N.S.U et code de l’école.'
-  ],
-  updatedAt: '2026-10-18T08:30:00.000Z'
-};
+const DEFAULT_REQUIREMENTS: AdmissionRequirementsConfig = DEFAULT_ADMISSION_REQUIREMENTS;
 
 export const AdmissionsRequirementsEditorView: React.FC<AdmissionsRequirementsEditorViewProps> = ({
   currentUser,
