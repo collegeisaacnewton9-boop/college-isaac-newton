@@ -111,9 +111,9 @@ export async function initDatabase(): Promise<boolean> {
           is_public BOOLEAN DEFAULT TRUE,
           image TEXT,
           created_at TIMESTAMPTZ DEFAULT NOW()
-        );
         ALTER TABLE school_events ADD COLUMN IF NOT EXISTS image TEXT;
-      `);
+        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'PUBLISHED';
+        ALTER TABLE school_events ADD COLUMN IF NOT EXISTS academic_year TEXT DEFAULT '2026-2027';
 
       // 4. Table Contact Messages
       await client.query(`
@@ -980,6 +980,8 @@ export async function dbGetEvents(): Promise<any[]> {
       audience: r.audience || 'ALL',
       isPublic: r.is_public !== false,
       image: r.image || '',
+      status: r.status || 'PUBLISHED',
+      academicYear: r.academic_year || '2026-2027',
       createdAt: r.created_at,
     }));
   } catch (err: any) {
@@ -993,8 +995,8 @@ export async function dbInsertEvent(evt: any): Promise<any | null> {
   if (!p || !isConnected) return null;
   try {
     const res = await p.query(`
-      INSERT INTO school_events (id, title, description, start_date, end_date, location, category, audience, is_public, image)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO school_events (id, title, description, start_date, end_date, location, category, audience, is_public, image, status, academic_year)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       RETURNING *
     `, [
       evt.id,
@@ -1006,7 +1008,9 @@ export async function dbInsertEvent(evt: any): Promise<any | null> {
       evt.category || 'Pédagogique',
       evt.audience || 'ALL',
       evt.isPublic !== false,
-      evt.image || null
+      evt.image || null,
+      evt.status || 'PUBLISHED',
+      evt.academicYear || '2026-2027'
     ]);
     const r = res.rows[0];
     return {
@@ -1020,6 +1024,8 @@ export async function dbInsertEvent(evt: any): Promise<any | null> {
       audience: r.audience,
       isPublic: r.is_public,
       image: r.image || '',
+      status: r.status || 'PUBLISHED',
+      academicYear: r.academic_year || '2026-2027',
     };
   } catch (err: any) {
     console.error('[DB Insert Event Error]', err.message);
@@ -1041,19 +1047,23 @@ export async function dbUpdateEvent(id: string, evt: any): Promise<any | null> {
           category = COALESCE($6, category),
           audience = COALESCE($7, audience),
           is_public = COALESCE($8, is_public),
-          image = COALESCE($9, image)
-      WHERE id = $10
+          image = COALESCE($9, image),
+          status = COALESCE($10, status),
+          academic_year = COALESCE($11, academic_year)
+      WHERE id = $12
       RETURNING *
     `, [
-      evt.title,
-      evt.description,
-      evt.startDate,
-      evt.endDate || null,
-      evt.location,
-      evt.category,
-      evt.audience,
+      evt.title !== undefined ? evt.title : null,
+      evt.description !== undefined ? evt.description : null,
+      evt.startDate !== undefined ? evt.startDate : null,
+      evt.endDate !== undefined ? evt.endDate : null,
+      evt.location !== undefined ? evt.location : null,
+      evt.category !== undefined ? evt.category : null,
+      evt.audience !== undefined ? evt.audience : null,
       evt.isPublic !== undefined ? evt.isPublic : null,
       evt.image !== undefined ? evt.image : null,
+      evt.status !== undefined ? evt.status : null,
+      evt.academicYear !== undefined ? evt.academicYear : null,
       id
     ]);
     if (res.rows.length === 0) return null;
@@ -1069,6 +1079,8 @@ export async function dbUpdateEvent(id: string, evt: any): Promise<any | null> {
       audience: r.audience,
       isPublic: r.is_public,
       image: r.image || '',
+      status: r.status || 'PUBLISHED',
+      academicYear: r.academic_year || '2026-2027',
     };
   } catch (err: any) {
     console.error('[DB Update Event Error]', err.message);

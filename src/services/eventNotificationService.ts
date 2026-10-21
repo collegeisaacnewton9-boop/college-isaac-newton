@@ -15,6 +15,8 @@ const inMemoryDismissed = new Set<string>();
 export const eventNotificationService = {
   /**
    * Calcule les événements survenant ou expirant dans les prochaines 48 heures.
+   * Filtre les périodes macroscopiques (trimestres/contrôles de plusieurs semaines)
+   * pour ne cibler que les véritables événements ponctuels ou journées d'action.
    */
   getImminentEvents(events: SchoolEvent[], now = new Date()): ImminentEventAlert[] {
     const nowTime = now.getTime();
@@ -23,10 +25,20 @@ export const eventNotificationService = {
     return events
       .filter((evt) => {
         if (!evt.startDate) return false;
+
+        // Exclure les grandes périodes académiques (ex: trimestre/contrôle de 49 jours)
+        // Les périodes structurelles ne doivent pas déclencher d'alerte quotidienne d'urgence 48h
+        if (evt.eventType === 'CONTROLE_PERIODE') return false;
+
         const startTime = new Date(evt.startDate).getTime();
         const endTime = evt.endDate ? new Date(evt.endDate).getTime() : startTime + 4 * 60 * 60 * 1000;
+        const totalDuration = endTime - startTime;
 
-        // Événement dans moins de 48 heures OU actuellement en cours
+        // Si l'événement s'étale sur plus de 48 heures (ex: vacances de 2 semaines, sessions longues),
+        // il s'agit d'une période de calendrier et non d'une urgence immédiate ponctuelle
+        if (totalDuration > threshold48h) return false;
+
+        // Événement dans moins de 48 heures OU actuellement en cours aujourd'hui
         const diffStart = startTime - nowTime;
         const isUpcomingWithin48h = diffStart > 0 && diffStart <= threshold48h;
         const isOngoing = diffStart <= 0 && endTime > nowTime;
@@ -77,15 +89,16 @@ export const eventNotificationService = {
   },
 
   /**
-   * Vérifie si l'alerte a déjà été fermée ou notifiée durant la session courante.
+   * Vérifie si l'alerte a déjà été fermée ou notifiée durant la session courante ou en stockage local.
    */
   isAlertDismissed(eventId: string): boolean {
-    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') {
-      return inMemoryDismissed.has(eventId);
-    }
+    if (inMemoryDismissed.has(eventId)) return true;
+    if (typeof window === 'undefined') return false;
     try {
-      const raw = sessionStorage.getItem(`${STORAGE_KEY_DISMISSED}_${eventId}`);
-      return Boolean(raw) || inMemoryDismissed.has(eventId);
+      const local = localStorage.getItem(`${STORAGE_KEY_DISMISSED}_${eventId}`);
+      if (local) return true;
+      const session = sessionStorage.getItem(`${STORAGE_KEY_DISMISSED}_${eventId}`);
+      return Boolean(session);
     } catch {
       return inMemoryDismissed.has(eventId);
     }
@@ -93,16 +106,22 @@ export const eventNotificationService = {
 
   dismissAlert(eventId: string): void {
     inMemoryDismissed.add(eventId);
-    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return;
+    if (typeof window === 'undefined') return;
     try {
+      localStorage.setItem(`${STORAGE_KEY_DISMISSED}_${eventId}`, Date.now().toString());
       sessionStorage.setItem(`${STORAGE_KEY_DISMISSED}_${eventId}`, Date.now().toString());
     } catch {}
   },
 
   clearDismissedAlerts(): void {
     inMemoryDismissed.clear();
-    if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return;
+    if (typeof window === 'undefined') return;
     try {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith(STORAGE_KEY_DISMISSED)) {
+          localStorage.removeItem(key);
+        }
+      });
       Object.keys(sessionStorage).forEach((key) => {
         if (key.startsWith(STORAGE_KEY_DISMISSED)) {
           sessionStorage.removeItem(key);

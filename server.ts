@@ -2024,10 +2024,16 @@ app.get('/api/events', async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization || '';
   const isAuthAdmin = authHeader.includes('admin') || authHeader.includes('editor') || authHeader.includes('direction');
   const includeDrafts = req.query.includeDrafts === 'true' && isAuthAdmin;
+  const includeArchived = req.query.includeArchived === 'true';
 
   let result = [...allEvents];
   if (!includeDrafts) {
     result = result.filter(e => e.status !== 'DRAFT');
+  }
+
+  // Filter out ARCHIVED events from main public displays unless explicitly requested
+  if (!includeArchived && (!isAuthAdmin || req.query.onlyActive === 'true')) {
+    result = result.filter(e => e.status !== 'ARCHIVED' && (e.status as any) !== 'ARCHIVE');
   }
 
   if (req.query.academicYear) {
@@ -2039,6 +2045,63 @@ app.get('/api/events', async (req: Request, res: Response) => {
   result.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
 
   res.json(result);
+});
+
+// Automated cleanup endpoint: detects past events and moves them to 'ARCHIVED' state
+app.post('/api/events/cleanup', async (req: Request, res: Response) => {
+  const nowTime = Date.now();
+  let archivedCount = 0;
+  const newlyArchived: any[] = [];
+
+  for (let i = 0; i < schoolEvents.length; i++) {
+    const e = schoolEvents[i];
+    if (!e.startDate) continue;
+
+    let endMs: number;
+    if (e.endDate) {
+      endMs = new Date(e.endDate).getTime();
+    } else {
+      const startMs = new Date(e.startDate).getTime();
+      endMs = e.startDate.length === 10 ? startMs + 24 * 60 * 60 * 1000 - 1 : startMs + 4 * 60 * 60 * 1000;
+    }
+
+    if (endMs < nowTime && e.status !== 'ARCHIVED' && (e.status as any) !== 'ARCHIVE') {
+      schoolEvents[i] = {
+        ...schoolEvents[i],
+        status: 'ARCHIVED',
+        updatedAt: new Date().toISOString()
+      };
+
+      if (isDbActive()) {
+        try {
+          await dbUpdateEvent(e.id, { status: 'ARCHIVED' });
+        } catch (dbErr: any) {
+          console.error('[DB Cleanup Archive Error]', dbErr.message);
+        }
+      }
+
+      archivedCount++;
+      newlyArchived.push(schoolEvents[i]);
+    }
+  }
+
+  if (archivedCount > 0) {
+    saveEventsToDisk(schoolEvents);
+    auditLogs.push({
+      id: `log-${Date.now()}`,
+      action: 'EVENTS_AUTO_CLEANUP_ARCHIVED',
+      user: 'Service d’Archivage Automatisé',
+      details: `${archivedCount} événement(s) passé(s) ont été archivés en base de données.`,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  res.json({
+    success: true,
+    archivedCount,
+    newlyArchived,
+    remainingActiveCount: schoolEvents.filter(e => e.status !== 'ARCHIVED' && (e.status as any) !== 'ARCHIVE').length
+  });
 });
 
 app.post('/api/events', async (req: Request, res: Response) => {

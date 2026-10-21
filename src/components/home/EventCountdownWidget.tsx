@@ -32,12 +32,15 @@ interface EventCountdownWidgetProps {
   currentUser?: User | null;
 }
 
+export type EventLiveStatus = 'UPCOMING' | 'ONGOING' | 'FINISHED';
+
 interface TimeRemaining {
   totalMs: number;
   days: number;
   hours: number;
   minutes: number;
   seconds: number;
+  status: EventLiveStatus;
   isPast: boolean;
 }
 
@@ -99,15 +102,29 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
 
   // Filter and sort future events
   const upcomingEvents = useMemo(() => {
-    const valid = events
+    // 1. Événements futurs ou actuellement en cours (non achevés)
+    const activeOrFuture = events
       .filter((e) => {
         if (!e.startDate) return false;
+        // Les grandes périodes macroscopiques (ex: Période du Premier Contrôle de 49 jours)
+        // sont des cadres trimestriels et ne doivent pas monopoliser le compte à rebours
+        if (e.eventType === 'CONTROLE_PERIODE') return false;
+
         const startTime = new Date(e.startDate).getTime();
         const endTime = e.endDate ? new Date(e.endDate).getTime() : startTime + 4 * 60 * 60 * 1000;
         return endTime > now.getTime();
       })
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-    return valid.length > 0 ? valid : events.slice(0, 4);
+
+    if (activeOrFuture.length > 0) {
+      return activeOrFuture;
+    }
+
+    // 2. Si aucun événement futur n'est trouvé, afficher les événements récents (triés du plus récent au plus ancien)
+    return events
+      .filter((e) => e.eventType !== 'CONTROLE_PERIODE' && Boolean(e.startDate))
+      .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+      .slice(0, 4);
   }, [events, now]);
 
   // Active event to display
@@ -175,31 +192,57 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
     setIsDropdownOpen(false);
   }, [activeIndex]);
 
-  // Calculate remaining time
+  // Calculate remaining time and authentic live status
   const timeRemaining: TimeRemaining = useMemo(() => {
     if (!activeEvent || !activeEvent.startDate) {
-      return { totalMs: 0, days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
+      return { totalMs: 0, days: 0, hours: 0, minutes: 0, seconds: 0, status: 'FINISHED', isPast: true };
     }
 
-    const targetTime = new Date(activeEvent.startDate).getTime();
-    const diff = targetTime - now.getTime();
+    const startTime = new Date(activeEvent.startDate).getTime();
+    // Default duration is 4h if no endDate is specified
+    const endTime = activeEvent.endDate 
+      ? new Date(activeEvent.endDate).getTime() 
+      : startTime + 4 * 60 * 60 * 1000;
+    const nowTime = now.getTime();
 
-    if (diff <= 0) {
-      return { totalMs: 0, days: 0, hours: 0, minutes: 0, seconds: 0, isPast: true };
+    // 1. Événement complètement terminé / écoulé
+    if (nowTime > endTime) {
+      return { totalMs: 0, days: 0, hours: 0, minutes: 0, seconds: 0, status: 'FINISHED', isPast: true };
     }
 
+    // 2. Événement actuellement en cours sur le campus (entre l'heure de début et l'heure de fin)
+    if (nowTime >= startTime && nowTime <= endTime) {
+      const remainingMs = Math.max(0, endTime - nowTime);
+      const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+      const minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
+      const seconds = Math.floor((remainingMs / 1000) % 60);
+      return { totalMs: remainingMs, days: 0, hours, minutes, seconds, status: 'ONGOING', isPast: false };
+    }
+
+    // 3. Événement à venir
+    const diff = startTime - nowTime;
     const seconds = Math.floor((diff / 1000) % 60);
     const minutes = Math.floor((diff / (1000 * 60)) % 60);
     const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-    return { totalMs: diff, days, hours, minutes, seconds, isPast: false };
+    return { totalMs: diff, days, hours, minutes, seconds, status: 'UPCOMING', isPast: false };
   }, [activeEvent, now]);
 
   if (!activeEvent) return null;
 
+  // Helper to parse dates safely avoiding UTC midnight shifting to previous day
+  const parseSafeDate = (dateStr: string) => {
+    if (!dateStr) return new Date(NaN);
+    if (dateStr.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const [y, m, d] = dateStr.split('-').map(Number);
+      return new Date(y, m - 1, d, 8, 0, 0); // Default to 8h00 morning local time
+    }
+    return new Date(dateStr);
+  };
+
   // Format date nicely in French
-  const eventDateObj = new Date(activeEvent.startDate);
+  const eventDateObj = parseSafeDate(activeEvent.startDate);
   const formattedDate = !isNaN(eventDateObj.getTime())
     ? eventDateObj.toLocaleDateString('fr-FR', {
         weekday: 'long',
@@ -209,13 +252,17 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
       })
     : activeEvent.startDate;
 
-  const formattedTime = !isNaN(eventDateObj.getTime())
+  const hasExplicitTime = Boolean(
+    activeEvent.startDate && (activeEvent.startDate.includes('T') || activeEvent.startDate.includes(':'))
+  );
+
+  const formattedTime = hasExplicitTime && !isNaN(eventDateObj.getTime())
     ? eventDateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     : '';
 
   // Format short date for badges (e.g. "10 oct.")
   const getShortDateLabel = (dateStr: string) => {
-    const d = new Date(dateStr);
+    const d = parseSafeDate(dateStr);
     if (isNaN(d.getTime())) return 'Date';
     return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
@@ -339,7 +386,9 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
               <div className="leading-tight">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[11px] font-mono uppercase tracking-wider text-amber-300 font-bold">
-                    Événement Officiel à Venir
+                    {timeRemaining.status === 'UPCOMING' && 'Événement Officiel à Venir'}
+                    {timeRemaining.status === 'ONGOING' && 'Événement en Cours sur le Campus'}
+                    {timeRemaining.status === 'FINISHED' && 'Événement Récent Écoulé'}
                   </span>
                   <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-white/10 text-slate-300 font-medium">
                     2026–2027
@@ -570,12 +619,20 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
                           ? 'Pour Élèves & Candidats' 
                           : 'Tous publics'}
                     </span>
-                    {timeRemaining.days <= 1 && !timeRemaining.isPast && (
+                    {timeRemaining.status === 'UPCOMING' && timeRemaining.days <= 1 && (
                       <>
                         <span className="text-white/30" aria-hidden="true">·</span>
                         <span className="text-[10.5px] font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30 flex items-center gap-1 animate-pulse">
                           <span>⚡</span>
                           <span>{timeRemaining.days === 0 ? 'Aujourd’hui (< 24h)' : 'Échéance Imminente (< 48h)'}</span>
+                        </span>
+                      </>
+                    )}
+                    {timeRemaining.status === 'FINISHED' && (
+                      <>
+                        <span className="text-white/30" aria-hidden="true">·</span>
+                        <span className="text-[10.5px] font-semibold text-slate-400 bg-white/10 px-2 py-0.5 rounded-full border border-white/10">
+                          Écoulé
                         </span>
                       </>
                     )}
@@ -614,16 +671,48 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
                 {/* RIGHT COUNTDOWN & DYNAMIC MEMO (5 Cols) */}
                 <div className="lg:col-span-5 flex flex-col items-center lg:items-end justify-center">
                   
-                  {timeRemaining.isPast ? (
+                  {timeRemaining.status === 'ONGOING' ? (
                     <div className="bg-emerald-500/20 border border-emerald-400/40 rounded-xl p-3.5 text-center w-full max-w-sm">
                       <CheckCircle2 className="w-6 h-6 text-emerald-400 mx-auto mb-1" />
                       <h4 className="font-bold text-sm text-white flex items-center justify-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span>Événement en cours</span>
+                        <span>Événement en cours aujourd’hui</span>
                       </h4>
                       <p className="text-[11px] text-emerald-200 mt-0.5">
-                        Bienvenue aux participants sur le campus de Delmas 50 !
+                        Actuellement en direct sur le campus de Delmas 50 · Bienvenue aux participants !
                       </p>
+                    </div>
+                  ) : timeRemaining.status === 'FINISHED' ? (
+                    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-3.5 text-center w-full max-w-sm">
+                      <CheckCircle2 className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+                      <h4 className="font-bold text-sm text-slate-300 flex items-center justify-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-slate-500" />
+                        <span>Événement terminé / écoulé</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Cet événement officiel est désormais achevé. Retrouvez les prochaines dates dans l'agenda scolaire.
+                      </p>
+                      {upcomingEvents.some(e => {
+                        const s = new Date(e.startDate).getTime();
+                        const end = e.endDate ? new Date(e.endDate).getTime() : s + 4 * 3600 * 1000;
+                        return end > Date.now();
+                      }) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextEvt = upcomingEvents.find(e => {
+                              const s = new Date(e.startDate).getTime();
+                              const end = e.endDate ? new Date(e.endDate).getTime() : s + 4 * 3600 * 1000;
+                              return end > Date.now();
+                            });
+                            if (nextEvt) setSelectedEventId(nextEvt.id);
+                          }}
+                          className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-[11px] transition-colors cursor-pointer"
+                        >
+                          <span>Voir le prochain événement</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div className="w-full max-w-md">
@@ -686,28 +775,37 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
           <div className="pt-2.5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
             
             <div className="flex items-center gap-2 flex-wrap">
-              {/* Google Calendar Link */}
-              <a
-                href={getGoogleCalendarUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors cursor-pointer"
-                title="Ajouter cet événement à mon calendrier personnel"
-              >
-                <CalendarPlus className="w-3.5 h-3.5 text-amber-400" />
-                <span>Ajouter à mon agenda Google</span>
-              </a>
+              {timeRemaining.status !== 'FINISHED' ? (
+                <>
+                  {/* Google Calendar Link */}
+                  <a
+                    href={getGoogleCalendarUrl()}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-colors cursor-pointer"
+                    title="Ajouter cet événement à mon calendrier personnel"
+                  >
+                    <CalendarPlus className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Ajouter à mon agenda Google</span>
+                  </a>
 
-              {/* Quick Reminder Request Button */}
-              <button
-                type="button"
-                onClick={() => setIsReminderModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 text-slate-200 font-medium transition-colors cursor-pointer border border-white/10"
-                title="Recevoir un rappel par Email ou WhatsApp"
-              >
-                <Bell className="w-3.5 h-3.5 text-amber-300" />
-                <span>M'envoyer un rappel</span>
-              </button>
+                  {/* Quick Reminder Request Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsReminderModalOpen(true)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/15 text-slate-200 font-medium transition-colors cursor-pointer border border-white/10"
+                    title="Recevoir un rappel par Email ou WhatsApp"
+                  >
+                    <Bell className="w-3.5 h-3.5 text-amber-300" />
+                    <span>M'envoyer un rappel</span>
+                  </button>
+                </>
+              ) : (
+                <span className="text-slate-400 text-xs italic flex items-center gap-1.5 py-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Événement passé archivé dans le calendrier officiel</span>
+                </span>
+              )}
 
               {/* Admin Direct Quick Edit */}
               {canManage && (

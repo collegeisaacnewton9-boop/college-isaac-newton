@@ -45,6 +45,7 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT'>('ALL');
   const [visibilityFilter, setVisibilityFilter] = useState<'ALL' | 'VISIBLE' | 'HIDDEN'>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [timeLifecycleFilter, setTimeLifecycleFilter] = useState<'ALL' | 'UPCOMING' | 'TODAY' | 'PAST'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modal State
@@ -127,6 +128,29 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
     return Array.from(set).sort();
   }, [events]);
 
+  // Lifecycle counts across all events for quick filters
+  const lifecycleCounts = useMemo(() => {
+    const nowTime = Date.now();
+    let upcoming = 0;
+    let today = 0;
+    let past = 0;
+
+    events.forEach(e => {
+      if (!e.startDate) return;
+      const start = new Date(e.startDate).getTime();
+      const end = e.endDate ? new Date(e.endDate).getTime() : start + 4 * 60 * 60 * 1000;
+      if (nowTime > end) {
+        past++;
+      } else if (nowTime >= start && nowTime <= end) {
+        today++;
+      } else {
+        upcoming++;
+      }
+    });
+
+    return { total: events.length, upcoming, today, past };
+  }, [events]);
+
   // Filtered & Chronologically Sorted Events
   const filteredEvents = useMemo(() => {
     const list = events.filter(e => {
@@ -134,6 +158,20 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
       const evtYear = e.academicYear || '2026-2027';
       if (selectedAcademicYear !== 'ALL' && evtYear !== selectedAcademicYear) {
         return false;
+      }
+
+      // Time Lifecycle Filter
+      if (timeLifecycleFilter !== 'ALL') {
+        const nowTime = Date.now();
+        const start = new Date(e.startDate).getTime();
+        const end = e.endDate ? new Date(e.endDate).getTime() : start + 4 * 60 * 60 * 1000;
+        const isPast = nowTime > end;
+        const isToday = nowTime >= start && nowTime <= end;
+        const isUpcoming = nowTime < start;
+
+        if (timeLifecycleFilter === 'UPCOMING' && !isUpcoming) return false;
+        if (timeLifecycleFilter === 'TODAY' && !isToday) return false;
+        if (timeLifecycleFilter === 'PAST' && !isPast) return false;
       }
 
       // Status Filter
@@ -162,7 +200,7 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
 
     // Chronological Sort
     return list.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-  }, [events, selectedAcademicYear, statusFilter, visibilityFilter, categoryFilter, searchQuery]);
+  }, [events, selectedAcademicYear, timeLifecycleFilter, statusFilter, visibilityFilter, categoryFilter, searchQuery]);
 
   // Open Create Modal
   const handleOpenCreate = () => {
@@ -378,6 +416,73 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
           </div>
         </div>
 
+        {/* Quick Temporal Lifecycle Filter Tabs */}
+        <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100">
+          <span className="text-[11px] font-bold text-slate-500 mr-1 flex items-center gap-1">
+            <Filter className="w-3 h-3 text-blue-900" />
+            <span>Période :</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => setTimeLifecycleFilter('ALL')}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              timeLifecycleFilter === 'ALL'
+                ? 'bg-blue-900 text-white shadow-2xs'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            <span>Toutes les dates</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${timeLifecycleFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+              {lifecycleCounts.total}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTimeLifecycleFilter('UPCOMING')}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              timeLifecycleFilter === 'UPCOMING'
+                ? 'bg-blue-900 text-white shadow-2xs'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            <Calendar className="w-3 h-3 text-blue-400" />
+            <span>À venir</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${timeLifecycleFilter === 'UPCOMING' ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-800'}`}>
+              {lifecycleCounts.upcoming}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTimeLifecycleFilter('TODAY')}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              timeLifecycleFilter === 'TODAY'
+                ? 'bg-emerald-700 text-white shadow-2xs'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>En cours aujourd'hui</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${timeLifecycleFilter === 'TODAY' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+              {lifecycleCounts.today}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setTimeLifecycleFilter('PAST')}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+              timeLifecycleFilter === 'PAST'
+                ? 'bg-slate-800 text-white shadow-2xs'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            <Clock className="w-3 h-3 text-slate-400" />
+            <span>Écoulés / Passés</span>
+            <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${timeLifecycleFilter === 'PAST' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'}`}>
+              {lifecycleCounts.past}
+            </span>
+          </button>
+        </div>
+
         {/* Filters Toolbar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 pt-2 border-t border-slate-100 text-xs">
           
@@ -542,6 +647,36 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
                       <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate">
                         {evt.title}
                       </h3>
+
+                      {/* Temporal Status Badge (À venir / En cours / Écoulé) */}
+                      {(() => {
+                        if (!evt.startDate) return null;
+                        const nowTime = Date.now();
+                        const start = new Date(evt.startDate).getTime();
+                        const end = evt.endDate ? new Date(evt.endDate).getTime() : start + 4 * 60 * 60 * 1000;
+                        if (nowTime > end) {
+                          return (
+                            <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-semibold text-[9px] flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5 text-slate-400" />
+                              <span>Écoulé</span>
+                            </span>
+                          );
+                        }
+                        if (nowTime >= start && nowTime <= end) {
+                          return (
+                            <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[9px] flex items-center gap-1 animate-pulse">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                              <span>En cours aujourd'hui</span>
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-medium text-[9px] flex items-center gap-1">
+                            <Calendar className="w-2.5 h-2.5 text-blue-500" />
+                            <span>À venir</span>
+                          </span>
+                        );
+                      })()}
 
                       {/* Status Badges */}
                       {isDraft ? (

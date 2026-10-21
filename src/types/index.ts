@@ -136,9 +136,8 @@ export interface SchoolEvent {
   isPublic: boolean;
   image?: string;
   academicYear?: string; // e.g. '2026-2027', '2027-2028'
-  status?: 'PUBLISHED' | 'DRAFT'; // default 'PUBLISHED'
+  status?: 'PUBLISHED' | 'DRAFT' | 'ARCHIVED'; // default 'PUBLISHED', or 'ARCHIVED' when past
   indicatedDuration?: string; // e.g. '49 jours', '44 jours', '51 jours', '37 jours'
-  displayOrder?: number;
   eventType?: AcademicEventType;
   controlNumber?: 1 | 2 | 3 | 4;
   periodLabel?: string;
