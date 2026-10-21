@@ -245,7 +245,7 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
 
         {/* Main Slide Content - Institutional Editorial */}
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 w-full">
-          <div className="max-w-2xl sm:max-w-3xl space-y-4 sm:space-y-5">
+          <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl space-y-4 sm:space-y-5">
             
             {/* Tag Badge */}
             <div className="flex flex-wrap items-center gap-2">
@@ -259,8 +259,8 @@ export const HeroSlideshow: React.FC<HeroSlideshowProps> = ({ onNavigate }) => {
               </span>
             </div>
 
-            {/* Slide Title */}
-            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight">
+            {/* Slide Title - Garanti sur une seule ligne */}
+            <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white leading-tight whitespace-normal sm:whitespace-nowrap max-w-full overflow-hidden text-ellipsis">
               {active.title}
             </h1>
 

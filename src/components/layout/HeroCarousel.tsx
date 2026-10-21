@@ -287,7 +287,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.15 }}
-              className="max-w-2xl text-left"
+              className="max-w-4xl lg:max-w-5xl xl:max-w-6xl w-full text-left"
             >
               {/* Category Pill */}
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-600/90 backdrop-blur-md text-white text-xs sm:text-sm font-medium mb-2.5 sm:mb-3.5 shadow-sm border border-blue-400/30">
@@ -295,8 +295,8 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate }) => {
                 <span>{activeSlide.badge}</span>
               </div>
 
-              {/* Slide Title */}
-              <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-md leading-tight line-clamp-2">
+              {/* Slide Title - Garanti sur une seule ligne sur écran d'ordinateur */}
+              <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-[42px] xl:text-5xl font-bold text-white tracking-tight drop-shadow-md leading-tight whitespace-normal sm:whitespace-nowrap max-w-full overflow-hidden text-ellipsis">
                 {activeSlide.title}
               </h1>
 

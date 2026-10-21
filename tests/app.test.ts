@@ -352,16 +352,21 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.ok(eventsPageCode.includes('apiService.getEvents()'), 'Must load events dynamically from apiService');
     });
 
-    it('should present interactive calendar directly under header without redundant stacked benchmark blocks', async () => {
+    it('should present official calendar structure and agenda directly without bulky month grid', async () => {
       const fs = await import('fs');
       const eventsPageCode = fs.readFileSync('src/pages/EventsPage.tsx', 'utf-8');
 
-      // Ensure calendar is presented immediately without duplicate giant banners or redundant stacked sections
-      assert.ok(eventsPageCode.includes('<InteractiveCalendar'), 'InteractiveCalendar must be rendered on the page');
+      // Ensure official structure is preserved without bulky month grid
       assert.ok(
-        !eventsPageCode.includes('Structure des 4 Contrôles Académiques'),
-        'Redundant stacked section Structure des 4 Contrôles Académiques must be removed from web page'
+        !eventsPageCode.includes('<InteractiveCalendar'),
+        'Bulky month calendar grid must be removed as requested'
       );
+      assert.ok(
+        eventsPageCode.includes('Structure des 4 Contrôles Académiques'),
+        'Official 4 controls reference section must be preserved'
+      );
+      assert.ok(eventsPageCode.includes('1er Contrôle'), '1er Contrôle must be present');
+      assert.ok(eventsPageCode.includes('4e Contrôle'), '4e Contrôle must be present');
       assert.ok(
         eventsPageCode.includes('Modalités Pratiques & Fonctionnement de l’Agenda'),
         'Practical guidelines section must be preserved'
