@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { SchoolEvent, EventCategory, AcademicEventType, User } from '../../types';
 import { apiService } from '../../services/api';
+import { eventNotificationService } from '../../services/eventNotificationService';
 import { toast } from 'sonner';
 
 interface CalendarManagerViewProps {
@@ -41,6 +42,7 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
   const [isLoading, setIsLoading] = useState(true);
 
   // Filters
+  const [temporalFilter, setTemporalFilter] = useState<'ACTIVE_UPCOMING' | 'ALL' | 'PAST'>('ACTIVE_UPCOMING');
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('2026-2027');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT'>('ALL');
   const [visibilityFilter, setVisibilityFilter] = useState<'ALL' | 'VISIBLE' | 'HIDDEN'>('ALL');
@@ -127,6 +129,21 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
     return Array.from(set).sort();
   }, [events]);
 
+  // Counts of events by temporal state (Active/Upcoming vs Elapsed/Past)
+  const temporalCounts = useMemo(() => {
+    let activeUpcoming = 0;
+    let past = 0;
+    events.forEach((e) => {
+      const st = eventNotificationService.getEventTemporalStatus(e);
+      if (st === 'PAST') {
+        past++;
+      } else {
+        activeUpcoming++;
+      }
+    });
+    return { activeUpcoming, past, total: events.length };
+  }, [events]);
+
   // Filtered & Chronologically Sorted Events
   const filteredEvents = useMemo(() => {
     const list = events.filter(e => {
@@ -134,6 +151,17 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
       const evtYear = e.academicYear || '2026-2027';
       if (selectedAcademicYear !== 'ALL' && evtYear !== selectedAcademicYear) {
         return false;
+      }
+
+      // Temporal Filter (Active/Upcoming vs Past vs All)
+      if (temporalFilter !== 'ALL') {
+        const temporalStatus = eventNotificationService.getEventTemporalStatus(e);
+        if (temporalFilter === 'ACTIVE_UPCOMING' && temporalStatus === 'PAST') {
+          return false;
+        }
+        if (temporalFilter === 'PAST' && temporalStatus !== 'PAST') {
+          return false;
+        }
       }
 
       // Status Filter
@@ -162,7 +190,7 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
 
     // Chronological Sort
     return list.sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
-  }, [events, selectedAcademicYear, statusFilter, visibilityFilter, categoryFilter, searchQuery]);
+  }, [events, selectedAcademicYear, temporalFilter, statusFilter, visibilityFilter, categoryFilter, searchQuery]);
 
   // Open Create Modal
   const handleOpenCreate = () => {
@@ -378,6 +406,69 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
           </div>
         </div>
 
+        {/* Quick Segmented Filter for Temporal Status (Active/Upcoming vs All vs Past) */}
+        <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t border-slate-100">
+          <div className="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/80 text-xs">
+            <button
+              type="button"
+              onClick={() => setTemporalFilter('ACTIVE_UPCOMING')}
+              className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                temporalFilter === 'ACTIVE_UPCOMING'
+                  ? 'bg-blue-900 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span>En cours & À venir</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                temporalFilter === 'ACTIVE_UPCOMING' ? 'bg-blue-800 text-amber-300' : 'bg-slate-200 text-slate-700'
+              }`}>
+                {temporalCounts.activeUpcoming}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTemporalFilter('ALL')}
+              className={`px-3 py-1.5 rounded-lg font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                temporalFilter === 'ALL'
+                  ? 'bg-blue-900 text-white shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Toutes les dates</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                temporalFilter === 'ALL' ? 'bg-blue-800 text-amber-300' : 'bg-slate-200 text-slate-700'
+              }`}>
+                {temporalCounts.total}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTemporalFilter('PAST')}
+              className={`px-3 py-1.5 rounded-lg font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
+                temporalFilter === 'PAST'
+                  ? 'bg-slate-800 text-white shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+              }`}
+            >
+              <Clock className="w-3.5 h-3.5 text-slate-400" />
+              <span>Événements écoulés / Archivés</span>
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                temporalFilter === 'PAST' ? 'bg-slate-700 text-slate-200' : 'bg-slate-200 text-slate-700'
+              }`}>
+                {temporalCounts.past}
+              </span>
+            </button>
+          </div>
+
+          <div className="text-xs text-slate-500 font-medium">
+            Affichage : <strong className="text-slate-800">{filteredEvents.length}</strong> date(s)
+          </div>
+        </div>
+
         {/* Filters Toolbar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 pt-2 border-t border-slate-100 text-xs">
           
@@ -508,12 +599,13 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
             const isDraft = evt.status === 'DRAFT';
             const isHidden = evt.isPublic === false;
             const isControl = evt.category === 'Contrôle' || evt.eventType === 'CONTROLE_PERIODE';
+            const temporalDetails = eventNotificationService.getEventTemporalDetails(evt);
 
             return (
               <div 
                 key={evt.id} 
                 className={`p-3 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 transition-colors ${
-                  isDraft ? 'bg-amber-50/30 hover:bg-amber-50/50' : 'hover:bg-slate-50/70'
+                  isDraft ? 'bg-amber-50/30 hover:bg-amber-50/50' : temporalDetails.isPast ? 'bg-slate-50/50 hover:bg-slate-50 opacity-90' : 'hover:bg-slate-50/70'
                 }`}
               >
                 {/* Left: Date details */}
@@ -521,7 +613,9 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
                   
                   {/* Calendar day badge */}
                   <div className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center shrink-0 border shadow-2xs ${
-                    isControl
+                    temporalDetails.isPast
+                      ? 'bg-slate-700 text-slate-200 border-slate-800'
+                      : isControl
                       ? 'bg-blue-900 text-white border-blue-950'
                       : evt.category === 'Examen'
                       ? 'bg-rose-700 text-white border-rose-800'
@@ -539,9 +633,27 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
 
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h3 className="font-bold text-slate-900 text-xs sm:text-sm truncate">
+                      <h3 className={`font-bold text-xs sm:text-sm truncate ${temporalDetails.isPast ? 'text-slate-700' : 'text-slate-900'}`}>
                         {evt.title}
                       </h3>
+
+                      {/* Temporal Status Badge (Terminé / En cours / Imminent / À venir) */}
+                      {temporalDetails.isPast ? (
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200 font-medium text-[9px] flex items-center gap-1" title="Cet événement est terminé et archivé">
+                          <Clock className="w-2.5 h-2.5 text-slate-400" />
+                          <span>{temporalDetails.label}</span>
+                        </span>
+                      ) : temporalDetails.isOngoing ? (
+                        <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold text-[9px] flex items-center gap-1 animate-pulse" title="Événement actuellement en cours sur le campus">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                          <span>{temporalDetails.label}</span>
+                        </span>
+                      ) : (
+                        <span className={`px-2 py-0.5 rounded-full border text-[9px] flex items-center gap-1 ${temporalDetails.badgeClass}`}>
+                          <Calendar className="w-2.5 h-2.5" />
+                          <span>{temporalDetails.label}</span>
+                        </span>
+                      )}
 
                       {/* Status Badges */}
                       {isDraft ? (

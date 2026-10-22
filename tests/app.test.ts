@@ -621,6 +621,90 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       eventNotificationService.clearDismissedAlerts();
       assert.strictEqual(eventNotificationService.isAlertDismissed(testEvent.id), false);
     });
+
+    it('should not treat ongoing multi-week periods as imminent alarms unless within 48h of start or end', async () => {
+      const { eventNotificationService } = await import('../src/services/eventNotificationService.ts');
+      const fixedNow = new Date('2026-10-15T10:00:00Z');
+
+      const longPeriodEvent: SchoolEvent = {
+        id: 'evt-ctrl-1-long',
+        title: 'Période du 1er Contrôle',
+        description: '67 jours de période',
+        startDate: '2026-09-07T07:30:00Z', // Started over 1 month ago
+        endDate: '2026-11-13T15:00:00Z',   // Finishes in ~29 days
+        location: 'Campus',
+        category: 'Contrôle',
+        audience: 'ALL',
+        isPublic: true,
+      };
+
+      // In the middle of the long period (e.g. Oct 15) -> should NOT trigger an imminent emergency alert
+      const midAlerts = eventNotificationService.getImminentEvents([longPeriodEvent], fixedNow);
+      assert.strictEqual(midAlerts.length, 0, 'Long period in the middle must not trigger imminent alert');
+
+      // When within 48 hours of closing (e.g. Nov 12 at 10h) -> SHOULD alert for conclusion
+      const nearEndNow = new Date('2026-11-12T10:00:00Z');
+      const closingAlerts = eventNotificationService.getImminentEvents([longPeriodEvent], nearEndNow);
+      assert.strictEqual(closingAlerts.length, 1, 'Long period ending in < 48h must trigger closing alert');
+      assert.ok(closingAlerts[0].timeRemainingFormatted.includes('Clôture'), 'Must indicate closing status');
+    });
+
+    it('should accurately classify past, ongoing, and upcoming temporal statuses', async () => {
+      const { eventNotificationService } = await import('../src/services/eventNotificationService.ts');
+      const fixedNow = new Date('2026-10-15T10:00:00Z');
+
+      const pastEvt: SchoolEvent = {
+        id: 'evt-test-past',
+        title: 'Événement hier',
+        description: 'Événement terminé hier',
+        startDate: '2026-10-14T08:00:00Z',
+        endDate: '2026-10-14T12:00:00Z',
+        location: 'Campus',
+        category: 'Pédagogique',
+        audience: 'ALL',
+        isPublic: true,
+      };
+
+      const ongoingEvt: SchoolEvent = {
+        id: 'evt-test-ongoing',
+        title: 'Événement aujourd’hui',
+        description: 'Événement en cours aujourd’hui',
+        startDate: '2026-10-15T08:00:00Z',
+        endDate: '2026-10-15T14:00:00Z',
+        location: 'Campus',
+        category: 'Pédagogique',
+        audience: 'ALL',
+        isPublic: true,
+      };
+
+      const futureEvt: SchoolEvent = {
+        id: 'evt-test-future',
+        title: 'Événement semaine prochaine',
+        description: 'Événement à venir semaine prochaine',
+        startDate: '2026-10-22T08:00:00Z',
+        endDate: '2026-10-22T14:00:00Z',
+        location: 'Campus',
+        category: 'Pédagogique',
+        audience: 'ALL',
+        isPublic: true,
+      };
+
+      assert.strictEqual(eventNotificationService.getEventTemporalStatus(pastEvt, fixedNow), 'PAST');
+      assert.strictEqual(eventNotificationService.getEventTemporalStatus(ongoingEvt, fixedNow), 'ONGOING');
+      assert.strictEqual(eventNotificationService.getEventTemporalStatus(futureEvt, fixedNow), 'UPCOMING');
+
+      const pastDetails = eventNotificationService.getEventTemporalDetails(pastEvt, fixedNow);
+      assert.strictEqual(pastDetails.isPast, true);
+      assert.ok(pastDetails.label.includes('Terminé'));
+
+      const ongoingDetails = eventNotificationService.getEventTemporalDetails(ongoingEvt, fixedNow);
+      assert.strictEqual(ongoingDetails.isOngoing, true);
+      assert.strictEqual(ongoingDetails.label, 'En cours aujourd’hui');
+
+      const futureDetails = eventNotificationService.getEventTemporalDetails(futureEvt, fixedNow);
+      assert.strictEqual(futureDetails.isUpcoming, true);
+      assert.ok(futureDetails.label.includes('À venir'));
+    });
   });
 
   describe('Client-Side Image Compression & Resizing Utility (Canvas API)', () => {
