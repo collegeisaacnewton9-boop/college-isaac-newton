@@ -1028,26 +1028,36 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
               </p>
             </div>
 
-            {/* Avertissement solennel : Dépôt obligatoire pour finaliser l'inscription */}
-            <div className="p-3 rounded-xl bg-amber-50/90 border border-amber-300 shadow-2xs flex items-start gap-2.5 text-xs">
-              <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-              <div className="space-y-1 text-amber-950">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-xs text-amber-950">
-                    Dépôt physique obligatoire au secrétariat (Delmas 50)
-                  </span>
-                  <span className="text-[9.5px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 border border-amber-300">
-                    Finalisation requise
-                  </span>
+            {/* Avertissement solennel : Dépôt obligatoire au secrétariat avec l'enfant */}
+            <div className="p-3.5 rounded-xl bg-amber-50/95 border-2 border-amber-300 shadow-2xs space-y-2 text-xs">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-5 h-5 text-amber-800 shrink-0 mt-0.5" />
+                <div className="space-y-1 text-amber-950 flex-1">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <span className="font-bold text-xs sm:text-sm text-amber-950">
+                      Dépôt physique obligatoire au secrétariat (Delmas 50 no 2 bis)
+                    </span>
+                    <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded-full bg-amber-200 text-amber-950 border border-amber-300">
+                      8h à 15h (8h à 3h)
+                    </span>
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-amber-900 leading-relaxed">
+                    La préinscription en ligne réserve temporairement une place pour votre enfant. <strong>L'inscription définitive sera confirmée lors du dépôt physique des pièces obligatoires</strong> au secrétariat du Collège Isaac Newton.
+                  </p>
+                  <p className="text-[11px] font-bold text-amber-950 bg-amber-100/80 p-1.5 rounded-lg border border-amber-200">
+                    ⚠️ Règle impérative : L'enfant doit être présent lors de l'inscription.
+                  </p>
                 </div>
-                <p className="text-[11px] sm:text-xs text-amber-900 leading-relaxed">
-                  La préinscription en ligne bloque temporairement une place pour votre enfant. <strong>L'inscription définitive sera officiellement validée uniquement après le dépôt physique obligatoire de ces pièces justificatives</strong> au secrétariat du Collège Isaac Newton lors de votre entretien d'admission.
-                </p>
               </div>
             </div>
 
-            {/* Grille des pièces justificatives avec statut obligatoire */}
-            <div className="space-y-2">
+            {/* Grille des pièces justificatives officielles (Conformes au document administratif 2026-2027) */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-700 px-0.5">
+                <span>Pièces requises pour finaliser le dossier :</span>
+                <span className="text-blue-900 font-mono text-[11px] font-semibold">5 pièces de base</span>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                 
                 {/* 1. Acte de naissance */}
@@ -1066,31 +1076,26 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                     <div className="space-y-0.5 flex-1">
                       <div className="flex items-center justify-between gap-1 flex-wrap">
                         <span className="font-bold text-slate-900 text-[11px] sm:text-xs">
-                          Extrait d'acte de naissance
+                          1. Acte de naissance ou extrait des archives
                         </span>
                         <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-300">
-                          Obligatoire
+                          Original & Copie
                         </span>
                       </div>
                       <p className="text-[10px] sm:text-[10.5px] text-slate-500">
-                        Original ou copie légalisée conforme (immatriculation MENFP).
+                        À fournir en original et copie conforme pour l'immatriculation.
                       </p>
                     </div>
                   </div>
-                  {!formData.hasBirthCert ? (
-                    <p className="text-[10px] text-rose-600 font-semibold mt-1.5 pl-6 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3 shrink-0" />
-                      <span>Pièce obligatoire pour finaliser l'inscription définitive</span>
-                    </p>
-                  ) : (
+                  {formData.hasBirthCert && (
                     <p className="text-[10px] text-emerald-700 font-medium mt-1.5 pl-6 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                      <span>Je confirme apporter cette pièce lors du rendez-vous</span>
+                      <span>Original et copie prêts à être présentés</span>
                     </p>
                   )}
                 </label>
 
-                {/* 2. Bulletins scolaires */}
+                {/* 2. Carnet scolaire */}
                 <label className={`flex flex-col justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
                   formData.hasReportCards 
                     ? 'border-emerald-300 bg-emerald-50/15 shadow-2xs' 
@@ -1106,69 +1111,30 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                     <div className="space-y-0.5 flex-1">
                       <div className="flex items-center justify-between gap-1 flex-wrap">
                         <span className="font-bold text-slate-900 text-[11px] sm:text-xs">
-                          Bulletins scolaires des 2 dernières années
+                          2. Carnet scolaire du dernier établissement
                         </span>
                         <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-blue-100 text-blue-900 border border-blue-200">
-                          Obligatoire (dès 1e AF)
+                          Original Requis
                         </span>
                       </div>
                       <p className="text-[10px] sm:text-[10.5px] text-slate-500">
-                        Relevés originaux pour étude du niveau et orientation pédagogique.
+                        Carnet officiel certifiant la promotion et les notes acquises.
                       </p>
                     </div>
                   </div>
                   {formData.hasReportCards ? (
                     <p className="text-[10px] text-emerald-700 font-medium mt-1.5 pl-6 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                      <span>Je confirme apporter ces bulletins scolaires</span>
+                      <span>Carnet scolaire original confirmé</span>
                     </p>
                   ) : (
                     <p className="text-[10px] text-slate-500 mt-1.5 pl-6">
-                      (Non requis pour une première rentrée en Maternelle/Préscolaire)
+                      (Non requis uniquement pour entrée initiale en Préscolaire)
                     </p>
                   )}
                 </label>
 
-                {/* 3. Certificat de passage */}
-                <label className={`flex flex-col justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
-                  formData.hasPassCert 
-                    ? 'border-emerald-300 bg-emerald-50/15 shadow-2xs' 
-                    : 'border-slate-200 bg-white hover:bg-slate-50'
-                }`}>
-                  <div className="flex items-start gap-2">
-                    <input
-                      type="checkbox"
-                      checked={formData.hasPassCert}
-                      onChange={(e) => handleFieldChange('hasPassCert', e.target.checked)}
-                      className="w-4 h-4 text-blue-900 rounded mt-0.5 cursor-pointer shrink-0"
-                    />
-                    <div className="space-y-0.5 flex-1">
-                      <div className="flex items-center justify-between gap-1 flex-wrap">
-                        <span className="font-bold text-slate-900 text-[11px] sm:text-xs">
-                          Certificat de passage officiel
-                        </span>
-                        <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300">
-                          Requis si classe sup.
-                        </span>
-                      </div>
-                      <p className="text-[10px] sm:text-[10.5px] text-slate-500">
-                        Signé et timbré par la direction de l'école de provenance.
-                      </p>
-                    </div>
-                  </div>
-                  {formData.hasPassCert ? (
-                    <p className="text-[10px] text-emerald-700 font-medium mt-1.5 pl-6 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                      <span>Certificat de passage prêt à être déposé</span>
-                    </p>
-                  ) : (
-                    <p className="text-[10px] text-slate-500 mt-1.5 pl-6">
-                      À fournir pour toute admission en classe supérieure
-                    </p>
-                  )}
-                </label>
-
-                {/* 4. Photos d'identité */}
+                {/* 3. Photos d'identité (2 Photos selon document officiel) */}
                 <label className={`flex flex-col justify-between p-2.5 rounded-xl border transition-all cursor-pointer ${
                   formData.hasIdPhotos 
                     ? 'border-emerald-300 bg-emerald-50/15 shadow-2xs' 
@@ -1184,31 +1150,101 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                     <div className="space-y-0.5 flex-1">
                       <div className="flex items-center justify-between gap-1 flex-wrap">
                         <span className="font-bold text-slate-900 text-[11px] sm:text-xs">
-                          4 photos d'identité récentes
+                          3. Deux (2) Photos d'identité
                         </span>
                         <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-300">
-                          Obligatoire
+                          Date récente
                         </span>
                       </div>
                       <p className="text-[10px] sm:text-[10.5px] text-slate-500">
-                        Format passeport (destinées à la fiche officielle et à la carte scolaire).
+                        Format passeport récent pour la fiche individuelle et la carte scolaire.
                       </p>
                     </div>
                   </div>
-                  {!formData.hasIdPhotos ? (
-                    <p className="text-[10px] text-rose-600 font-semibold mt-1.5 pl-6 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3 shrink-0" />
-                      <span>Photos obligatoires pour créer le dossier et la carte d'élève</span>
-                    </p>
-                  ) : (
+                  {formData.hasIdPhotos && (
                     <p className="text-[10px] text-emerald-700 font-medium mt-1.5 pl-6 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
-                      <span>Je confirme apporter les 4 photos d'identité</span>
+                      <span>2 photos d'identité récentes confirmées</span>
                     </p>
                   )}
                 </label>
 
+                {/* 4. Frais d'inscription (3 000 Gourdes) */}
+                <div className="p-2.5 rounded-xl border border-amber-200 bg-amber-50/40 flex flex-col justify-between">
+                  <div className="flex items-start gap-2">
+                    <div className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                      4
+                    </div>
+                    <div className="space-y-0.5 flex-1">
+                      <div className="flex items-center justify-between gap-1 flex-wrap">
+                        <span className="font-bold text-amber-950 text-[11px] sm:text-xs">
+                          4. Frais d'inscription officiels
+                        </span>
+                        <span className="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-full bg-amber-400 text-slate-950">
+                          3 000 Gourdes
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-amber-900">
+                        À régler sur place au secrétariat lors du dépôt physique.
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-amber-800 font-semibold mt-1.5 pl-6">
+                    Tarif standard applicable pour l'année 2026-2027
+                  </p>
+                </div>
+
+                {/* 5. Pièce d'identité de la personne responsable */}
+                <div className="sm:col-span-2 p-2.5 rounded-xl border border-slate-200 bg-white flex flex-col justify-between">
+                  <div className="flex items-start gap-2">
+                    <div className="w-4 h-4 rounded-full bg-blue-900 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                      5
+                    </div>
+                    <div className="space-y-0.5 flex-1">
+                      <div className="flex items-center justify-between gap-1 flex-wrap">
+                        <span className="font-bold text-slate-900 text-[11px] sm:text-xs">
+                          5. Pièce d'identité de la personne responsable
+                        </span>
+                        <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-800 border border-slate-200">
+                          CIN ou NIF valide
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-600">
+                        Carte d'Identification Nationale (CIN) ou Numéro d'Immatriculation Fiscale (NIF) du parent ou tuteur signataire.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
               </div>
+
+              {/* SECTION SECONDAIRE : PIÈCES ADDITIONNELLES EXIGIBLES (Affichées en rappel ou si secondaire) */}
+              <div className="p-3 rounded-xl bg-blue-900/5 border border-blue-900/20 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-blue-950 font-bold text-xs">
+                  <GraduationCap className="w-4 h-4 text-blue-900" />
+                  <span>N.B : Pièces additionnelles exigibles pour la Section Secondaire (NS1 à NS4) :</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[10.5px] text-slate-700">
+                  <div className="p-1.5 bg-white rounded-lg border border-slate-200 font-medium flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-blue-900 shrink-0" />
+                    <span>Relevé Notes NS2/NS3</span>
+                  </div>
+                  <div className="p-1.5 bg-white rounded-lg border border-slate-200 font-medium flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-blue-900 shrink-0" />
+                    <span>Fiche 9ème A.F</span>
+                  </div>
+                  <div className="p-1.5 bg-white rounded-lg border border-slate-200 font-medium flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-blue-900 shrink-0" />
+                    <span>Attestation 9ème A.F</span>
+                  </div>
+                  <div className="p-1.5 bg-white rounded-lg border border-slate-200 font-medium flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-blue-900 shrink-0" />
+                    <span>NISU & code école</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
 
               {/* Remarques particulières */}
               <div>
@@ -1265,7 +1301,6 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                   </p>
                 )}
               </div>
-            </div>
           </div>
         )}
 
