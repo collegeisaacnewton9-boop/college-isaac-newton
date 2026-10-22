@@ -380,9 +380,12 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
             style={{
               transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
             }}
-            loading="lazy"
+            loading="eager"
             decoding="async"
             draggable={false}
+            onError={(e) => {
+              e.currentTarget.src = '/images/campus_courtyard_building_1790531780046.jpg';
+            }}
           />
         </div>
 
@@ -429,6 +432,9 @@ export const ImageLightboxModal: React.FC<ImageLightboxModalProps> = ({
                       className="w-full h-full object-cover"
                       loading="lazy"
                       decoding="async"
+                      onError={(e) => {
+                        e.currentTarget.src = '/images/campus_courtyard_building_1790531780046.jpg';
+                      }}
                     />
                   </button>
                 ))}

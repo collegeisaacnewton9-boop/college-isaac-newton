@@ -799,6 +799,17 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       const module = await import('../src/components/common/ResponsiveLazyImage.tsx');
       assert.ok(module.ResponsiveLazyImage);
     });
+
+    it('should support instant loading for base64 data URIs and eager priority for carousel heroes', async () => {
+      const fs = await import('fs');
+      const carouselCode = fs.readFileSync('src/components/home/InfrastructureCarousel.tsx', 'utf-8');
+      assert.ok(carouselCode.includes('loading="eager"'), 'InfrastructureCarousel must use loading="eager" on active slide');
+      assert.ok(carouselCode.includes('fetchPriority="high"'), 'InfrastructureCarousel must use fetchPriority="high"');
+
+      const imgCode = fs.readFileSync('src/components/common/ResponsiveLazyImage.tsx', 'utf-8');
+      assert.ok(imgCode.includes('imgRef.current.complete'), 'ResponsiveLazyImage must inspect imgRef.current.complete for cached images');
+      assert.ok(imgCode.includes('data:') && imgCode.includes('blob:'), 'ResponsiveLazyImage must recognize data: and blob: URLs');
+    });
   });
 });
 

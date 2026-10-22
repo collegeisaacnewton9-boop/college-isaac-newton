@@ -297,7 +297,8 @@ export const InfrastructureCarousel: React.FC<InfrastructureCarouselProps> = ({
                     darkPlaceholder
                     containerClassName="w-full h-full"
                     imgClassName="select-none transition-transform duration-700 ease-out group-hover:scale-105"
-                    loading="lazy"
+                    loading="eager"
+                    fetchPriority="high"
                     decoding="async"
                     fallbackSrc="/images/campus_courtyard_building_1790531780046.jpg"
                   />

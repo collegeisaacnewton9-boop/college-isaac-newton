@@ -51,16 +51,47 @@ export const ResponsiveLazyImage: React.FC<ResponsiveLazyImageProps> = ({
   onError,
   ...restProps
 }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(src);
+  const isDataOrBlob = typeof src === 'string' && (src.startsWith('data:') || src.startsWith('blob:'));
+  const [isLoaded, setIsLoaded] = useState<boolean>(isDataOrBlob);
+  const [hasError, setHasError] = useState<boolean>(false);
+  const [currentSrc, setCurrentSrc] = useState<string>(src || fallbackSrc);
+  const imgRef = React.useRef<HTMLImageElement>(null);
 
   // Sync if src prop changes
   React.useEffect(() => {
+    if (!src) {
+      if (fallbackSrc) {
+        setCurrentSrc(fallbackSrc);
+      }
+      return;
+    }
     setCurrentSrc(src);
-    setIsLoaded(false);
     setHasError(false);
-  }, [src]);
+    const dataOrBlob = typeof src === 'string' && (src.startsWith('data:') || src.startsWith('blob:'));
+    if (dataOrBlob) {
+      setIsLoaded(true);
+    } else {
+      setIsLoaded(false);
+    }
+  }, [src, fallbackSrc]);
+
+  // Handle cached images and instant completion across all browsers
+  React.useEffect(() => {
+    const isDataOrBlobCurrent = typeof currentSrc === 'string' && (currentSrc.startsWith('data:') || currentSrc.startsWith('blob:'));
+    if (isDataOrBlobCurrent) {
+      setIsLoaded(true);
+      return;
+    }
+
+    if (imgRef.current) {
+      if (imgRef.current.complete && imgRef.current.naturalWidth > 0) {
+        setIsLoaded(true);
+      } else if (imgRef.current.complete && imgRef.current.naturalWidth === 0 && fallbackSrc && currentSrc !== fallbackSrc) {
+        setHasError(true);
+        setCurrentSrc(fallbackSrc);
+      }
+    }
+  }, [currentSrc, fallbackSrc]);
 
   const computedSizes = sizes || (preset !== 'custom' ? PRESET_SIZES[preset] : undefined);
   const aspectClass = ASPECT_RATIO_CLASSES[aspectRatio];
@@ -74,6 +105,10 @@ export const ResponsiveLazyImage: React.FC<ResponsiveLazyImageProps> = ({
     if (!hasError && fallbackSrc && currentSrc !== fallbackSrc) {
       setHasError(true);
       setCurrentSrc(fallbackSrc);
+      setIsLoaded(false);
+    } else {
+      // Prevent stuck skeleton state if fallback also fails or is exhausted
+      setIsLoaded(true);
     }
     onError?.(e);
   };
@@ -100,13 +135,13 @@ export const ResponsiveLazyImage: React.FC<ResponsiveLazyImageProps> = ({
 
       {/* Main Image */}
       <img
+        ref={imgRef}
         src={currentSrc}
         alt={alt}
         sizes={computedSizes}
         loading={loading}
         decoding={decoding}
         fetchPriority={fetchPriority}
-        referrerPolicy="no-referrer"
         onLoad={handleImageLoad}
         onError={handleImageError}
         className={`w-full h-full object-cover transition-opacity duration-300 ease-out ${
