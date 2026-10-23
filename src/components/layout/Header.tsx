@@ -53,7 +53,30 @@ export const Header: React.FC<HeaderProps> = ({
   currentUser,
   onOpenAuth,
 }) => {
-  const [navItems, setNavItems] = useState<NavigationMenuItem[]>(DEFAULT_NAVIGATION_MENU);
+  // Normalization helper: cleanses any legacy duplicate sub-menus under 'college'
+  const normalizeNavigation = (items: NavigationMenuItem[]): NavigationMenuItem[] => {
+    return items.map((item) => {
+      if (item.id === 'college') {
+        const children = item.children || [];
+        const hasObsolete = children.some(c => 
+          c.label.includes('Localisation') || 
+          c.label.includes('Secrétariat') || 
+          c.label.includes('Notre histoire') ||
+          c.label.includes('Partenariats')
+        );
+        if (hasObsolete || children.length > 4) {
+          const defaultCollege = DEFAULT_NAVIGATION_MENU.find(m => m.id === 'college');
+          return {
+            ...item,
+            children: defaultCollege?.children || children,
+          };
+        }
+      }
+      return item;
+    });
+  };
+
+  const [navItems, setNavItems] = useState<NavigationMenuItem[]>(() => normalizeNavigation(DEFAULT_NAVIGATION_MENU));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [expandedMobileItem, setExpandedMobileItem] = useState<string | null>(null);
@@ -68,17 +91,17 @@ export const Header: React.FC<HeaderProps> = ({
   useEffect(() => {
     apiService.getSettings().then((settings) => {
       if (settings?.navigationMenu && Array.isArray(settings.navigationMenu) && settings.navigationMenu.length > 0) {
-        setNavItems(settings.navigationMenu);
+        setNavItems(normalizeNavigation(settings.navigationMenu));
       }
     }).catch(() => {});
 
     const handleNavUpdate = (e: any) => {
       if (e?.detail?.navigationMenu && Array.isArray(e.detail.navigationMenu)) {
-        setNavItems(e.detail.navigationMenu);
+        setNavItems(normalizeNavigation(e.detail.navigationMenu));
       } else {
         apiService.getSettings().then((settings) => {
           if (settings?.navigationMenu && Array.isArray(settings.navigationMenu)) {
-            setNavItems(settings.navigationMenu);
+            setNavItems(normalizeNavigation(settings.navigationMenu));
           }
         }).catch(() => {});
       }

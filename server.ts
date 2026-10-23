@@ -3588,10 +3588,66 @@ app.delete('/api/contact/:id', async (req: Request, res: Response) => {
   res.json({ success: true });
 });
 
-// Helper de sécurité : Masquage systématique des secrets dans les paramètres publics
+// Helper de sécurité : Masquage systématique des secrets dans les paramètres publics & normalisation de la navigation
 function getSafePublicSettings(settings: any) {
   if (!settings) return {};
   const safe = { ...settings };
+  if (safe.navigationMenu && Array.isArray(safe.navigationMenu)) {
+    safe.navigationMenu = safe.navigationMenu.map((item: any) => {
+      if (item.id === 'college') {
+        const children = item.children || [];
+        const hasObsolete = children.some((c: any) => 
+          c.label?.includes('Localisation') || 
+          c.label?.includes('Secrétariat') || 
+          c.label?.includes('Notre histoire') ||
+          c.label?.includes('Partenariats')
+        );
+        if (hasObsolete || children.length > 4) {
+          return {
+            ...item,
+            children: [
+              {
+                id: 'college',
+                label: 'Histoire, Mission & Vision',
+                subSection: 'histoire-mission',
+                iconName: 'Target',
+                description: 'Origines fondatrices, vocation scientifique et projet éducatif',
+                isActive: true,
+                order: 1,
+              },
+              {
+                id: 'college',
+                label: 'Direction & Corps professoral',
+                subSection: 'equipe',
+                iconName: 'Users',
+                description: 'M. Orphe Jean Marie et l’équipe pédagogique',
+                isActive: true,
+                order: 2,
+              },
+              {
+                id: 'college',
+                label: 'Infrastructures & Campus',
+                subSection: 'infrastructures',
+                iconName: 'Building',
+                description: 'Laboratoire informatique, cour et installations modernes',
+                isActive: true,
+                order: 3,
+              },
+              {
+                id: 'support',
+                label: 'Soutenir le Collège',
+                iconName: 'HeartHandshake',
+                description: 'Bourses d’excellence, mécénat et projets d’avenir',
+                isActive: true,
+                order: 4,
+              },
+            ],
+          };
+        }
+      }
+      return item;
+    });
+  }
   if (safe.smtpConfig) {
     safe.smtpConfig = {
       ...safe.smtpConfig,

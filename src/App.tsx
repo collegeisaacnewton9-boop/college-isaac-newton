@@ -230,7 +230,7 @@ export default function App() {
           />
         )}
 
-        {currentPage === 'college' && currentSubSection !== 'equipe' && (
+        {currentPage === 'college' && (
           <AboutPage
             subSection={currentSubSection}
             onNavigate={handleNavigate}
@@ -238,7 +238,7 @@ export default function App() {
           />
         )}
 
-        {(currentPage === 'faculty' || (currentPage === 'college' && currentSubSection === 'equipe')) && (
+        {currentPage === 'faculty' && (
           <FacultyPage
             onNavigate={handleNavigate}
             currentUser={currentUser}

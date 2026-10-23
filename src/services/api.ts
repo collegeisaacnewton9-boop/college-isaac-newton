@@ -27,6 +27,7 @@ import {
   INITIAL_USERS 
 } from '../data/mockData';
 import { INITIAL_FACULTY_MEMBERS } from '../data/facultyData';
+import { DEFAULT_NAVIGATION_MENU } from '../data/navigationData';
 import { appFetch } from './loadingService';
 
 export const DEFAULT_SETTINGS: SiteSettings = {
@@ -1548,19 +1549,51 @@ export const apiService = {
     return true;
   },
 
+  // Helper to sanitize navigation menu from legacy duplicate sub-menus
+  sanitizeNavMenu(menu?: any[]): any[] | undefined {
+    if (!menu || !Array.isArray(menu)) return menu;
+    return menu.map((item) => {
+      if (item.id === 'college') {
+        const children = item.children || [];
+        const hasObsolete = children.some((c: any) => 
+          c.label?.includes('Localisation') || 
+          c.label?.includes('Secrétariat') || 
+          c.label?.includes('Notre histoire') ||
+          c.label?.includes('Partenariats')
+        );
+        if (hasObsolete || children.length > 4) {
+          const defaultCollege = DEFAULT_NAVIGATION_MENU.find(m => m.id === 'college');
+          return {
+            ...item,
+            children: defaultCollege?.children || children,
+          };
+        }
+      }
+      return item;
+    });
+  },
+
   // --- SITE SETTINGS & CMS ---
   async getSettings(): Promise<SiteSettings> {
     try {
       const res = await appFetch(`/api/settings?_t=${Date.now()}`);
       if (res.ok) {
         const json = await res.json();
+        if (json?.navigationMenu) {
+          json.navigationMenu = this.sanitizeNavMenu(json.navigationMenu);
+        }
         setLocal(STORAGE_KEYS.SETTINGS, json);
         return json;
       }
     } catch {
       // Fallback
     }
-    return getLocal<SiteSettings>(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
+    const local = getLocal<SiteSettings>(STORAGE_KEYS.SETTINGS, DEFAULT_SETTINGS);
+    if (local?.navigationMenu) {
+      local.navigationMenu = this.sanitizeNavMenu(local.navigationMenu);
+      setLocal(STORAGE_KEYS.SETTINGS, local);
+    }
+    return local;
   },
 
   async updateSettings(settings: Partial<SiteSettings>): Promise<SiteSettings> {
