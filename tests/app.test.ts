@@ -852,6 +852,32 @@ describe('Collège Isaac Newton - Unit Tests', () => {
       assert.ok(contactPageCode.includes('cin:settings-updated'), 'ContactPage must sync with config updates in real time');
     });
   });
+
+  describe('Menu Le Collège Fusion & In-Page Real School Image Customizer', () => {
+    it('should have fused Le Collège menu with non-redundant items and removed duplicate contact link', async () => {
+      const navModule = await import('../src/data/navigationData.ts');
+      const collegeMenu = navModule.DEFAULT_NAVIGATION_MENU.find((m: any) => m.id === 'college');
+      assert.ok(collegeMenu, 'Le Collège menu item must exist');
+      assert.strictEqual(collegeMenu.children?.length, 4, 'Le Collège must contain exactly 4 clean, non-redundant sub-items');
+
+      const labels = collegeMenu.children?.map((c: any) => c.label);
+      assert.ok(labels?.includes('Histoire, Mission & Vision'), 'Must have fused Histoire, Mission & Vision');
+      assert.ok(labels?.includes('Direction & Corps professoral'), 'Must have Direction & Corps professoral');
+      assert.ok(labels?.includes('Infrastructures & Campus'), 'Must have Infrastructures & Campus');
+      assert.ok(labels?.includes('Soutenir le Collège'), 'Must have Soutenir le Collège');
+      assert.ok(!labels?.includes('Localisation & Secrétariat'), 'Duplicate contact sub-item must be removed');
+    });
+
+    it('should integrate ImageEditable with real school assets and tabs in AboutPage', async () => {
+      const fs = await import('fs');
+      const aboutCode = fs.readFileSync('src/pages/AboutPage.tsx', 'utf-8');
+      assert.ok(aboutCode.includes('ImageEditable'), 'AboutPage must use ImageEditable for real school images');
+      assert.ok(aboutCode.includes('about.campus.image'), 'AboutPage must support about.campus.image');
+      assert.ok(aboutCode.includes('about.infra.lab.image'), 'AboutPage must support computer lab real image');
+      assert.ok(aboutCode.includes('about.infra.courtyard.image'), 'AboutPage must support courtyard real image');
+      assert.ok(aboutCode.includes('scrollIntoView'), 'AboutPage must support smooth scrolling for subSection anchors');
+    });
+  });
 });
 
 

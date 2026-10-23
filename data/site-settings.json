@@ -154,55 +154,38 @@
       "children": [
         {
           "id": "college",
-          "label": "Notre histoire & Fondation",
+          "label": "Histoire, Mission & Vision",
           "order": 1,
           "iconName": "Target",
           "isActive": true,
-          "subSection": "histoire",
-          "description": "L’héritage scientifique et les valeurs fondatrices"
-        },
-        {
-          "id": "college",
-          "label": "Mission & Vision pédagogique",
-          "order": 2,
-          "iconName": "Sparkles",
-          "isActive": true,
-          "subSection": "mission",
-          "description": "Exigence académique et formation citoyenne"
+          "subSection": "histoire-mission",
+          "description": "Origines fondatrices, vocation scientifique et projet éducatif"
         },
         {
           "id": "college",
           "label": "Direction & Corps professoral",
-          "order": 3,
+          "order": 2,
           "iconName": "Users",
           "isActive": true,
           "subSection": "equipe",
-          "description": "Dirigé par M. Orphe Jean Marie, Directeur fondateur"
+          "description": "M. Orphe Jean Marie et l’équipe pédagogique"
         },
         {
           "id": "college",
           "label": "Infrastructures & Campus",
-          "order": 4,
+          "order": 3,
           "iconName": "Building",
           "isActive": true,
           "subSection": "infrastructures",
-          "description": "Bâtiments modernes et cour sécurisée à Delmas 50"
+          "description": "Laboratoire informatique, cour et installations modernes"
         },
         {
           "id": "support",
-          "label": "Soutenir le Collège & Partenariats",
-          "order": 5,
+          "label": "Soutenir le Collège",
+          "order": 4,
           "iconName": "HeartHandshake",
           "isActive": true,
-          "description": "Bourses scolaires, équipements et dons de soutien"
-        },
-        {
-          "id": "contact",
-          "label": "Localisation & Secrétariat",
-          "order": 6,
-          "iconName": "MapPin",
-          "isActive": true,
-          "description": "Delmas 50, rue Dominique #2 bis · Port-au-Prince"
+          "description": "Bourses d’excellence, mécénat et projets d’avenir"
         }
       ],
       "isActive": true,

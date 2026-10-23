@@ -192,6 +192,68 @@ const KEY_PAGE_IMAGES: KeyPageImageConfig[] = [
     defaultCaption: 'Promotion des Bacheliers & Cérémonie Officielle',
     subcaptionKey: 'graduation.promo.subcaption',
     defaultSubcaption: '100% de réussite aux examens d’État officiels'
+  },
+  {
+    id: 'about-assembly',
+    contentKey: 'about.assembly.image',
+    defaultImage: '/images/slide_students_flag_assembly.webp',
+    pageTitle: 'Le Collège / Rassemblement',
+    pageRoute: 'college',
+    sectionTitle: 'Rassemblement Civique & Élèves en Uniforme',
+    description: 'Photo des élèves réunis lors du salut aux couleurs sur l’esplanade du campus Delmas 50.',
+    aspectRatio: '21:9',
+    badge: 'Discipline & Citoyenneté',
+    category: 'viescolaire',
+    captionKey: 'about.assembly.caption',
+    defaultCaption: 'Rassemblement civique des élèves du Collège Isaac Newton'
+  },
+  {
+    id: 'about-director',
+    contentKey: 'about.director.image',
+    defaultImage: '/images/portrait_coasmin_maxy_1792232767777.jpg',
+    pageTitle: 'Le Collège / Direction',
+    pageRoute: 'college',
+    sectionTitle: 'Directeur Fondateur — M. Orphe Jean Marie',
+    description: 'Portrait officiel du Directeur fondateur du Collège Isaac Newton, Professeur de Mathématiques & Sciences Physiques.',
+    aspectRatio: '1:1',
+    badge: 'Gouvernance & Direction',
+    category: 'pedagogie'
+  },
+  {
+    id: 'about-infra-lab',
+    contentKey: 'about.infra.lab.image',
+    defaultImage: '/images/slide_computer_lab_students.webp',
+    pageTitle: 'Infrastructures / Pôle Numérique',
+    pageRoute: 'college',
+    sectionTitle: 'Laboratoire Informatique & Postes Équipés',
+    description: 'Postes technologiques avec les élèves en séance pratique d’informatique et bureautique.',
+    aspectRatio: '16:9',
+    badge: 'Infrastructures & Lab',
+    category: 'campus'
+  },
+  {
+    id: 'about-infra-courtyard',
+    contentKey: 'about.infra.courtyard.image',
+    defaultImage: '/images/slide_campus_courtyard_facade.webp',
+    pageTitle: 'Infrastructures / Cour d’Honneur',
+    pageRoute: 'college',
+    sectionTitle: 'Cour d’Honneur & Terrains Multisports',
+    description: 'Espace extérieur du campus de Delmas 50 pour le sport, les rassemblements et la récréation.',
+    aspectRatio: '16:9',
+    badge: 'Infrastructures & Sport',
+    category: 'campus'
+  },
+  {
+    id: 'about-infra-building',
+    contentKey: 'about.infra.building.image',
+    defaultImage: '/images/campus_courtyard_building_1790531780046.jpg',
+    pageTitle: 'Infrastructures / Salles de classe',
+    pageRoute: 'college',
+    sectionTitle: 'Bâtiments Pédagogiques & Salles de cours aérées',
+    description: 'Architecture des salles de classe favorisant la ventilation naturelle et la lumière du jour.',
+    aspectRatio: '16:9',
+    badge: 'Bâtiments Scolaires',
+    category: 'campus'
   }
 ];
 
