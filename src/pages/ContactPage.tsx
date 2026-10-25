@@ -57,8 +57,18 @@ export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
   }, []);
 
   const officialEmail = settings?.contactInfo?.email || SCHOOL_INFO.email || 'collegeisaacnewton9@gmail.com';
-  const officialPhone = settings?.contactInfo?.phone || SCHOOL_INFO.phone;
-  const officialPhoneAlt = settings?.contactInfo?.phoneAlt || SCHOOL_INFO.phone2;
+  
+  // Extraire et garantir les 2 numéros de contact direct du secrétariat
+  const rawPhone = settings?.contactInfo?.phone || SCHOOL_INFO.phone1 || '+509 3316-0934';
+  let phone1 = rawPhone;
+  let phone2 = settings?.contactInfo?.phoneAlt || SCHOOL_INFO.phone2 || '+509 3721-1818';
+
+  if (rawPhone.includes('/')) {
+    const parts = rawPhone.split('/').map(p => p.trim());
+    if (parts[0]) phone1 = parts[0];
+    if (parts[1]) phone2 = parts[1];
+  }
+
   const officialAddress = settings?.contactInfo?.address || SCHOOL_INFO.address;
   const officialOpeningHours = settings?.contactInfo?.openingHours || 'Lun - Ven : 7h30 - 15h30';
 
@@ -165,19 +175,41 @@ export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
                 </div>
               </div>
 
-              {/* Phone */}
+              {/* Téléphones : Les 2 numéros de contact direct du Secrétariat */}
               <div className="flex items-start gap-2.5">
                 <div className="w-7 h-7 rounded-lg bg-amber-400/10 flex items-center justify-center shrink-0 mt-0.5">
                   <Phone className="w-3.5 h-3.5 text-amber-400" />
                 </div>
-                <div>
-                  <a 
-                    href={`tel:${officialPhone.replace(/[^0-9+]/g, '')}`} 
-                    className="font-mono font-bold text-white hover:text-amber-400 transition-colors"
-                  >
-                    {officialPhone}
-                  </a>
-                  <p className="text-[10px] text-slate-400">Ligne directe secrétariat</p>
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <a 
+                      href={`tel:${phone1.replace(/[^0-9+]/g, '')}`} 
+                      className="font-mono font-bold text-white hover:text-amber-400 transition-colors text-xs sm:text-sm"
+                      title="Appeler la Ligne 1 du secrétariat"
+                    >
+                      {phone1}
+                    </a>
+                    <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 border border-amber-400/20">
+                      Ligne 1 · Secrétariat
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-1">
+                    <a 
+                      href={`tel:${phone2.replace(/[^0-9+]/g, '')}`} 
+                      className="font-mono font-bold text-white hover:text-amber-400 transition-colors text-xs sm:text-sm"
+                      title="Appeler la Ligne 2 du secrétariat"
+                    >
+                      {phone2}
+                    </a>
+                    <span className="text-[9px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-300 border border-amber-400/20">
+                      Ligne 2 · Secrétariat & Admissions
+                    </span>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 pt-0.5">
+                    Lignes directes du secrétariat aux heures d'ouverture
+                  </p>
                 </div>
               </div>
 
@@ -266,7 +298,28 @@ export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
               Pour toute question d'admission, certificat de scolarité, relevé de notes, légalisation ou rendez-vous avec la direction :
             </p>
 
-            <div className="space-y-1.5 pt-1">
+            <div className="space-y-2 pt-1">
+              {/* Boutons d'appel direct pour les 2 lignes */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <a 
+                  href={`tel:${phone1.replace(/[^0-9+]/g, '')}`}
+                  className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold transition-colors"
+                  title={`Appeler la Ligne 1 (${phone1})`}
+                >
+                  <Phone className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="truncate">Ligne 1 : {phone1}</span>
+                </a>
+
+                <a 
+                  href={`tel:${phone2.replace(/[^0-9+]/g, '')}`}
+                  className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold transition-colors"
+                  title={`Appeler la Ligne 2 (${phone2})`}
+                >
+                  <Phone className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="truncate">Ligne 2 : {phone2}</span>
+                </a>
+              </div>
+
               <a 
                 href={`mailto:${officialEmail}?subject=Contact%20Secrétariat%20-%20Collège%20Isaac%20Newton`}
                 className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold transition-colors"
@@ -276,7 +329,7 @@ export const ContactPage: React.FC<ContactPageProps> = ({ currentUser }) => {
               </a>
 
               <a 
-                href="https://wa.me/50933160934"
+                href={`https://wa.me/${phone1.replace(/[^0-9]/g, '') || '50933160934'}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors"
