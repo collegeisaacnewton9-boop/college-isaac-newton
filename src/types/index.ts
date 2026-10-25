@@ -165,7 +165,7 @@ export interface DocumentFile {
   id: string;
   title: string;
   description?: string;
-  category: 'reglement' | 'calendrier' | 'fournitures' | 'formulaires' | 'admissions' | 'guide';
+  category: 'reglement' | 'calendrier' | 'cours' | 'fournitures' | 'formulaires' | 'admissions' | 'guide';
   fileUrl: string;
   fileSize: string;
   fileType: string;

@@ -87,6 +87,7 @@ import { FacultyManagerView } from '../components/admin/FacultyManagerView';
 import { CalendarManagerView } from '../components/admin/CalendarManagerView';
 import { AdmissionsRequirementsEditorView } from '../components/admin/AdmissionsRequirementsEditorView';
 import { SecurityAuditView } from '../components/admin/SecurityAuditView';
+import { HonorRollTable } from '../components/admin/HonorRollTable';
 
 interface AdminDashboardPageProps {
   currentUser: User | null;
@@ -105,8 +106,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
   onUserChange,
   subSection,
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'slideshow' | 'menus' | 'admissions' | 'news' | 'events' | 'media' | 'messages' | 'cms' | 'users' | 'whatsapp' | 'faculty' | 'security'>(
-    (subSection && ['overview', 'slideshow', 'menus', 'admissions', 'news', 'events', 'media', 'messages', 'cms', 'users', 'whatsapp', 'faculty', 'security'].includes(subSection)) 
+  const [activeTab, setActiveTab] = useState<'overview' | 'slideshow' | 'menus' | 'admissions' | 'news' | 'events' | 'media' | 'messages' | 'cms' | 'users' | 'whatsapp' | 'faculty' | 'security' | 'honor_roll'>(
+    (subSection && ['overview', 'slideshow', 'menus', 'admissions', 'news', 'events', 'media', 'messages', 'cms', 'users', 'whatsapp', 'faculty', 'security', 'honor_roll'].includes(subSection)) 
       ? (subSection as any) 
       : 'overview'
   );
@@ -171,6 +172,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     faculty: 'Professeurs',
     whatsapp: 'WhatsApp',
     security: 'Cyberdéfense & Audit',
+    honor_roll: 'Tableau d’Honneur',
   };
 
   // Smooth scroll handler for tabs

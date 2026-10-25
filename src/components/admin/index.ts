@@ -7,4 +7,5 @@ export * from './SlideshowEditorView';
 export * from './MenuEditorView';
 export * from './DocumentManagerView';
 export * from './SecurityAuditView';
+export * from './HonorRollTable';
 

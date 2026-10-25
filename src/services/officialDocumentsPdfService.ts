@@ -1737,4 +1737,238 @@ export const officialDocumentsPdfService = {
       },
     };
   },
+
+  /**
+   * 8. TABLEAU RÉCAPITULATIF DU TABLEAU D'HONNEUR (EXPORT PDF PAR CLASSE ET TRIMESTRE)
+   */
+  async generateHonorRollTablePdf(
+    students: HonorRollStudent[],
+    filterOptions: {
+      classLevel?: string;
+      period?: string;
+      academicYear?: string;
+    } = {}
+  ): Promise<GeneratedPdfResult> {
+    const { 
+      classLevel = 'Toutes les classes', 
+      period = 'Tous les trimestres', 
+      academicYear = '2026-2027' 
+    } = filterOptions;
+
+    const base = await this.createBasePdfDocument(
+      `Tableau d'Honneur - ${classLevel} - ${period}`,
+      { academicYear, paperFormat: 'A4' }
+    );
+    const { addOfficialPage, fontBold, fontRegular, fontOblique, margin, contentWidth, finalizePdf } = base;
+
+    const { page, startY } = addOfficialPage("PALMARÈS DES ÉLÈVES MÉRITANTS · TABLEAU D'HONNEUR");
+    let y = startY;
+
+    // Entête du tableau avec récapitulatif
+    page.drawRectangle({
+      x: margin,
+      y: y - 38,
+      width: contentWidth,
+      height: 42,
+      color: COLOR_BG_HEADER,
+      borderColor: COLOR_NAVY,
+      borderWidth: 1,
+    });
+    page.drawText(sanitizeText(`TABLEAU D'HONNEUR OFFICIEL · SESSION ${academicYear}`), {
+      x: margin + 12,
+      y: y - 14,
+      size: 11,
+      font: fontBold,
+      color: COLOR_NAVY,
+    });
+    page.drawText(
+      sanitizeText(`Classe : ${classLevel} · Période / Trimestre : ${period} · ${students.length} élève(s) méritant(s) récompensé(s)`),
+      {
+        x: margin + 12,
+        y: y - 28,
+        size: 8.5,
+        font: fontRegular,
+        color: COLOR_MUTED,
+      }
+    );
+    y -= 54;
+
+    // Définition des colonnes du tableau
+    const colRang = 38;
+    const colNom = 135;
+    const colClasse = 85;
+    const colMoyenne = 62;
+    const colDistinction = 95;
+
+    // En-tête du tableau
+    page.drawRectangle({
+      x: margin,
+      y: y - 18,
+      width: contentWidth,
+      height: 20,
+      color: COLOR_NAVY,
+    });
+
+    const drawHeaderCol = (txt: string, xPos: number) => {
+      page.drawText(sanitizeText(txt), {
+        x: xPos,
+        y: y - 13,
+        size: 7.5,
+        font: fontBold,
+        color: rgb(1, 1, 1),
+      });
+    };
+
+    let curX = margin + 6;
+    drawHeaderCol('Rang', curX); curX += colRang;
+    drawHeaderCol('Élève', curX); curX += colNom;
+    drawHeaderCol('Classe', curX); curX += colClasse;
+    drawHeaderCol('Moyenne', curX); curX += colMoyenne;
+    drawHeaderCol('Distinction', curX); curX += colDistinction;
+    drawHeaderCol('Citation / Mention', curX);
+    y -= 22;
+
+    const getDistLabel = (dist: string) => {
+      switch (dist) {
+        case 'FELICITATIONS': return 'Félicitations';
+        case 'TABLEAU_HONNEUR': return 'Tableau d’Honneur';
+        case 'ENCOURAGEMENTS': return 'Encouragements';
+        case 'PRIX_SCIENCES': return 'Prix Sciences';
+        case 'PRIX_HUMANITES': return 'Prix Humanités';
+        case 'PRIX_CIVISME': return 'Prix Civisme';
+        default: return 'Méritant';
+      }
+    };
+
+    // Lignes d'élèves
+    students.forEach((st, idx) => {
+      const isAlt = idx % 2 === 1;
+      const rowHeight = 22;
+
+      if (isAlt) {
+        page.drawRectangle({
+          x: margin,
+          y: y - rowHeight + 4,
+          width: contentWidth,
+          height: rowHeight,
+          color: COLOR_BG_LIGHT,
+        });
+      }
+
+      page.drawLine({
+        start: { x: margin, y: y - rowHeight + 4 },
+        end: { x: margin + contentWidth, y: y - rowHeight + 4 },
+        thickness: 0.5,
+        color: COLOR_BORDER,
+      });
+
+      let rx = margin + 6;
+      // Rang
+      const rangStr = `${st.rankInClass}${st.rankInClass === 1 ? 'er' : 'e'}`;
+      page.drawText(sanitizeText(rangStr), {
+        x: rx,
+        y: y - 11,
+        size: 8,
+        font: fontBold,
+        color: st.rankInClass === 1 ? COLOR_GOLD : COLOR_NAVY,
+      });
+      rx += colRang;
+
+      // Nom de l'élève
+      page.drawText(sanitizeText(st.studentName), {
+        x: rx,
+        y: y - 11,
+        size: 8,
+        font: fontBold,
+        color: COLOR_DARK,
+      });
+      rx += colNom;
+
+      // Classe
+      page.drawText(sanitizeText(st.classLevel), {
+        x: rx,
+        y: y - 11,
+        size: 7.5,
+        font: fontRegular,
+        color: COLOR_MUTED,
+      });
+      rx += colClasse;
+
+      // Moyenne
+      page.drawText(sanitizeText(`${st.average} / ${st.maxScale}`), {
+        x: rx,
+        y: y - 11,
+        size: 8,
+        font: fontBold,
+        color: COLOR_NAVY,
+      });
+      rx += colMoyenne;
+
+      // Distinction
+      page.drawText(sanitizeText(getDistLabel(st.distinction)), {
+        x: rx,
+        y: y - 11,
+        size: 7.5,
+        font: fontBold,
+        color: COLOR_GOLD,
+      });
+      rx += colDistinction;
+
+      // Citation (tronquée)
+      const shortCit = st.citation.length > 40 ? st.citation.slice(0, 38) + '...' : st.citation;
+      page.drawText(sanitizeText(shortCit), {
+        x: rx,
+        y: y - 11,
+        size: 7,
+        font: fontOblique,
+        color: COLOR_MUTED,
+      });
+
+      y -= rowHeight;
+    });
+
+    // Bloc de validation & certification
+    y -= 20;
+    page.drawRectangle({
+      x: margin,
+      y: y - 55,
+      width: contentWidth,
+      height: 55,
+      color: COLOR_BG_HEADER,
+      borderColor: COLOR_NAVY,
+      borderWidth: 0.8,
+    });
+
+    page.drawText(sanitizeText("HOMOLOGATION DU CONSEIL PÉDAGOGIQUE & DE LA DIRECTION :"), {
+      x: margin + 12,
+      y: y - 14,
+      size: 8.5,
+      font: fontBold,
+      color: COLOR_NAVY,
+    });
+    page.drawText(
+      sanitizeText(`Fait à Port-au-Prince · Résultats officiels certifiés conformes aux délibérations des conseils de classe.`),
+      {
+        x: margin + 12,
+        y: y - 27,
+        size: 7.5,
+        font: fontRegular,
+        color: COLOR_DARK,
+      }
+    );
+    page.drawText(
+      sanitizeText(`Direction des Études : Orphe Jean Marie · Professeur Principal · Sceau Officiel de l’établissement.`),
+      {
+        x: margin + 12,
+        y: y - 43,
+        size: 7.5,
+        font: fontOblique,
+        color: COLOR_MUTED,
+      }
+    );
+
+    const safeClass = classLevel.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const safePeriod = period.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    return finalizePdf(`Tableau-Honneur-${safeClass}-${safePeriod}`);
+  },
 };
