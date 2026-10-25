@@ -266,17 +266,45 @@ export const HonorRollTable: React.FC = () => {
     }
   };
 
+  const stats = useMemo(() => {
+    const total = students.length;
+    const felicitations = students.filter(s => s.distinction === 'FELICITATIONS').length;
+    const honors = students.filter(s => s.distinction === 'TABLEAU_HONNEUR').length;
+    const specialPrizes = students.filter(s => s.distinction.startsWith('PRIX_')).length;
+    const normalizedMax = students.reduce((max, s) => {
+      const val = s.maxScale === 100 ? s.average / 10 : s.average;
+      return val > max ? val : max;
+    }, 0);
+    return { total, felicitations, honors, specialPrizes, normalizedMax };
+  }, [students]);
+
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
       const matchesClass = selectedClass === 'ALL' || s.classLevel === selectedClass;
-      const matchesPeriod = selectedPeriod === 'ALL' || s.period === selectedPeriod;
+      
+      let matchesPeriod = selectedPeriod === 'ALL';
+      if (!matchesPeriod) {
+        if (s.period === selectedPeriod) {
+          matchesPeriod = true;
+        } else if (selectedPeriod.includes('1') && s.period.includes('1')) {
+          matchesPeriod = true;
+        } else if (selectedPeriod.includes('2') && s.period.includes('2')) {
+          matchesPeriod = true;
+        } else if (selectedPeriod.includes('3') && s.period.includes('3')) {
+          matchesPeriod = true;
+        } else if (selectedPeriod.includes('4') && s.period.includes('4')) {
+          matchesPeriod = true;
+        }
+      }
+
       const matchesDistinction = selectedDistinction === 'ALL' || s.distinction === selectedDistinction;
       
       const query = searchQuery.toLowerCase().trim();
       const matchesSearch = !query || 
         s.studentName.toLowerCase().includes(query) ||
         s.classLevel.toLowerCase().includes(query) ||
-        s.citation.toLowerCase().includes(query);
+        s.citation.toLowerCase().includes(query) ||
+        (s.specialty && s.specialty.toLowerCase().includes(query));
 
       return matchesClass && matchesPeriod && matchesDistinction && matchesSearch;
     });
@@ -321,6 +349,7 @@ export const HonorRollTable: React.FC = () => {
             onClick={handleExportTablePdf}
             disabled={isExportingTable || filteredStudents.length === 0}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            title="Exporter la sélection filtrée au format PDF officiel"
           >
             {isExportingTable ? (
               <>
@@ -329,8 +358,8 @@ export const HonorRollTable: React.FC = () => {
               </>
             ) : (
               <>
-                <Download className="w-3.5 h-3.5 text-amber-400" />
-                <span>Exporter le Tableau (PDF)</span>
+                <FileDown className="w-3.5 h-3.5 text-amber-400" />
+                <span>Exporter le Tableau PDF ({filteredStudents.length})</span>
               </>
             )}
           </button>
@@ -344,6 +373,53 @@ export const HonorRollTable: React.FC = () => {
             <Plus className="w-4 h-4" />
             <span>Ajouter un élève méritant</span>
           </button>
+        </div>
+      </div>
+
+      {/* KPI STATS STRIP */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">Total Lauréats</span>
+            <Trophy className="w-4 h-4 text-amber-500" />
+          </div>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-lg font-extrabold text-slate-900">{stats.total}</span>
+            <span className="text-2xs text-slate-400 font-medium">({filteredStudents.length} affiché{filteredStudents.length > 1 ? 's' : ''})</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">Félicitations</span>
+            <Sparkles className="w-4 h-4 text-amber-500" />
+          </div>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-lg font-extrabold text-amber-600">{stats.felicitations}</span>
+            <span className="text-2xs text-slate-400">du Conseil</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">Prix d'Excellence</span>
+            <Award className="w-4 h-4 text-blue-600" />
+          </div>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-lg font-extrabold text-blue-900">{stats.specialPrizes}</span>
+            <span className="text-2xs text-slate-400">Sciences & Humanités</span>
+          </div>
+        </div>
+
+        <div className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-2xs font-bold text-slate-500 uppercase tracking-wider">Meilleure Moyenne</span>
+            <TrendingUp className="w-4 h-4 text-emerald-600" />
+          </div>
+          <div className="mt-1 flex items-baseline gap-1.5">
+            <span className="text-lg font-extrabold text-emerald-700">{stats.normalizedMax.toFixed(2)}</span>
+            <span className="text-2xs text-slate-400">/ 10</span>
+          </div>
         </div>
       </div>
 
@@ -378,10 +454,11 @@ export const HonorRollTable: React.FC = () => {
               onChange={(e) => setSelectedPeriod(e.target.value)}
               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-900/20 text-xs"
             >
-              <option value="ALL">Tous les trimestres</option>
-              {AVAILABLE_PERIODS.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
+              <option value="ALL">Tous les trimestres / contrôles</option>
+              <option value="1er Contrôle Officiel">1er Trimestre (1er Contrôle Officiel)</option>
+              <option value="2e Contrôle Officiel">2e Trimestre (2e Contrôle Officiel)</option>
+              <option value="3e Contrôle Officiel">3e Trimestre (3e Contrôle Officiel)</option>
+              <option value="4e Contrôle / Bilan Annuel">4e Contrôle / Bilan Annuel</option>
             </select>
           </div>
 

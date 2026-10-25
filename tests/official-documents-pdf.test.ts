@@ -84,4 +84,57 @@ test('Official Documents PDF Generator Service', async (t) => {
     assert.ok(result.filename.includes('Diplome-Tableau-Honneur'));
     assert.strictEqual(typeof result.downloadBlob, 'function');
   });
+
+  await t.test('should generate certified PDF table for Honor Roll Table with filter options', async () => {
+    const students = [
+      {
+        id: 'hr-test-1',
+        studentName: 'Alexandre Pierre',
+        gender: 'M' as const,
+        classLevel: '9ème Année Fondamentale',
+        cycle: 'FONDAMENTAL' as const,
+        academicYear: '2026-2027',
+        period: '1er Contrôle Officiel',
+        average: 9.45,
+        maxScale: 10,
+        rankInClass: 1,
+        totalStudentsInClass: 32,
+        distinction: 'FELICITATIONS' as const,
+        citation: 'Excellence remarquable dans toutes les disciplines.',
+        specialty: 'Mathématiques & Sciences Expérimentales',
+        dateAwarded: '2026-11-27',
+        isPublic: true,
+      },
+      {
+        id: 'hr-test-2',
+        studentName: 'Sherlyne Auguste',
+        gender: 'F' as const,
+        classLevel: 'Nouveau Secondaire 4 (NS4 - Terminale SVT)',
+        cycle: 'SECONDAIRE' as const,
+        academicYear: '2026-2027',
+        period: '1er Contrôle Officiel',
+        average: 91.8,
+        maxScale: 100,
+        rankInClass: 1,
+        totalStudentsInClass: 28,
+        distinction: 'PRIX_SCIENCES' as const,
+        citation: 'Prix d’Excellence Isaac Newton en Sciences.',
+        specialty: 'Physique-Chimie & SVT',
+        dateAwarded: '2026-11-27',
+        isPublic: true,
+      }
+    ];
+
+    const result = await officialDocumentsPdfService.generateHonorRollTablePdf(students, {
+      classLevel: 'Toutes les classes',
+      period: '1er Contrôle Officiel',
+      academicYear: '2026-2027',
+    });
+
+    assert.ok(result.pdfBytes instanceof Uint8Array);
+    assert.ok(result.pdfBytes.length > 1000, 'Table PDF size should be valid');
+    assert.ok(result.pageCount >= 1, 'Table PDF should have at least 1 page');
+    assert.ok(result.filename.includes('Tableau-Honneur'));
+    assert.strictEqual(typeof result.downloadBlob, 'function');
+  });
 });

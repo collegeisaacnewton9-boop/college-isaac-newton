@@ -120,7 +120,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
     if (subSection === 'admissions-requirements' || subSection === 'conditions') {
       setActiveTab('admissions');
       setAdmissionsSubTab('requirements');
-    } else if (subSection && ['overview', 'slideshow', 'menus', 'admissions', 'news', 'events', 'media', 'messages', 'cms', 'users', 'whatsapp', 'faculty', 'security'].includes(subSection)) {
+    } else if (subSection === 'honor_roll' || subSection === 'honor-roll' || subSection === 'honor' || subSection === 'palmares') {
+      setActiveTab('honor_roll');
+    } else if (subSection && ['overview', 'slideshow', 'menus', 'admissions', 'news', 'events', 'media', 'messages', 'cms', 'users', 'whatsapp', 'faculty', 'security', 'honor_roll'].includes(subSection)) {
       setActiveTab(subSection as any);
       if (subSection === 'admissions') setAdmissionsSubTab('applications');
     }
@@ -1729,6 +1731,23 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <span>Cyberdéfense</span>
               </button>
 
+              {/* Tab 14: Tableau d'Honneur & Palmarès */}
+              <button
+                type="button"
+                role="tab"
+                aria-selected={activeTab === 'honor_roll'}
+                data-tab-id="honor_roll"
+                onClick={() => setActiveTab('honor_roll')}
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-lg text-xs font-semibold transition-all shrink-0 cursor-pointer ${
+                  activeTab === 'honor_roll'
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-xs ring-1 ring-amber-400/40'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/70'
+                }`}
+              >
+                <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                <span>Tableau d’Honneur</span>
+              </button>
+
             </div>
 
             {/* Right Chevron Scroll Button (Inline, positioned AFTER tabs track, NEVER overlapping!) */}
@@ -2004,6 +2023,20 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                             <span>Audit & Cybersécurité</span>
                           </div>
                           {activeTab === 'security' && <Check className="w-3.5 h-3.5 text-white" />}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => { setActiveTab('honor_roll'); setIsModulesMenuOpen(false); }}
+                          className={`w-full text-left p-2 rounded-xl flex items-center justify-between text-xs transition-colors cursor-pointer ${
+                            activeTab === 'honor_roll' ? 'bg-amber-500 text-slate-950 font-bold' : 'hover:bg-slate-800/80 text-slate-200'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Tableau d’Honneur & Palmarès</span>
+                          </div>
+                          {activeTab === 'honor_roll' && <Check className="w-3.5 h-3.5 text-slate-950" />}
                         </button>
                       </div>
                     </div>
@@ -2417,6 +2450,18 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                   </div>
                   <h4 className="font-semibold text-slate-900 text-xs">Diagnostic WhatsApp</h4>
                   <p className="text-[9.5px] text-slate-500 line-clamp-1">Console de Test & Logs</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('honor_roll')}
+                  className="p-2 rounded-lg border border-amber-300/80 hover:border-amber-500 bg-amber-50/70 hover:bg-amber-100/60 text-left transition-all group cursor-pointer"
+                >
+                  <div className="w-6 h-6 rounded-md bg-amber-400 text-slate-950 flex items-center justify-center mb-1 group-hover:scale-105 transition-transform font-bold">
+                    <Trophy className="w-3 h-3 text-slate-950" />
+                  </div>
+                  <h4 className="font-bold text-slate-900 text-xs">Tableau d'Honneur</h4>
+                  <p className="text-[9.5px] text-slate-600 line-clamp-1">Élèves méritants & Diplômes PDF</p>
                 </button>
 
               </div>
@@ -3481,6 +3526,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               setSettingsInitialTab('security');
             }}
           />
+        )}
+
+        {/* =========================================================================
+            TAB 14: TABLEAU D'HONNEUR & PALMARÈS DES ÉLÈVES MÉRITANTS
+        ========================================================================= */}
+        {activeTab === 'honor_roll' && (
+          <HonorRollTable />
         )}
 
       </main>
