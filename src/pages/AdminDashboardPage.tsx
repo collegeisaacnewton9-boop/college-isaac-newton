@@ -34,6 +34,7 @@ import {
   MessageSquare,
   MessageCircle,
   Award,
+  Trophy,
   Globe,
   Check,
   Send,

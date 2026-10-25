@@ -13,6 +13,7 @@ import { GoogleGenAI } from '@google/genai';
 import { 
   initDatabase, 
   isDbActive, 
+  getDbPool,
   dbGetAdmissions, 
   dbInsertAdmission, 
   dbUpdateAdmissionStatus,
