@@ -27,7 +27,6 @@ import { HonorRollStudent, HonorDistinctionType } from '../../types';
 import { apiService } from '../../services/api';
 import { INITIAL_HONOR_ROLL } from '../../data/mockData';
 import { officialDocumentsPdfService } from '../../services/officialDocumentsPdfService';
-import { HonorDiplomaModal } from '../honor/HonorDiplomaModal';
 import { toast } from 'sonner';
 
 const AVAILABLE_CLASSES = [
@@ -58,18 +57,13 @@ export const HonorRollTable: React.FC = () => {
   const [selectedDistinction, setSelectedDistinction] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Export & download states
+  // Export states
   const [isExportingTable, setIsExportingTable] = useState(false);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   // Modal d'ajout / édition
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<HonorRollStudent | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Modal d'aperçu de diplôme individuel
-  const [previewStudent, setPreviewStudent] = useState<HonorRollStudent | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Form states
   const [formName, setFormName] = useState('');
@@ -253,18 +247,6 @@ export const HonorRollTable: React.FC = () => {
     }
   };
 
-  const handleDownloadDiploma = async (student: HonorRollStudent) => {
-    setDownloadingId(student.id);
-    try {
-      const result = await officialDocumentsPdfService.generateHonorCertificatePdf(student);
-      result.downloadBlob();
-      toast.success(`Diplôme d'Honneur téléchargé pour ${student.studentName}`);
-    } catch (err: any) {
-      toast.error('Erreur de téléchargement du diplôme', { description: err.message });
-    } finally {
-      setDownloadingId(null);
-    }
-  };
 
   const stats = useMemo(() => {
     const total = students.length;
@@ -584,30 +566,6 @@ export const HonorRollTable: React.FC = () => {
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
                         
-                        {/* Voir Diplôme */}
-                        <button
-                          type="button"
-                          onClick={() => { setPreviewStudent(st); setIsPreviewOpen(true); }}
-                          className="p-1.5 text-slate-500 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                          title="Aperçu du diplôme officiel"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-
-                        {/* Télécharger Diplôme PDF */}
-                        <button
-                          type="button"
-                          onClick={() => handleDownloadDiploma(st)}
-                          disabled={downloadingId === st.id}
-                          className="p-1.5 text-slate-500 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                          title="Télécharger le diplôme (PDF)"
-                        >
-                          {downloadingId === st.id ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-900" />
-                          ) : (
-                            <Download className="w-3.5 h-3.5 text-amber-600" />
-                          )}
-                        </button>
 
                         {/* Modifier */}
                         <button
@@ -854,12 +812,6 @@ export const HonorRollTable: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL APERÇU DIPLÔME INDIVIDUEL */}
-      <HonorDiplomaModal
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        student={previewStudent}
-      />
 
     </div>
   );

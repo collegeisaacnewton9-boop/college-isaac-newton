@@ -2,29 +2,23 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Award, 
   Sparkles, 
-  GraduationCap, 
   Trophy, 
   Star, 
-  Download, 
-  Eye, 
   Search, 
   Filter, 
   ShieldCheck, 
   TrendingUp, 
   BookOpen, 
   HeartHandshake, 
-  Loader2,
+  GraduationCap,
   Calendar,
   Layers,
   ChevronRight,
-  Info
+  X
 } from 'lucide-react';
 import { HonorRollStudent, HonorDistinctionType } from '../../types';
 import { apiService } from '../../services/api';
 import { INITIAL_HONOR_ROLL } from '../../data/mockData';
-import { officialDocumentsPdfService } from '../../services/officialDocumentsPdfService';
-import { HonorDiplomaModal } from './HonorDiplomaModal';
-import { toast } from 'sonner';
 
 interface HonorRollViewProps {
   onOpenAuth?: () => void;
@@ -41,11 +35,6 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
   const [selectedDistinction, setSelectedDistinction] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('ALL');
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
-
-  // Modal d'aperçu de diplôme
-  const [previewStudent, setPreviewStudent] = useState<HonorRollStudent | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const loadHonorRoll = async () => {
     setIsLoading(true);
@@ -72,28 +61,6 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
     return () => window.removeEventListener('cin:honor-roll-updated', handleUpdate);
   }, []);
 
-  const handleDownloadDiploma = async (student: HonorRollStudent) => {
-    setDownloadingId(student.id);
-    try {
-      const result = await officialDocumentsPdfService.generateHonorCertificatePdf(student);
-      result.downloadBlob();
-      toast.success(`Diplôme d'Honneur officiel téléchargé !`, {
-        description: `${result.filename} pour ${student.studentName}`,
-      });
-    } catch (err: any) {
-      toast.error('Erreur lors de la génération du diplôme', {
-        description: err.message,
-      });
-    } finally {
-      setDownloadingId(null);
-    }
-  };
-
-  const handleOpenPreview = (student: HonorRollStudent) => {
-    setPreviewStudent(student);
-    setIsModalOpen(true);
-  };
-
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
       if (!s.isPublic) return false;
@@ -115,54 +82,54 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
 
   const distinctionsFilterList: { id: string; label: string; icon: any }[] = [
     { id: 'ALL', label: 'Toutes les distinctions', icon: Award },
-    { id: 'FELICITATIONS', label: 'Félicitations du Conseil', icon: Star },
+    { id: 'FELICITATIONS', label: 'Félicitations', icon: Star },
     { id: 'TABLEAU_HONNEUR', label: 'Tableau d’Honneur', icon: Trophy },
-    { id: 'PRIX_SCIENCES', label: 'Prix Isaac Newton des Sciences', icon: Sparkles },
-    { id: 'PRIX_HUMANITES', label: 'Prix des Humanités & Éloquence', icon: BookOpen },
-    { id: 'PRIX_CIVISME', label: 'Prix du Civisme & Dévouement', icon: HeartHandshake },
-    { id: 'ENCOURAGEMENTS', label: 'Tableau des Encouragements', icon: TrendingUp },
+    { id: 'PRIX_SCIENCES', label: 'Prix Sciences', icon: Sparkles },
+    { id: 'PRIX_HUMANITES', label: 'Prix Humanités', icon: BookOpen },
+    { id: 'PRIX_CIVISME', label: 'Prix Civisme', icon: HeartHandshake },
+    { id: 'ENCOURAGEMENTS', label: 'Encouragements', icon: TrendingUp },
   ];
 
   const getDistinctionBadge = (distinction: HonorDistinctionType) => {
     switch (distinction) {
       case 'FELICITATIONS':
         return {
-          bg: 'bg-amber-100 text-amber-900 border-amber-300',
+          bg: 'bg-amber-50 text-amber-900 border-amber-300',
           label: 'Félicitations du Conseil',
           icon: Star,
           iconColor: 'text-amber-600',
         };
       case 'TABLEAU_HONNEUR':
         return {
-          bg: 'bg-blue-100 text-blue-900 border-blue-300',
+          bg: 'bg-blue-50 text-blue-900 border-blue-300',
           label: 'Tableau d’Honneur',
           icon: Trophy,
           iconColor: 'text-blue-700',
         };
       case 'PRIX_SCIENCES':
         return {
-          bg: 'bg-indigo-100 text-indigo-900 border-indigo-300',
-          label: 'Prix Isaac Newton des Sciences',
+          bg: 'bg-indigo-50 text-indigo-900 border-indigo-300',
+          label: 'Prix des Sciences',
           icon: Sparkles,
           iconColor: 'text-indigo-600',
         };
       case 'PRIX_HUMANITES':
         return {
-          bg: 'bg-emerald-100 text-emerald-900 border-emerald-300',
-          label: 'Prix d’Éloquence & Humanités',
+          bg: 'bg-emerald-50 text-emerald-900 border-emerald-300',
+          label: 'Prix Humanités & Éloquence',
           icon: BookOpen,
           iconColor: 'text-emerald-700',
         };
       case 'PRIX_CIVISME':
         return {
-          bg: 'bg-rose-100 text-rose-900 border-rose-300',
-          label: 'Prix du Civisme & Camaraderie',
+          bg: 'bg-rose-50 text-rose-900 border-rose-300',
+          label: 'Prix du Civisme & Dévouement',
           icon: HeartHandshake,
           iconColor: 'text-rose-600',
         };
       case 'ENCOURAGEMENTS':
         return {
-          bg: 'bg-teal-100 text-teal-900 border-teal-300',
+          bg: 'bg-teal-50 text-teal-900 border-teal-300',
           label: 'Encouragements & Progrès',
           icon: TrendingUp,
           iconColor: 'text-teal-700',
@@ -177,249 +144,255 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
     }
   };
 
+  const hasActiveFilters = selectedCycle !== 'ALL' || selectedDistinction !== 'ALL' || selectedPeriod !== 'ALL' || searchQuery.trim() !== '';
+
+  const resetFilters = () => {
+    setSelectedCycle('ALL');
+    setSelectedDistinction('ALL');
+    setSelectedPeriod('ALL');
+    setSearchQuery('');
+  };
+
   return (
-    <div className="space-y-8 sm:space-y-12">
+    <div className="space-y-4 sm:space-y-5">
       
-      {/* HERO BANNER PALMARÈS */}
-      <section className="bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl border border-amber-400/30 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-2xs font-extrabold tracking-wider uppercase border border-amber-400/40">
-              <Trophy className="w-3.5 h-3.5 text-amber-400" />
-              <span>Palmarès d’Excellence & Distinction Académique</span>
+      {/* HERO BANNER PALMARÈS - COMPACT & ERGONOMIQUE */}
+      <section className="bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 rounded-2xl p-4 sm:p-6 text-white shadow-md border border-amber-400/30 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-2xs font-extrabold tracking-wide uppercase border border-amber-400/40">
+              <Trophy className="w-3 h-3 text-amber-400" />
+              <span>Palmarès d’Excellence Académique</span>
             </div>
             
-            <h2 className="font-serif text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+            <h2 className="font-serif text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
               Tableau d'Honneur des Élèves
             </h2>
             
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
-              Le Collège Isaac Newton valorise le labeur assidu, l'émulation positive et la persévérance. Découvrez les lauréats certifiés ayant brillé par leurs résultats, leur civisme et leur amour des sciences.
+            <p className="text-xs text-slate-300 leading-relaxed font-light">
+              Publication officielle du Conseil Pédagogique valorisant le labeur assidu, la rigueur intellectuelle et l'engagement citoyen de nos apprenants.
             </p>
-
-            {/* Micro stats strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 text-2xs">
-              <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                <div className="font-bold text-amber-400 text-sm">{students.length} Élèves Primés</div>
-                <div className="text-slate-300 text-[10px]">Session 2026–2027</div>
-              </div>
-              <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                <div className="font-bold text-amber-400 text-sm">9.45 / 10 · 91.8 %</div>
-                <div className="text-slate-300 text-[10px]">Meilleures Moyennes</div>
-              </div>
-              <div className="bg-white/10 rounded-xl p-2.5 border border-white/10 col-span-2 sm:col-span-1">
-                <div className="font-bold text-emerald-400 text-sm">100% de Réussite</div>
-                <div className="text-slate-300 text-[10px]">Examens d’État MENFP</div>
-              </div>
-            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-3 shrink-0">
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-xs space-y-2">
-              <span className="font-bold text-amber-300 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                <span>Diplômes d'Honneur Certifiés</span>
-              </span>
-              <p className="text-2xs text-slate-300 leading-relaxed">
-                Chaque distinction donne droit à un diplôme officiel vectoriel avec sceau de l’établissement, imprimable pour les familles.
-              </p>
+          {/* Micro stats strip - Compact */}
+          <div className="grid grid-cols-3 gap-2 shrink-0 text-2xs">
+            <div className="bg-white/10 rounded-xl p-2.5 border border-white/10 text-center">
+              <div className="font-bold text-amber-400 text-sm leading-tight">{students.length}</div>
+              <div className="text-slate-300 text-[10px] mt-0.5">Élèves Primés</div>
+            </div>
+            <div className="bg-white/10 rounded-xl p-2.5 border border-white/10 text-center">
+              <div className="font-bold text-amber-400 text-sm leading-tight">9.45 / 10</div>
+              <div className="text-slate-300 text-[10px] mt-0.5">Meilleure Note</div>
+            </div>
+            <div className="bg-white/10 rounded-xl p-2.5 border border-white/10 text-center">
+              <div className="font-bold text-emerald-400 text-sm leading-tight">100%</div>
+              <div className="text-slate-300 text-[10px] mt-0.5">Réussite MENFP</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FILTRES & RECHERCHE */}
-      <section className="space-y-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* FORMULAIRE DE RECHERCHE & FILTRES OPTIMISÉ - COMPACT & FLUIDE */}
+      <section className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3">
+        {/* Ligne 1: Recherche + Sélecteurs Cycle & Trimestre */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-center">
           
-          {/* Cycle Pills */}
-          <div className="inline-flex rounded-xl p-1 bg-slate-100 text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => setSelectedCycle('ALL')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                selectedCycle === 'ALL'
-                  ? 'bg-blue-900 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Tous les cycles
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedCycle('FONDAMENTAL')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                selectedCycle === 'FONDAMENTAL'
-                  ? 'bg-blue-900 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Cycle Fondamental (7e–9e AF)
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedCycle('SECONDAIRE')}
-              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                selectedCycle === 'SECONDAIRE'
-                  ? 'bg-blue-900 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Nouveau Secondaire (NS1–NS4)
-            </button>
-          </div>
-
           {/* Recherche */}
-          <div className="relative w-full md:w-72">
+          <div className="sm:col-span-2 lg:col-span-5 relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher un élève, classe..."
-              className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900 transition-all"
+              placeholder="Rechercher par élève, classe, mot-clé..."
+              className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900 transition-all placeholder:text-slate-400"
             />
-          </div>
-        </div>
-
-        {/* Distinction Filter Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
-          {distinctionsFilterList.map((df) => {
-            const Icon = df.icon;
-            const isSelected = selectedDistinction === df.id;
-            return (
+            {searchQuery && (
               <button
-                key={df.id}
                 type="button"
-                onClick={() => setSelectedDistinction(df.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                    : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200'
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-slate-600 rounded-md cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Filtre Cycle */}
+          <div className="lg:col-span-4">
+            <div className="flex items-center rounded-xl p-0.5 bg-slate-100 border border-slate-200/70 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setSelectedCycle('ALL')}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-center text-2xs sm:text-xs transition-all cursor-pointer truncate ${
+                  selectedCycle === 'ALL'
+                    ? 'bg-blue-900 text-white shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5 shrink-0" />
-                <span>{df.label}</span>
+                Tous cycles
               </button>
-            );
-          })}
+              <button
+                type="button"
+                onClick={() => setSelectedCycle('FONDAMENTAL')}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-center text-2xs sm:text-xs transition-all cursor-pointer truncate ${
+                  selectedCycle === 'FONDAMENTAL'
+                    ? 'bg-blue-900 text-white shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Fondamental
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCycle('SECONDAIRE')}
+                className={`flex-1 py-1.5 px-2 rounded-lg text-center text-2xs sm:text-xs transition-all cursor-pointer truncate ${
+                  selectedCycle === 'SECONDAIRE'
+                    ? 'bg-blue-900 text-white shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Secondaire
+              </button>
+            </div>
+          </div>
+
+          {/* Filtre Période */}
+          <div className="lg:col-span-3">
+            <select
+              value={selectedPeriod}
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+              className="w-full px-3 py-2 text-xs bg-slate-50 hover:bg-slate-100/70 focus:bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-900/20 focus:border-blue-900 transition-all font-medium text-slate-700 cursor-pointer"
+            >
+              <option value="ALL">Tous les trimestres</option>
+              <option value="1er Contrôle Officiel">1er Contrôle</option>
+              <option value="2e Contrôle Officiel">2e Contrôle</option>
+              <option value="3e Contrôle Officiel">3e Contrôle</option>
+              <option value="4e Contrôle / Bilan Annuel">4e Contrôle / Bilan</option>
+            </select>
+          </div>
+
+        </div>
+
+        {/* Ligne 2: Distinction Chips + Compteur & Reset */}
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 flex-wrap">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none py-0.5 max-w-full">
+            {distinctionsFilterList.map((df) => {
+              const Icon = df.icon;
+              const isSelected = selectedDistinction === df.id;
+              return (
+                <button
+                  key={df.id}
+                  type="button"
+                  onClick={() => setSelectedDistinction(df.id)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-2xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-amber-400 text-slate-950 font-bold shadow-2xs'
+                      : 'bg-slate-100/80 hover:bg-slate-200/80 text-slate-600'
+                  }`}
+                >
+                  <Icon className="w-3 h-3 shrink-0" />
+                  <span>{df.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 text-2xs text-slate-500 font-medium">
+            <span className="font-bold text-slate-700">
+              {filteredStudents.length} {filteredStudents.length > 1 ? 'élèves primés' : 'élève primé'}
+            </span>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="text-blue-900 hover:underline font-bold cursor-pointer"
+              >
+                Réinitialiser
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
-      {/* GRILLE DES ÉLÈVES PRIMÉS */}
+      {/* GRILLE DES ÉLÈVES PRIMÉS - SANS BOUTONS CERTIFICATS, ERGONOMIE DENSE */}
       {filteredStudents.length === 0 ? (
-        <div className="bg-slate-50 rounded-2xl border border-slate-200 p-10 text-center space-y-2">
-          <Award className="w-10 h-10 text-slate-400 mx-auto" />
-          <h3 className="font-bold text-slate-800 text-sm">Aucun élève trouvé pour ces critères</h3>
-          <p className="text-xs text-slate-500">Modifiez le cycle ou réinitialisez les filtres pour afficher les lauréats.</p>
+        <div className="bg-slate-50 rounded-2xl border border-slate-200 p-8 text-center space-y-2">
+          <Award className="w-8 h-8 text-slate-400 mx-auto" />
+          <h3 className="font-bold text-slate-800 text-xs sm:text-sm">Aucun élève trouvé pour ces critères</h3>
+          <p className="text-2xs sm:text-xs text-slate-500">Modifiez le cycle ou réinitialisez les filtres pour afficher les lauréats.</p>
           <button
             type="button"
-            onClick={() => { setSelectedCycle('ALL'); setSelectedDistinction('ALL'); setSearchQuery(''); }}
-            className="text-xs font-bold text-blue-900 hover:underline pt-2 inline-block cursor-pointer"
+            onClick={resetFilters}
+            className="text-xs font-bold text-blue-900 hover:underline pt-1 inline-block cursor-pointer"
           >
             Réinitialiser les filtres
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
           {filteredStudents.map((student) => {
             const badge = getDistinctionBadge(student.distinction);
             const BadgeIcon = badge.icon;
-            const isBusy = downloadingId === student.id;
 
             return (
               <div
                 key={student.id}
-                className="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs hover:border-amber-400 hover:shadow-md transition-all flex flex-col justify-between space-y-4 group relative overflow-hidden"
+                className="bg-white rounded-2xl p-4 sm:p-4.5 border border-slate-200 shadow-2xs hover:border-amber-400/80 hover:shadow-sm transition-all flex flex-col justify-between space-y-3 group relative overflow-hidden"
               >
                 {/* Accent ribbon at top */}
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-900 via-amber-400 to-blue-900" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-900 via-amber-400 to-blue-900" />
 
-                <div className="space-y-4 pt-1">
-                  
+                <div className="space-y-2.5 pt-0.5">
                   {/* Top row: Rank & Average */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200/70">
                       <Trophy className="w-3 h-3 text-amber-600" />
                       <span>{student.rankInClass === 1 ? '1er de la classe' : `${student.rankInClass}e de la classe`}</span>
                     </span>
 
-                    <div className="text-right">
-                      <span className="text-xs font-mono font-extrabold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200">
-                        {student.average} / {student.maxScale}
-                      </span>
-                    </div>
+                    <span className="text-xs font-mono font-extrabold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/70">
+                      {student.average} / {student.maxScale}
+                    </span>
                   </div>
 
                   {/* Student Identity */}
-                  <div className="flex items-start gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-900 to-slate-900 text-amber-400 font-serif font-bold text-lg flex items-center justify-center shrink-0 shadow-xs border border-amber-400/40">
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-900 to-slate-900 text-amber-400 font-serif font-bold text-sm flex items-center justify-center shrink-0 shadow-2xs border border-amber-400/30">
                       {student.studentName.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </div>
-                    <div>
-                      <h3 className="font-serif font-bold text-base text-slate-900 group-hover:text-blue-900 transition-colors leading-tight">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-serif font-bold text-sm sm:text-base text-slate-900 group-hover:text-blue-900 transition-colors leading-snug truncate">
                         {student.studentName}
                       </h3>
-                      <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        {student.classLevel}
-                      </p>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        {student.period}
-                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap text-2xs text-slate-500 font-medium">
+                        <span>{student.classLevel}</span>
+                        <span className="text-slate-300">·</span>
+                        <span className="font-mono text-slate-400">{student.period}</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Distinction Pill */}
-                  <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-2xs font-bold border ${badge.bg}`}>
-                    <BadgeIcon className={`w-3.5 h-3.5 ${badge.iconColor}`} />
-                    <span>{badge.label}</span>
+                  {/* Distinction Tag */}
+                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-2xs font-bold border ${badge.bg}`}>
+                    <BadgeIcon className={`w-3 h-3 ${badge.iconColor} shrink-0`} />
+                    <span className="truncate">{badge.label}</span>
                   </div>
 
                   {/* Citation du Conseil */}
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 italic leading-relaxed">
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-2xs text-slate-700 italic leading-relaxed">
                     « {student.citation} »
                   </div>
 
                   {/* Specialty tag if present */}
                   {student.specialty && (
-                    <div className="flex items-center gap-1.5 text-2xs text-slate-500">
+                    <div className="flex items-center gap-1.5 text-2xs text-slate-500 pt-0.5">
                       <span className="font-semibold text-slate-700">Point fort :</span>
-                      <span>{student.specialty}</span>
+                      <span className="truncate">{student.specialty}</span>
                     </div>
                   )}
-
-                </div>
-
-                {/* Actions */}
-                <div className="space-y-2 pt-3 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => handleDownloadDiploma(student)}
-                    disabled={isBusy}
-                    className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-900 hover:bg-blue-800 text-white text-xs font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-60"
-                  >
-                    {isBusy ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Génération du diplôme...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Télécharger le Diplôme (PDF)</span>
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleOpenPreview(student)}
-                    className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium border border-slate-200 transition-colors cursor-pointer"
-                  >
-                    <Eye className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Voir le Certificat & Imprimer</span>
-                  </button>
                 </div>
 
               </div>
@@ -428,54 +401,47 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
         </div>
       )}
 
-      {/* CADRE PÉDAGOGIQUE & VALEURS D'ÉMULATION */}
-      <section className="bg-slate-50 rounded-3xl p-6 sm:p-8 border border-slate-200 space-y-4">
+      {/* CADRE PÉDAGOGIQUE & CRITÈRES D'ATTRIBUTION - COMPACT */}
+      <section className="bg-slate-50 rounded-2xl p-4 sm:p-5 border border-slate-200/80 space-y-3">
         <div className="flex items-center gap-2">
-          <ShieldCheck className="w-5 h-5 text-blue-900" />
-          <h3 className="font-serif font-bold text-base text-slate-900">
+          <ShieldCheck className="w-4 h-4 text-blue-900" />
+          <h3 className="font-serif font-bold text-xs sm:text-sm text-slate-900">
             Charte & Critères d'Attribution du Tableau d'Honneur (Session 2026–2027)
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-slate-600 leading-relaxed">
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2">
-            <div className="font-bold text-blue-900 flex items-center gap-1.5">
-              <Star className="w-4 h-4 text-amber-500" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-2xs text-slate-600 leading-relaxed">
+          <div className="p-3 rounded-xl bg-white border border-slate-200/80 space-y-1">
+            <div className="font-bold text-blue-900 flex items-center gap-1">
+              <Star className="w-3.5 h-3.5 text-amber-500" />
               <span>1. Félicitations du Conseil</span>
             </div>
             <p>
-              Attribuées aux élèves obtenant une moyenne générale ≥ 8.5/10 (Fondamental) ou ≥ 85/100 (Secondaire), avec une assiduité et un comportement irréprochables tout au long du contrôle.
+              Moyenne générale ≥ 8.5/10 (Fondamental) ou ≥ 85/100 (Secondaire), avec assiduité et comportement exemplaires.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2">
-            <div className="font-bold text-blue-900 flex items-center gap-1.5">
-              <Trophy className="w-4 h-4 text-blue-600" />
+          <div className="p-3 rounded-xl bg-white border border-slate-200/80 space-y-1">
+            <div className="font-bold text-blue-900 flex items-center gap-1">
+              <Trophy className="w-3.5 h-3.5 text-blue-600" />
               <span>2. Tableau d'Honneur</span>
             </div>
             <p>
-              Réservé aux apprenants affichant une moyenne ≥ 7.5/10 ou ≥ 75/100, sans aucune note éliminatoire dans les matières fondamentales et respectant la discipline républicaine.
+              Moyenne ≥ 7.5/10 ou ≥ 75/100, sans note éliminatoire dans les matières fondamentales et respect de la discipline.
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2">
-            <div className="font-bold text-blue-900 flex items-center gap-1.5">
-              <TrendingUp className="w-4 h-4 text-emerald-600" />
-              <span>3. Tableau des Encouragements</span>
+          <div className="p-3 rounded-xl bg-white border border-slate-200/80 space-y-1">
+            <div className="font-bold text-blue-900 flex items-center gap-1">
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+              <span>3. Encouragements & Progrès</span>
             </div>
             <p>
-              Dédié aux élèves ayant accompli des progrès spectaculaires (gain net supérieur à +2.5 points) et faisant preuve d'une persévérance exemplaire dans l'effort quotidien.
+              Progrès notables (&gt; +2.5 points) et engagement constant dans le travail scolaire au cours du trimestre.
             </p>
           </div>
         </div>
       </section>
-
-      {/* MODAL CERTIFICAT */}
-      <HonorDiplomaModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        student={previewStudent}
-      />
 
     </div>
   );
