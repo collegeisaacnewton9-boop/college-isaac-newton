@@ -15,5 +15,6 @@ export const SCHOOL_IMAGES = {
   // Legacy / supporting references
   heroCampus: '/images/campus_facade_real_1790679454540.jpg',
   heroCampusAlt: '/images/hero_campus_facade_1790529159819.jpg',
-  studentsAssembly: '/images/students_assembly_1790529184364.jpg',
+  // Authentic CIN students flag assembly ceremony
+  studentsAssembly: '/images/slide_students_flag_assembly.webp',
 };

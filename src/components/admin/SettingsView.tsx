@@ -2001,7 +2001,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         { label: 'Façade', path: '/images/campus_facade_real_1790679454540.jpg' },
                         { label: 'Diplômés', path: '/images/graduation_promo_real_1790679465649.jpg' },
                         { label: 'Lab Info', path: '/images/computer_lab_real_1790679476180.jpg' },
-                        { label: 'Rassemblement', path: '/images/students_assembly_1790529184364.jpg' },
+                        { label: 'Rassemblement', path: '/images/slide_students_flag_assembly.webp' },
                       ].map((img) => (
                         <button
                           key={img.path}

@@ -804,7 +804,7 @@ export const apiService = {
       { id: 'med-2', url: '/images/computer_lab_real_1790679476180.jpg', title: 'Laboratoire Informatique & Multimédia', category: 'LAB', dimensions: '1280x853', createdAt: '2026-09-02' },
       { id: 'med-3', url: '/images/graduation_promo_real_1790679465649.jpg', title: 'Promotion des Diplômés en Toges', category: 'SLIDESHOW', dimensions: '1280x853', createdAt: '2026-09-03' },
       { id: 'med-4', url: '/images/campus_courtyard_building_1790531780046.jpg', title: 'Cour d’Honneur & Bâtiment Pédagogique', category: 'CAMPUS', dimensions: '1280x853', createdAt: '2026-09-04' },
-      { id: 'med-5', url: '/images/students_assembly_1790529184364.jpg', title: 'Rassemblement Matinal & Discipline', category: 'EVENTS', dimensions: '1280x853', createdAt: '2026-09-05' }
+      { id: 'med-5', url: '/images/slide_students_flag_assembly.webp', title: 'Rassemblement Matinal & Discipline (Drapeau National)', category: 'EVENTS', dimensions: '1280x853', createdAt: '2026-09-05' }
     ]);
   },
 

@@ -27,7 +27,7 @@ export const DEFAULT_EDUCATIONAL_CYCLES: AcademicCyclesRecord = {
     ],
     targetPage: 'fondamental',
     badgeColor: 'bg-blue-100 text-blue-900 border-blue-200',
-    image: '/images/students_assembly_1790529184364.jpg',
+    image: '/images/slide_students_flag_assembly.webp',
   },
   secondaire: {
     title: 'Nouveau Secondaire (NS1 à NS4)',
