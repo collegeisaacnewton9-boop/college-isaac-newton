@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { FacultyMember, FacultyCategory, User } from '../types';
 import { apiService } from '../services/api';
+import { INITIAL_FACULTY_MEMBERS } from '../data/facultyData';
 import { ContentEditable } from '../components/common/ContentEditable';
 
 interface FacultyPageProps {
@@ -36,8 +37,8 @@ export const FacultyPage: React.FC<FacultyPageProps> = ({
   currentUser,
   onOpenAdminManager
 }) => {
-  const [members, setMembers] = useState<FacultyMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState<FacultyMember[]>(INITIAL_FACULTY_MEMBERS);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'direction' | 'administration' | 'enseignant'>('all');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
@@ -49,9 +50,22 @@ export const FacultyPage: React.FC<FacultyPageProps> = ({
     try {
       setLoading(true);
       const data = await apiService.getFacultyMembers(false);
-      setMembers(data);
+      if (Array.isArray(data) && data.length >= 10) {
+        setMembers(data);
+      } else if (Array.isArray(data) && data.length > 0) {
+        const merged = [...INITIAL_FACULTY_MEMBERS];
+        data.forEach(m => {
+          const idx = merged.findIndex(x => x.id === m.id);
+          if (idx >= 0) merged[idx] = m;
+          else merged.push(m);
+        });
+        setMembers(merged);
+      } else {
+        setMembers(INITIAL_FACULTY_MEMBERS);
+      }
     } catch (e) {
       console.error('Erreur chargement corps professoral:', e);
+      setMembers(INITIAL_FACULTY_MEMBERS);
     } finally {
       setLoading(false);
     }
@@ -108,9 +122,21 @@ export const FacultyPage: React.FC<FacultyPageProps> = ({
     });
   }, [members, selectedCategory, selectedSubject, searchQuery]);
 
-  // Regroupements pour la vue structurée
+  // Regroupements et décomptes précis par pôle institutionnel
+  const directionCount = useMemo(() => {
+    return members.filter(m => m.categories?.includes('direction') || m.categories?.includes('conseil_pedagogique')).length;
+  }, [members]);
+
+  const adminCount = useMemo(() => {
+    return members.filter(m => m.categories?.includes('administration')).length;
+  }, [members]);
+
+  const teachersCount = useMemo(() => {
+    return members.filter(m => m.categories?.includes('enseignant')).length;
+  }, [members]);
+
   const directionTeam = useMemo(() => {
-    return members.filter(m => m.categories?.includes('direction') || m.categories?.includes('administration'));
+    return members.filter(m => m.categories?.includes('direction') || m.categories?.includes('administration') || m.categories?.includes('conseil_pedagogique'));
   }, [members]);
 
   const teachersTeam = useMemo(() => {
@@ -216,7 +242,7 @@ export const FacultyPage: React.FC<FacultyPageProps> = ({
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                Direction & Conseil
+                Direction & Conseil ({directionCount})
               </button>
               <button
                 type="button"
@@ -227,7 +253,7 @@ export const FacultyPage: React.FC<FacultyPageProps> = ({
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                Administration
+                Administration ({adminCount})
               </button>
               <button
                 type="button"
@@ -238,7 +264,7 @@ export const FacultyPage: React.FC<FacultyPageProps> = ({
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                Enseignants
+                Enseignants ({teachersCount})
               </button>
             </div>
 

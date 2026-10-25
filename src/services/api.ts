@@ -1469,9 +1469,19 @@ export const apiService = {
       const res = await appFetch(url);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data) && data.length >= 10) {
           setLocal(STORAGE_KEYS.FACULTY, data);
           return data;
+        } else if (Array.isArray(data) && data.length > 0) {
+          // If server returns fewer than 10, merge with official 12 members
+          const merged = [...INITIAL_FACULTY_MEMBERS];
+          data.forEach((custom: any) => {
+            const idx = merged.findIndex(m => m.id === custom.id);
+            if (idx >= 0) merged[idx] = custom;
+            else merged.push(custom);
+          });
+          setLocal(STORAGE_KEYS.FACULTY, merged);
+          return merged;
         }
       }
     } catch {
@@ -1479,10 +1489,44 @@ export const apiService = {
     }
 
     const localData = getLocal<FacultyMember[]>(STORAGE_KEYS.FACULTY, INITIAL_FACULTY_MEMBERS);
-    if (!includeHidden) {
-      return localData.filter(m => m.isVisible !== false).sort((a, b) => (a.displayOrder ?? 1) - (b.displayOrder ?? 1));
+    let effectiveData = Array.isArray(localData) && localData.length >= 10 ? localData : INITIAL_FACULTY_MEMBERS;
+    if (Array.isArray(localData) && localData.length > 0 && localData.length < 10) {
+      const merged = [...INITIAL_FACULTY_MEMBERS];
+      localData.forEach((custom: any) => {
+        const idx = merged.findIndex(m => m.id === custom.id);
+        if (idx >= 0) merged[idx] = custom;
+        else merged.push(custom);
+      });
+      effectiveData = merged;
+      setLocal(STORAGE_KEYS.FACULTY, merged);
     }
-    return [...localData].sort((a, b) => (a.displayOrder ?? 1) - (b.displayOrder ?? 1));
+
+    if (!includeHidden) {
+      return effectiveData.filter(m => m.isVisible !== false).sort((a, b) => (a.displayOrder ?? 1) - (b.displayOrder ?? 1));
+    }
+    return [...effectiveData].sort((a, b) => (a.displayOrder ?? 1) - (b.displayOrder ?? 1));
+  },
+
+  async resetFacultyMembers(): Promise<FacultyMember[]> {
+    try {
+      const res = await appFetch('/api/faculty/reset', { method: 'POST' });
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.members) {
+          setLocal(STORAGE_KEYS.FACULTY, json.members);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('cin:faculty-updated', { detail: json.members }));
+          }
+          return json.members;
+        }
+      }
+    } catch {}
+
+    setLocal(STORAGE_KEYS.FACULTY, INITIAL_FACULTY_MEMBERS);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:faculty-updated', { detail: INITIAL_FACULTY_MEMBERS }));
+    }
+    return INITIAL_FACULTY_MEMBERS;
   },
 
   async saveFacultyMember(member: Partial<FacultyMember>): Promise<FacultyMember> {

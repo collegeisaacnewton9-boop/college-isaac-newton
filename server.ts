@@ -3432,13 +3432,18 @@ function loadFacultyFromDisk(): any[] {
   try {
     if (fs.existsSync(FACULTY_FILE_PATH)) {
       const raw = fs.readFileSync(FACULTY_FILE_PATH, 'utf-8');
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
     }
   } catch (err: any) {
     console.error('[Faculty Disk Read Error]', err.message);
   }
   return [];
 }
+
+const DEFAULT_OFFICIAL_FACULTY = loadFacultyFromDisk();
 
 function saveFacultyToDisk(members: any[]): boolean {
   try {
@@ -3463,17 +3468,44 @@ app.get('/api/faculty', async (req: Request, res: Response) => {
   if (isDbActive()) {
     try {
       const dbMembers = await dbGetFacultyMembers();
-      if (dbMembers && Array.isArray(dbMembers) && dbMembers.length > 0) {
+      if (dbMembers && Array.isArray(dbMembers) && dbMembers.length >= 10) {
         memoryFaculty = dbMembers;
+      } else if (dbMembers && Array.isArray(dbMembers) && dbMembers.length > 0 && dbMembers.length < 10) {
+        // If PostgreSQL only has an incomplete test list (e.g. 1 member), merge with official 12 members
+        const merged = [...DEFAULT_OFFICIAL_FACULTY];
+        dbMembers.forEach((custom: any) => {
+          const idx = merged.findIndex(m => m.id === custom.id);
+          if (idx >= 0) merged[idx] = custom;
+          else merged.push(custom);
+        });
+        memoryFaculty = merged;
+        saveFacultyToDisk(merged);
+        const p = getDbPool();
+        if (p) {
+          p.query(
+            `INSERT INTO site_settings (id, data, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
+            ['faculty_members', JSON.stringify(merged)]
+          ).catch(() => {});
+        }
       }
     } catch (e: any) {
       console.error('[API Faculty DB Error]', e.message);
     }
   }
 
-  // If memory is empty, fallback to disk
+  // If memory is empty or incomplete, fallback to official list
   if (!memoryFaculty || memoryFaculty.length === 0) {
     memoryFaculty = loadFacultyFromDisk();
+  }
+  if (memoryFaculty.length < 10 && DEFAULT_OFFICIAL_FACULTY.length > 0) {
+    const merged = [...DEFAULT_OFFICIAL_FACULTY];
+    memoryFaculty.forEach((custom: any) => {
+      const idx = merged.findIndex(m => m.id === custom.id);
+      if (idx >= 0) merged[idx] = custom;
+      else merged.push(custom);
+    });
+    memoryFaculty = merged;
+    saveFacultyToDisk(merged);
   }
 
   // Sort by displayOrder ascending
@@ -3486,6 +3518,40 @@ app.get('/api/faculty', async (req: Request, res: Response) => {
   // Public view: only visible
   const visibleOnly = sorted.filter(m => m.isVisible !== false);
   res.json(visibleOnly);
+});
+
+// Endpoint to reset faculty members to the complete official list (12 members)
+app.post('/api/faculty/reset', async (req: Request, res: Response) => {
+  try {
+    memoryFaculty = [...DEFAULT_OFFICIAL_FACULTY];
+    saveFacultyToDisk(memoryFaculty);
+
+    if (isDbActive()) {
+      try {
+        const p = getDbPool();
+        if (p) {
+          await p.query(
+            `INSERT INTO site_settings (id, data, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET data = $2, updated_at = NOW()`,
+            ['faculty_members', JSON.stringify(memoryFaculty)]
+          );
+        }
+      } catch (e: any) {
+        console.error('[API Reset Faculty DB Error]', e.message);
+      }
+    }
+
+    auditLogs.push({
+      id: `log-${Date.now()}`,
+      action: 'FACULTY_MEMBERS_RESET',
+      user: 'Direction (Admin)',
+      details: 'Réinitialisation de la liste du corps professoral aux 12 membres officiels',
+      timestamp: new Date().toISOString(),
+    });
+
+    res.json({ success: true, count: memoryFaculty.length, members: memoryFaculty });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Erreur lors de la réinitialisation', details: err.message });
+  }
 });
 
 app.post('/api/faculty', async (req: Request, res: Response) => {
