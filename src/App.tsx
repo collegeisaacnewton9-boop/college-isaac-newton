@@ -295,6 +295,7 @@ export default function App() {
             onOpenAuth={() => setIsAuthOpen(true)}
             onNavigate={handleNavigate}
             currentUser={currentUser}
+            initialSubSection={currentSubSection}
           />
         )}
 

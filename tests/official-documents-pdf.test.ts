@@ -56,4 +56,32 @@ test('Official Documents PDF Generator Service', async (t) => {
     assert.ok(result.pageCount >= 2);
     assert.ok(result.filename.includes('Fiche-Medicale'));
   });
+
+  await t.test('should generate certified Landscape PDF for Honor Roll Diploma', async () => {
+    const student = {
+      id: 'hr-test-1',
+      studentName: 'Alexandre Pierre',
+      gender: 'M' as const,
+      classLevel: '9ème Année Fondamentale',
+      cycle: 'FONDAMENTAL' as const,
+      academicYear: '2026-2027',
+      period: '1er Contrôle Officiel',
+      average: 9.45,
+      maxScale: 10,
+      rankInClass: 1,
+      totalStudentsInClass: 32,
+      distinction: 'FELICITATIONS' as const,
+      citation: 'Excellence remarquable dans toutes les disciplines.',
+      specialty: 'Mathématiques & Sciences Expérimentales',
+      dateAwarded: '2026-11-27',
+      isPublic: true,
+    };
+
+    const result = await officialDocumentsPdfService.generateHonorCertificatePdf(student);
+    assert.ok(result.pdfBytes instanceof Uint8Array);
+    assert.ok(result.pdfBytes.length > 1000, 'Diploma PDF size should be valid');
+    assert.strictEqual(result.pageCount, 1, 'Diploma should be 1 ornate page');
+    assert.ok(result.filename.includes('Diplome-Tableau-Honneur'));
+    assert.strictEqual(typeof result.downloadBlob, 'function');
+  });
 });

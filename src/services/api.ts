@@ -16,7 +16,8 @@ import {
   WhatsAppNotificationLog,
   WhatsAppDiagnosticSummary,
   SecurityAuditReport,
-  FacultyMember
+  FacultyMember,
+  HonorRollStudent
 } from '../types';
 import { 
   INITIAL_ADMISSIONS, 
@@ -24,7 +25,8 @@ import {
   INITIAL_EVENTS, 
   INITIAL_GALLERY, 
   INITIAL_DOCUMENTS, 
-  INITIAL_USERS 
+  INITIAL_USERS,
+  INITIAL_HONOR_ROLL
 } from '../data/mockData';
 import { INITIAL_FACULTY_MEMBERS } from '../data/facultyData';
 import { DEFAULT_NAVIGATION_MENU } from '../data/navigationData';
@@ -129,6 +131,7 @@ const STORAGE_KEYS = {
   CONTENT_BLOCKS: 'cin_content_blocks_v1',
   DOCUMENTS: 'cin_official_documents_v1',
   FACULTY: 'cin_faculty_members_v4',
+  HONOR_ROLL: 'cin_honor_roll_v1',
 };
 
 // Helper for local persistent fallback
@@ -1347,6 +1350,114 @@ export const apiService = {
       fileSize: sizeStr,
       fileType: 'PDF'
     };
+  },
+
+  // ==============================================================================
+  // TABLEAU D'HONNEUR & PALMARÈS DES LAURÉATS
+  // ==============================================================================
+  async getHonorRoll(): Promise<HonorRollStudent[]> {
+    try {
+      const res = await appFetch('/api/honor-roll');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setLocal(STORAGE_KEYS.HONOR_ROLL, data);
+          return data;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+    return getLocal<HonorRollStudent[]>(STORAGE_KEYS.HONOR_ROLL, INITIAL_HONOR_ROLL);
+  },
+
+  async addHonorRollStudent(student: Omit<HonorRollStudent, 'id'> & { id?: string }): Promise<HonorRollStudent> {
+    const payload: HonorRollStudent = {
+      ...student,
+      id: student.id || `hr-${Date.now()}`,
+      dateAwarded: student.dateAwarded || new Date().toISOString().split('T')[0],
+      isPublic: student.isPublic !== undefined ? student.isPublic : true,
+    };
+    try {
+      const res = await appFetch('/api/honor-roll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        const current = await this.getHonorRoll();
+        const updated = [created, ...current.filter(s => s.id !== created.id)];
+        setLocal(STORAGE_KEYS.HONOR_ROLL, updated);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('cin:honor-roll-updated', { detail: { action: 'add', student: created } }));
+        }
+        return created;
+      }
+    } catch {
+      // Fallback
+    }
+    const current = await this.getHonorRoll();
+    const updated = [payload, ...current.filter(s => s.id !== payload.id)];
+    setLocal(STORAGE_KEYS.HONOR_ROLL, updated);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:honor-roll-updated', { detail: { action: 'add', student: payload } }));
+    }
+    return payload;
+  },
+
+  async updateHonorRollStudent(id: string, updates: Partial<HonorRollStudent>): Promise<HonorRollStudent> {
+    try {
+      const res = await appFetch(`/api/honor-roll/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        const current = await this.getHonorRoll();
+        const next = current.map(s => s.id === id ? { ...s, ...updated } : s);
+        setLocal(STORAGE_KEYS.HONOR_ROLL, next);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('cin:honor-roll-updated', { detail: { action: 'update', id } }));
+        }
+        return updated;
+      }
+    } catch {
+      // Fallback
+    }
+    const current = await this.getHonorRoll();
+    const next = current.map(s => s.id === id ? { ...s, ...updates } : s);
+    setLocal(STORAGE_KEYS.HONOR_ROLL, next);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:honor-roll-updated', { detail: { action: 'update', id } }));
+    }
+    const found = next.find(s => s.id === id);
+    return found || (updates as HonorRollStudent);
+  },
+
+  async deleteHonorRollStudent(id: string): Promise<boolean> {
+    try {
+      const res = await appFetch(`/api/honor-roll/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        const current = await this.getHonorRoll();
+        const next = current.filter(s => s.id !== id);
+        setLocal(STORAGE_KEYS.HONOR_ROLL, next);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('cin:honor-roll-updated', { detail: { action: 'delete', id } }));
+        }
+        return true;
+      }
+    } catch {
+      // Fallback
+    }
+    const current = await this.getHonorRoll();
+    const next = current.filter(s => s.id !== id);
+    setLocal(STORAGE_KEYS.HONOR_ROLL, next);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cin:honor-roll-updated', { detail: { action: 'delete', id } }));
+    }
+    return true;
   },
 
   // ==============================================================================

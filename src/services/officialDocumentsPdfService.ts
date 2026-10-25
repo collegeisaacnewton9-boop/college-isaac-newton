@@ -11,7 +11,7 @@
  */
 
 import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont } from 'pdf-lib';
-import { DocumentFile, SchoolEvent } from '../types';
+import { DocumentFile, SchoolEvent, HonorRollStudent } from '../types';
 import { calendarPdfService } from './calendarPdfService';
 import { apiService } from './api';
 
@@ -1438,5 +1438,303 @@ export const officialDocumentsPdfService = {
       // Ignorer l'erreur réseau pour ne pas bloquer l'utilisateur
     }
     return result;
+  },
+
+  /**
+   * 7. DIPLÔME OFFICIEL DU TABLEAU D'HONNEUR (FORMAT PAYSAGE A4 SOIGNÉ)
+   */
+  async generateHonorCertificatePdf(
+    student: HonorRollStudent,
+    options: OfficialPdfOptions = {}
+  ): Promise<GeneratedPdfResult> {
+    const { academicYear = student.academicYear || '2026-2027' } = options;
+    
+    // Format A4 Paysage (Landscape) : 841.89 x 595.28 pt
+    const pageWidth = 841.89;
+    const pageHeight = 595.28;
+    const margin = 36;
+
+    const doc = await PDFDocument.create();
+    doc.setTitle(`Diplôme du Tableau d'Honneur - ${student.studentName} - Collège Isaac Newton`);
+    doc.setAuthor('Collège Isaac Newton');
+    doc.setSubject(`Certificat officiel du Tableau d'Honneur et d'Excellence Académique`);
+    doc.setCreator('Direction des Études & Conseil des Professeurs Collège Isaac Newton');
+
+    const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+    const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
+    const fontOblique = await doc.embedFont(StandardFonts.HelveticaOblique);
+
+    const page = doc.addPage([pageWidth, pageHeight]);
+
+    // Cadre triple élégant : Or, Blanc, Bleu marine
+    page.drawRectangle({
+      x: margin,
+      y: margin,
+      width: pageWidth - margin * 2,
+      height: pageHeight - margin * 2,
+      borderColor: COLOR_GOLD,
+      borderWidth: 3,
+    });
+
+    page.drawRectangle({
+      x: margin + 6,
+      y: margin + 6,
+      width: pageWidth - (margin + 6) * 2,
+      height: pageHeight - (margin + 6) * 2,
+      borderColor: COLOR_NAVY,
+      borderWidth: 1,
+    });
+
+    // Coins décoratifs
+    const drawCorner = (cx: number, cy: number) => {
+      page.drawRectangle({
+        x: cx - 5,
+        y: cy - 5,
+        width: 10,
+        height: 10,
+        color: COLOR_GOLD,
+      });
+    };
+    drawCorner(margin + 6, margin + 6);
+    drawCorner(pageWidth - margin - 6, margin + 6);
+    drawCorner(margin + 6, pageHeight - margin - 6);
+    drawCorner(pageWidth - margin - 6, pageHeight - margin - 6);
+
+    let y = pageHeight - 75;
+
+    // République & Ministère
+    const repText = sanitizeText("RÉPUBLIQUE D'HAÏTI · MINISTÈRE DE L'ÉDUCATION NATIONALE ET DE LA FORMATION PROFESSIONNELLE (MENFP)");
+    const repW = fontBold.widthOfTextAtSize(repText, 8.5);
+    page.drawText(repText, {
+      x: pageWidth / 2 - repW / 2,
+      y,
+      size: 8.5,
+      font: fontBold,
+      color: COLOR_MUTED,
+    });
+    y -= 26;
+
+    // Nom de l'établissement
+    const instText = sanitizeText("COLLÈGE ISAAC NEWTON");
+    const instW = fontBold.widthOfTextAtSize(instText, 22);
+    page.drawText(instText, {
+      x: pageWidth / 2 - instW / 2,
+      y,
+      size: 22,
+      font: fontBold,
+      color: COLOR_NAVY,
+    });
+    y -= 14;
+
+    // Devise
+    const mottoText = sanitizeText("« Savoir aujourd'hui, réussir demain » · Campus Delmas 50, Port-au-Prince");
+    const mottoW = fontOblique.widthOfTextAtSize(mottoText, 9.5);
+    page.drawText(mottoText, {
+      x: pageWidth / 2 - mottoW / 2,
+      y,
+      size: 9.5,
+      font: fontOblique,
+      color: COLOR_GOLD,
+    });
+    y -= 24;
+
+    // Ligne de séparation dorée
+    page.drawLine({
+      start: { x: pageWidth / 2 - 220, y },
+      end: { x: pageWidth / 2 + 220, y },
+      thickness: 1.5,
+      color: COLOR_GOLD,
+    });
+    y -= 26;
+
+    // Grand Titre du Diplôme
+    const titleText = sanitizeText("DIPLÔME DU TABLEAU D'HONNEUR");
+    const titleW = fontBold.widthOfTextAtSize(titleText, 17);
+    page.drawText(titleText, {
+      x: pageWidth / 2 - titleW / 2,
+      y,
+      size: 17,
+      font: fontBold,
+      color: COLOR_NAVY,
+    });
+    y -= 14;
+
+    const subTitleText = sanitizeText(`EXCELLENCE ACADÉMIQUE · SESSION ${academicYear} · ${student.period.toUpperCase()}`);
+    const subTitleW = fontBold.widthOfTextAtSize(subTitleText, 9);
+    page.drawText(subTitleText, {
+      x: pageWidth / 2 - subTitleW / 2,
+      y,
+      size: 9,
+      font: fontBold,
+      color: COLOR_GOLD,
+    });
+    y -= 26;
+
+    // Phrase solennelle
+    const introText = sanitizeText("Le Conseil des Professeurs et la Direction Pédagogique décernent solennellement le présent titre à :");
+    const introW = fontRegular.widthOfTextAtSize(introText, 11);
+    page.drawText(introText, {
+      x: pageWidth / 2 - introW / 2,
+      y,
+      size: 11,
+      font: fontRegular,
+      color: COLOR_DARK,
+    });
+    y -= 34;
+
+    // Nom de l'élève mis en valeur
+    const nameText = sanitizeText(student.studentName.toUpperCase());
+    const nameW = fontBold.widthOfTextAtSize(nameText, 20);
+    page.drawText(nameText, {
+      x: pageWidth / 2 - nameW / 2,
+      y,
+      size: 20,
+      font: fontBold,
+      color: COLOR_NAVY,
+    });
+    y -= 18;
+
+    // Classe et distinction
+    const classInfo = sanitizeText(`Classe : ${student.classLevel} · Rang : ${student.rankInClass}${student.rankInClass === 1 ? 'er' : 'e'} sur ${student.totalStudentsInClass} élèves · Moyenne : ${student.average} / ${student.maxScale}`);
+    const classW = fontBold.widthOfTextAtSize(classInfo, 10.5);
+    page.drawText(classInfo, {
+      x: pageWidth / 2 - classW / 2,
+      y,
+      size: 10.5,
+      font: fontBold,
+      color: COLOR_DARK,
+    });
+    y -= 22;
+
+    // Citation du conseil
+    const citation = sanitizeText(`« ${student.citation} »`);
+    const citationW = fontOblique.widthOfTextAtSize(citation, 10);
+    if (citationW <= pageWidth - 140) {
+      page.drawText(citation, {
+        x: pageWidth / 2 - citationW / 2,
+        y,
+        size: 10,
+        font: fontOblique,
+        color: COLOR_NAVY,
+      });
+      y -= 28;
+    } else {
+      const wrapped = wrapText(citation, pageWidth - 140, fontOblique, 9.5);
+      wrapped.forEach(line => {
+        const lineW = fontOblique.widthOfTextAtSize(line, 9.5);
+        page.drawText(line, {
+          x: pageWidth / 2 - lineW / 2,
+          y,
+          size: 9.5,
+          font: fontOblique,
+          color: COLOR_NAVY,
+        });
+        y -= 13;
+      });
+      y -= 15;
+    }
+
+    // Signatures colonnes
+    const sigY = margin + 55;
+    const colWidth = (pageWidth - margin * 2 - 40) / 3;
+
+    // Col 1 : Professeur Principal
+    page.drawText(sanitizeText("Le Professeur Principal"), {
+      x: margin + 30,
+      y: sigY + 20,
+      size: 9,
+      font: fontBold,
+      color: COLOR_DARK,
+    });
+    page.drawText(sanitizeText("Visa du Conseil"), {
+      x: margin + 30,
+      y: sigY + 8,
+      size: 7.5,
+      font: fontRegular,
+      color: COLOR_MUTED,
+    });
+    page.drawText(sanitizeText("[Signature Pédagogique]"), {
+      x: margin + 30,
+      y: sigY - 20,
+      size: 8,
+      font: fontOblique,
+      color: COLOR_MUTED,
+    });
+
+    // Col 2 : Sceau Institutionnel
+    page.drawRectangle({
+      x: pageWidth / 2 - 60,
+      y: sigY - 25,
+      width: 120,
+      height: 55,
+      color: COLOR_BG_LIGHT,
+      borderColor: COLOR_GOLD,
+      borderWidth: 1,
+    });
+    page.drawText(sanitizeText("COLLÈGE ISAAC NEWTON"), {
+      x: pageWidth / 2 - fontBold.widthOfTextAtSize("COLLÈGE ISAAC NEWTON", 7.5) / 2,
+      y: sigY + 14,
+      size: 7.5,
+      font: fontBold,
+      color: COLOR_NAVY,
+    });
+    page.drawText(sanitizeText("SCEAU OFFICIEL CERTIFIÉ"), {
+      x: pageWidth / 2 - fontBold.widthOfTextAtSize("SCEAU OFFICIEL CERTIFIÉ", 7) / 2,
+      y: sigY + 2,
+      size: 7,
+      font: fontBold,
+      color: COLOR_GOLD,
+    });
+    page.drawText(sanitizeText(`Réf : CIN-HONOR-${student.id.toUpperCase()}`), {
+      x: pageWidth / 2 - fontRegular.widthOfTextAtSize(`Réf : CIN-HONOR-${student.id.toUpperCase()}`, 6.5) / 2,
+      y: sigY - 12,
+      size: 6.5,
+      font: fontRegular,
+      color: COLOR_MUTED,
+    });
+
+    // Col 3 : Le Directeur Fondateur
+    page.drawText(sanitizeText("Pour la Direction du Collège"), {
+      x: pageWidth - margin - colWidth + 20,
+      y: sigY + 20,
+      size: 9,
+      font: fontBold,
+      color: COLOR_NAVY,
+    });
+    page.drawText(sanitizeText("Orphe Jean Marie · Directeur"), {
+      x: pageWidth - margin - colWidth + 20,
+      y: sigY + 8,
+      size: 7.5,
+      font: fontRegular,
+      color: COLOR_MUTED,
+    });
+    page.drawText(sanitizeText("[Sceau et Signature Officielle]"), {
+      x: pageWidth - margin - colWidth + 20,
+      y: sigY - 20,
+      size: 8,
+      font: fontBold,
+      color: COLOR_NAVY,
+    });
+
+    const pdfBytes = await doc.save();
+    const cleanStudentName = student.studentName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const filename = `Diplome-Tableau-Honneur-College-Isaac-Newton-${cleanStudentName}-${academicYear}.pdf`;
+
+    return {
+      pdfBytes,
+      pageCount: 1,
+      filename,
+      downloadBlob: () => {
+        const blob = new Blob([pdfBytes as unknown as BlobPart], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      },
+    };
   },
 };

@@ -176,6 +176,34 @@ export interface DocumentFile {
   updatedAt?: string;
 }
 
+export type HonorDistinctionType = 
+  | 'FELICITATIONS' 
+  | 'TABLEAU_HONNEUR' 
+  | 'ENCOURAGEMENTS' 
+  | 'PRIX_SCIENCES' 
+  | 'PRIX_HUMANITES' 
+  | 'PRIX_CIVISME';
+
+export interface HonorRollStudent {
+  id: string;
+  studentName: string;
+  gender: 'M' | 'F';
+  classLevel: string;
+  cycle: 'FONDAMENTAL' | 'SECONDAIRE';
+  academicYear: string;
+  period: string;
+  average: number;
+  maxScale: number;
+  rankInClass: number;
+  totalStudentsInClass: number;
+  distinction: HonorDistinctionType;
+  citation: string;
+  specialty?: string;
+  photoUrl?: string;
+  dateAwarded: string;
+  isPublic: boolean;
+}
+
 export interface ContactMessage {
   id: string;
   fullName: string;

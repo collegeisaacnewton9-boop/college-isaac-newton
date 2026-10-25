@@ -17,22 +17,43 @@ import {
   FileDown,
   Clock,
   Layers,
-  GraduationCap
+  GraduationCap,
+  Trophy,
+  Award
 } from 'lucide-react';
 import { INITIAL_DOCUMENTS, SCHOOL_INFO } from '../data/mockData';
 import { DocumentFile, SchoolEvent, User } from '../types';
 import { apiService } from '../services/api';
 import { officialDocumentsPdfService } from '../services/officialDocumentsPdfService';
 import { OfficialDocumentModal } from '../components/documents/OfficialDocumentModal';
+import { HonorRollView } from '../components/honor/HonorRollView';
 import { toast } from 'sonner';
 
 interface ResourcesPageProps {
   onOpenAuth: () => void;
   onNavigate: (page: string) => void;
   currentUser?: User | null;
+  initialSubSection?: string;
 }
 
-export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onOpenAuth, onNavigate }) => {
+export const ResourcesPage: React.FC<ResourcesPageProps> = ({ 
+  onOpenAuth, 
+  onNavigate,
+  currentUser,
+  initialSubSection
+}) => {
+  const [activeTab, setActiveTab] = useState<'documents' | 'palmares'>(() => {
+    if (initialSubSection === 'resultats' || initialSubSection === 'palmares') return 'palmares';
+    return 'documents';
+  });
+
+  useEffect(() => {
+    if (initialSubSection === 'resultats' || initialSubSection === 'palmares') {
+      setActiveTab('palmares');
+    } else if (initialSubSection === 'documents') {
+      setActiveTab('documents');
+    }
+  }, [initialSubSection]);
   const [documents, setDocuments] = useState<DocumentFile[]>(INITIAL_DOCUMENTS);
   const [events, setEvents] = useState<SchoolEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -161,6 +182,41 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onOpenAuth, onNavi
         </p>
       </div>
 
+      {/* Onglets Principaux : Documents vs Tableau d'Honneur & Palmarès */}
+      <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto scrollbar-none">
+        <button
+          type="button"
+          onClick={() => setActiveTab('documents')}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'documents'
+              ? 'bg-blue-900 text-white shadow-xs'
+              : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span>Documents Pédagogiques & Règlements</span>
+          <span className={`text-2xs px-2 py-0.5 rounded-full font-mono ${activeTab === 'documents' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+            {documents.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('palmares')}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+            activeTab === 'palmares'
+              ? 'bg-amber-400 text-slate-950 shadow-xs'
+              : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+          }`}
+        >
+          <Trophy className="w-4 h-4 text-amber-600" />
+          <span>Tableau d'Honneur & Palmarès des Lauréats</span>
+          <span className="text-2xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-950 font-mono font-bold">
+            Excellence
+          </span>
+        </button>
+      </div>
+
       {/* Download notice */}
       {downloadSuccess && (
         <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm flex items-center justify-between gap-3 animate-in fade-in shadow-xs">
@@ -174,14 +230,21 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onOpenAuth, onNavi
         </div>
       )}
 
-      {/* EN-TÊTE SPÉCIAL : CALENDRIER ACADÉMIQUE OFFICIEL 2026-2027 */}
-      {calendarDoc && (
-        <section className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-blue-900/40 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-            <div className="space-y-3 max-w-2xl">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 text-2xs font-extrabold tracking-wider uppercase">
+      {activeTab === 'palmares' ? (
+        <HonorRollView
+          onOpenAuth={onOpenAuth}
+          onNavigateToCalendar={() => onNavigate('events')}
+        />
+      ) : (
+        <>
+          {/* EN-TÊTE SPÉCIAL : CALENDRIER ACADÉMIQUE OFFICIEL 2026-2027 */}
+          {calendarDoc && (
+            <section className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-blue-900/40 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-3 max-w-2xl">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-400 text-slate-950 text-2xs font-extrabold tracking-wider uppercase">
                   <Sparkles className="w-3 h-3 text-slate-950" />
                   <span>Calendrier Officiel Validé</span>
                 </span>
@@ -402,6 +465,8 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({ onOpenAuth, onNavi
           </div>
         )}
       </section>
+      </>
+      )}
 
       {/* 2. ESPACE SÉCURISÉ PARENTS & ÉLÈVES */}
       <section className="bg-slate-900 rounded-3xl p-8 sm:p-12 text-white shadow-xl space-y-8">
