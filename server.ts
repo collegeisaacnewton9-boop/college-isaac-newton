@@ -66,6 +66,13 @@ import {
 
 const execPromise = util.promisify(exec);
 
+// Ensure Git safe directory and default credentials are configured immediately on startup
+try {
+  execPromise('git config --global --add safe.directory /app/applet && git config --global --add safe.directory "*"').catch(() => {});
+  execPromise('git config --global user.name "College Isaac Newton" && git config --global user.email "collegeisaacnewton9@gmail.com"').catch(() => {});
+  execPromise('git config --global init.defaultBranch main').catch(() => {});
+} catch {}
+
 dotenv.config();
 
 // ==============================================================================
@@ -4442,22 +4449,48 @@ app.post('/api/admin/github/sync', async (req: Request, res: Response) => {
   }
 
   try {
-    // 1. Verify with Octokit REST API
-    const octokit = new Octokit({ auth: token });
-    const { data: repoInfo } = await octokit.rest.repos.get({
-      owner: targetOwner,
-      repo: targetRepo,
-    });
+    // 0. Ensure git safe directory and identity
+    await execPromise('git config --global --add safe.directory /app/applet && git config --global --add safe.directory "*"').catch(() => {});
+    await execPromise('git config user.name "College Isaac Newton" && git config user.email "collegeisaacnewton9@gmail.com"').catch(() => {});
+
+    // 1. Verify with Octokit REST API (non-blocking if GitHub has transient 500 or timeout)
+    let repoFullName = `${targetOwner}/${targetRepo}`;
+    let octokitInstance: Octokit | null = null;
+    try {
+      octokitInstance = new Octokit({ 
+        auth: token,
+        request: { timeout: 10000 }
+      });
+      const { data: repoInfo } = await octokitInstance.rest.repos.get({
+        owner: targetOwner,
+        repo: targetRepo,
+      });
+      if (repoInfo?.full_name) {
+        repoFullName = repoInfo.full_name;
+      }
+    } catch (octokitErr: any) {
+      console.warn('[GitHub Octokit Notice]', octokitErr.message || octokitErr);
+      if (octokitErr.status === 401 || octokitErr.status === 403) {
+        throw new Error('Token GitHub invalide ou droits insuffisants pour accéder à ce dépôt.');
+      }
+      if (octokitErr.status === 404) {
+        throw new Error(`Dépôt introuvable ou inaccessible : ${targetOwner}/${targetRepo}`);
+      }
+      // If 500 / timeout, proceed to git push fallback
+    }
 
     // 2. Stage all changes and commit
     try {
       await execPromise('git rev-parse --is-inside-work-tree');
     } catch {
-      await execPromise('git init');
-      await execPromise('git branch -m main');
-      await execPromise('git config user.name "College Isaac Newton"');
-      await execPromise('git config user.email "collegeisaacnewton9@gmail.com"');
+      await execPromise('git init -b main').catch(async () => {
+        await execPromise('git init');
+      });
     }
+
+    try {
+      await execPromise(`git checkout -B ${targetBranch}`);
+    } catch {}
 
     // Protection Anti-Injection de Commande Shell (CWE-78) : neutralisation stricte
     const safeCommitMsg = String(commitMsg || 'Mise à jour des sources')
@@ -4491,40 +4524,51 @@ app.post('/api/admin/github/sync', async (req: Request, res: Response) => {
       await execPromise(`git push --force ${pushUrl} ${targetBranch}`);
     }
 
-    // 4. Retrieve latest commit SHA via Octokit
+    // 4. Retrieve latest commit SHA (local first, then Octokit fallback)
     let latestCommitSha = 'main';
     try {
-      const { data: commits } = await octokit.rest.repos.listCommits({
-        owner: targetOwner,
-        repo: targetRepo,
-        sha: targetBranch,
-        per_page: 1,
-      });
-      if (commits && commits.length > 0) {
-        latestCommitSha = commits[0].sha.substring(0, 7);
+      const { stdout: localSha } = await execPromise('git rev-parse --short HEAD');
+      if (localSha && localSha.trim()) {
+        latestCommitSha = localSha.trim();
       }
     } catch {
-      // Non-blocking
+      if (octokitInstance) {
+        try {
+          const { data: commits } = await octokitInstance.rest.repos.listCommits({
+            owner: targetOwner,
+            repo: targetRepo,
+            sha: targetBranch,
+            per_page: 1,
+          });
+          if (commits && commits.length > 0) {
+            latestCommitSha = commits[0].sha.substring(0, 7);
+          }
+        } catch {}
+      }
     }
 
     auditLogs.push({
       id: `log-${Date.now()}`,
       action: 'GITHUB_SYNC',
       user: 'Direction (Admin)',
-      details: `Synchronisation GitHub réussie vers ${repoInfo.full_name} (${latestCommitSha}) via Octokit REST API`,
+      details: `Synchronisation GitHub réussie vers ${repoFullName} (${latestCommitSha})`,
       timestamp: new Date().toISOString(),
     });
 
     res.json({
       success: true,
       commitSha: latestCommitSha,
-      repo: repoInfo.full_name,
-      message: `Fichiers sources synchronisés avec succès sur ${repoInfo.full_name} (${latestCommitSha})`,
+      repo: repoFullName,
+      message: `Fichiers sources synchronisés avec succès sur ${repoFullName} (${latestCommitSha})`,
     });
   } catch (error: any) {
-    console.error('[GitHub Sync Error]', error);
+    let rawMsg = error.message || 'Erreur lors de la synchronisation avec GitHub';
+    if (token) {
+      rawMsg = rawMsg.split(token).join('***');
+    }
+    console.error('[GitHub Sync Error]', rawMsg);
     res.status(500).json({
-      error: error.message || 'Erreur lors de la synchronisation avec GitHub',
+      error: rawMsg,
     });
   }
 });

@@ -13,7 +13,8 @@ import {
   AlertCircle, 
   GraduationCap, 
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Maximize2
 } from 'lucide-react';
 import { SCHOOL_INFO } from '../../data/mockData';
 
@@ -21,6 +22,7 @@ export interface FirstExamScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultCycle?: 'fundamental' | 'secondary123' | 'secondary4' | 'all';
+  onOpenFullPage?: () => void;
 }
 
 interface ExamSlot {
@@ -130,6 +132,7 @@ export const FirstExamScheduleModal: React.FC<FirstExamScheduleModalProps> = ({
   isOpen,
   onClose,
   defaultCycle = 'all',
+  onOpenFullPage,
 }) => {
   const [selectedCycle, setSelectedCycle] = useState<'all' | 'fundamental' | 'secondary123' | 'secondary4'>(defaultCycle);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | 'all'>('all');
@@ -272,8 +275,23 @@ export const FirstExamScheduleModal: React.FC<FirstExamScheduleModalProps> = ({
             </button>
           </div>
 
-          {/* Print Action */}
+          {/* Actions: Print & Full Page */}
           <div className="flex items-center gap-2 self-end sm:self-auto">
+            {onOpenFullPage && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenFullPage();
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                title="Consulter sur une page dédiée sans boîte de dialogue"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+                <span>Ouvrir en Pleine Page</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={handlePrint}
@@ -281,7 +299,7 @@ export const FirstExamScheduleModal: React.FC<FirstExamScheduleModalProps> = ({
               title="Imprimer l'horaire d'examen"
             >
               <Printer className="w-3.5 h-3.5 text-blue-900" />
-              <span>Imprimer l'horaire</span>
+              <span>Imprimer</span>
             </button>
           </div>
         </div>

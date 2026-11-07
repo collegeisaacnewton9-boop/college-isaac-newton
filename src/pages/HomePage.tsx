@@ -87,12 +87,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
       {/* 1. HERO CAROUSEL - Framer Motion, campus building & lab photos, uncluttered layout */}
       <HeroCarousel 
         onNavigate={onNavigate} 
-        onOpenExamSchedule={() => setIsExamModalOpen(true)}
+        onOpenExamSchedule={() => onNavigate('exam-schedule')}
       />
 
       {/* AVIS EXAMENS & 1ER CONTRÔLE - Notification officielle pour les parents et élèves */}
       <ExamNotificationBanner 
-        onOpenSchedule={() => setIsExamModalOpen(true)}
+        onOpenSchedule={() => onNavigate('exam-schedule')}
         onNavigate={onNavigate}
       />
 
@@ -630,6 +630,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
       <FirstExamScheduleModal 
         isOpen={isExamModalOpen}
         onClose={() => setIsExamModalOpen(false)}
+        onOpenFullPage={() => onNavigate('exam-schedule')}
       />
 
     </div>

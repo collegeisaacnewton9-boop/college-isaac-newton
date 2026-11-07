@@ -30,6 +30,7 @@ import { LegalPage } from './pages/LegalPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { FacultyPage } from './pages/FacultyPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { ExamSchedulePage } from './pages/ExamSchedulePage';
 
 import { User, Language, SchoolEvent } from './types';
 import { apiService } from './services/api';
@@ -284,6 +285,10 @@ export default function App() {
 
         {currentPage === 'events' && (
           <EventsPage onNavigate={handleNavigate} currentUser={currentUser} />
+        )}
+
+        {(currentPage === 'exam-schedule' || currentPage === 'horaires-examens' || currentPage === 'controles') && (
+          <ExamSchedulePage onNavigate={handleNavigate} />
         )}
 
         {currentPage === 'gallery' && (

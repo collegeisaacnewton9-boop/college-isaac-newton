@@ -161,15 +161,21 @@ export const githubService = {
   ): Promise<{ success: boolean; commitSha?: string; message: string }> {
     onProgress?.('Initialisation de la connexion Octokit...', 15);
 
-    // 1. Verify credentials via Octokit REST
-    const octokit = new Octokit({ auth: config.token });
+    // 1. Verify credentials via Octokit REST (with timeout, non-blocking on transient GitHub 500)
+    const octokit = new Octokit({ 
+      auth: config.token.trim(),
+      request: { timeout: 10000 }
+    });
     try {
       await octokit.rest.repos.get({
-        owner: config.owner,
-        repo: config.repo,
+        owner: config.owner.trim(),
+        repo: config.repo.trim(),
       });
     } catch (err: any) {
-      throw new Error(`Accès refusé au dépôt ${config.owner}/${config.repo}: ${err.message}`);
+      if (err.status === 401 || err.status === 403 || err.status === 404) {
+        throw new Error(`Accès refusé au dépôt ${config.owner}/${config.repo}: ${err.message}`);
+      }
+      console.warn('[GitHub Octokit Pre-check Notice - Proceeding to Backend Sync]', err.message || err);
     }
 
     onProgress?.('Préparation des fichiers sources et arborescence...', 40);

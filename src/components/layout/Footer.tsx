@@ -277,6 +277,15 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
               </li>
               <li>
                 <button 
+                  onClick={() => onNavigate('exam-schedule')} 
+                  className="hover:text-amber-300 transition-colors flex items-center gap-1.5 text-slate-300 font-medium hover:translate-x-0.5 duration-150 cursor-pointer whitespace-nowrap"
+                >
+                  <ArrowRight className="w-3 h-3 text-amber-400 shrink-0" />
+                  <span className="whitespace-nowrap">Horaires des Contrôles (Grilles)</span>
+                </button>
+              </li>
+              <li>
+                <button 
                   onClick={() => onNavigate('news')} 
                   className="hover:text-white transition-colors flex items-center gap-1.5 text-slate-400 hover:translate-x-0.5 duration-150 cursor-pointer whitespace-nowrap"
                 >

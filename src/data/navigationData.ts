@@ -166,12 +166,20 @@ export const DEFAULT_NAVIGATION_MENU: NavigationMenuItem[] = [
         order: 1,
       },
       { 
+        id: 'exam-schedule', 
+        label: 'Horaires des Contrôles & Examens', 
+        iconName: 'GraduationCap', 
+        description: 'Grilles officielles des 4 contrôles académiques (7e AF à NS4)',
+        isActive: true,
+        order: 2,
+      },
+      { 
         id: 'news', 
         label: 'Actualités & Vie de l’école', 
         iconName: 'Newspaper', 
         description: 'Événements, projets et réalisations des élèves',
         isActive: true,
-        order: 2,
+        order: 3,
       },
       { 
         id: 'gallery', 
