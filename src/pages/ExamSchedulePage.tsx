@@ -234,11 +234,11 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
               </span>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+            <div className="flex flex-wrap sm:flex-row items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={handlePrint}
-                className="inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-md transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                 title="Imprimer l'horaire d'examen au format A4"
               >
                 <Printer className="w-3.5 h-3.5" />
@@ -249,7 +249,7 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
                 href={`https://wa.me/${phone1.replace(/[^0-9]/g, '') || '50933160934'}?text=Bonjour,%20je%20souhaite%20une%20information%20concernant%20l'horaire%20des%20contrôles%20académiques`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors shadow-sm whitespace-nowrap"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors shadow-xs hover:shadow whitespace-nowrap"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span>WhatsApp Secrétariat</span>
@@ -834,7 +834,7 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
             <button
               type="button"
               onClick={() => setSelectedControl(0)}
-              className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer self-start sm:self-auto"
+              className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition-colors cursor-pointer self-start sm:self-auto"
             >
               Voir la Grille du 1er Contrôle
             </button>

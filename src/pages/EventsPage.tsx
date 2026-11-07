@@ -285,7 +285,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate, currentUser 
                   <button
                     type="button"
                     onClick={() => onNavigate?.('exam-schedule')}
-                    className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-xs transition-colors cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-xs transition-colors cursor-pointer"
                   >
                     <BookOpen className="w-3.5 h-3.5" />
                     <span>Page Horaires des Examens (7e-NS4)</span>
@@ -682,7 +682,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate, currentUser 
             <button
               type="button"
               onClick={() => onNavigate?.('exam-schedule')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-xs transition-colors cursor-pointer"
             >
               <BookOpen className="w-3.5 h-3.5" />
               <span>Consulter la Page Horaires</span>
