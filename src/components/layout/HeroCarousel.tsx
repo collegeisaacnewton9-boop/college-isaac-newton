@@ -320,8 +320,8 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate, onOpenEx
                 {activeSlide.subtitle}
               </p>
 
-              {/* Action Buttons */}
-              <div className="mt-4 sm:mt-6 flex flex-wrap items-center gap-3 sm:gap-4">
+              {/* Action Buttons - Fully responsive: full-width stacked on mobile, inline on tablet & desktop */}
+              <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-4 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => {
@@ -329,13 +329,13 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate, onOpenEx
                       if (onOpenExamSchedule) {
                         onOpenExamSchedule();
                       } else {
-                        onNavigate('events');
+                        onNavigate('exam-schedule');
                       }
                     } else {
                       onNavigate(activeSlide.ctaTarget || 'pre-registration');
                     }
                   }}
-                  className="inline-flex items-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-amber-400/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-amber-400/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
                 >
                   <span>{activeSlide.ctaText}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -345,7 +345,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onNavigate, onOpenEx
                   <button
                     type="button"
                     onClick={() => onNavigate(activeSlide.secondaryCtaTarget || 'contact')}
-                    className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-slate-900/70 hover:bg-slate-900 text-white font-medium text-xs sm:text-sm backdrop-blur-md border border-white/20 transition-all hover:border-white/40 cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-slate-900/70 hover:bg-slate-900 text-white font-medium text-xs sm:text-sm backdrop-blur-md border border-white/20 transition-all hover:border-white/40 cursor-pointer"
                   >
                     <span>{activeSlide.secondaryCtaText}</span>
                   </button>

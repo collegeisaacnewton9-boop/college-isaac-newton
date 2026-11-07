@@ -19,7 +19,9 @@ import {
   CalendarCheck,
   Palmtree,
   UserCheck,
-  Info
+  Info,
+  LayoutGrid,
+  Table as TableIcon
 } from 'lucide-react';
 import { SCHOOL_INFO } from '../data/mockData';
 import { FIRST_EXAM_DAYS } from '../components/events/FirstExamScheduleModal';
@@ -135,15 +137,24 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
     : FIRST_EXAM_DAYS.filter(d => d.dayName.toLowerCase() === selectedDay.toLowerCase());
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-7 space-y-6 sm:space-y-8 font-sans">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3.5 sm:py-6 lg:py-8 space-y-5 sm:space-y-7 font-sans">
       
-      {/* 1. Breadcrumbs & Top Navigation */}
-      <div className="flex flex-wrap items-center justify-between gap-3 text-xs border-b border-slate-200/80 pb-3">
-        <div className="flex items-center gap-2 text-slate-500">
+      {/* Print Stylesheet */}
+      <style>{`
+        @media print {
+          nav, header, footer, .no-print { display: none !important; }
+          body { background: white !important; color: black !important; font-size: 10pt !important; }
+          .print-block { break-inside: avoid; }
+        }
+      `}</style>
+
+      {/* 1. Breadcrumbs & Top Navigation Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs border-b border-slate-200/80 pb-3 no-print">
+        <div className="flex items-center gap-1.5 sm:gap-2 text-slate-500 overflow-x-auto whitespace-nowrap [scrollbar-width:none]">
           <button 
             type="button" 
             onClick={() => onNavigate('home')}
-            className="hover:text-blue-900 transition-colors cursor-pointer"
+            className="hover:text-blue-900 transition-colors cursor-pointer shrink-0"
           >
             Accueil
           </button>
@@ -151,12 +162,12 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
           <button 
             type="button" 
             onClick={() => onNavigate('events')}
-            className="hover:text-blue-900 transition-colors cursor-pointer"
+            className="hover:text-blue-900 transition-colors cursor-pointer shrink-0"
           >
             Vie Scolaire & Agenda
           </button>
           <span>/</span>
-          <span className="font-semibold text-slate-900">
+          <span className="font-semibold text-slate-900 truncate">
             Horaires des Contrôles Académiques
           </span>
         </div>
@@ -164,31 +175,31 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
         <button
           type="button"
           onClick={() => onNavigate('events')}
-          className="inline-flex items-center gap-1.5 text-blue-900 hover:text-blue-950 font-bold transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-blue-900 hover:text-blue-950 font-bold transition-colors cursor-pointer self-start sm:self-auto shrink-0"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Retour à l'Agenda Général</span>
         </button>
       </div>
 
-      {/* 2. Hero Header - Grand, Spacieux & Institutionnel */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-slate-900 text-white p-6 sm:p-8 lg:p-10 border border-slate-800 shadow-xl">
-        {/* Subtle decorative glow */}
+      {/* 2. Hero Header - Dynamic Responsive Container */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-slate-900 text-white p-4 sm:p-7 lg:p-9 border border-slate-800 shadow-xl">
+        {/* Glow ambient background */}
         <div className="absolute -right-20 -bottom-20 w-80 h-80 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -left-20 -top-20 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative space-y-4 max-w-4xl">
+        <div className="relative space-y-3.5 max-w-4xl">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-amber-400 text-slate-950 shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider bg-amber-400 text-slate-950 shadow-sm">
               <Sparkles className="w-3.5 h-3.5" />
               Année Académique 2026–2027
             </span>
-            <span className="text-xs text-slate-300 font-medium px-2.5 py-0.5 rounded-full bg-white/10 border border-white/10">
+            <span className="text-[11px] sm:text-xs text-slate-300 font-medium px-2.5 py-0.5 rounded-full bg-white/10 border border-white/10">
               4 Contrôles Académiques MENFP
             </span>
           </div>
 
-          <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
+          <h1 className="font-serif text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white tracking-tight leading-tight">
             Horaires des Épreuves & Contrôles Académiques
           </h1>
 
@@ -196,14 +207,14 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
             Consultez les grilles horaires officielles des évaluations écrites pour le 
             <strong className="text-amber-300 font-semibold"> 3e Cycle Fondamental (7e, 8e, 9e AF)</strong> et le 
             <strong className="text-amber-300 font-semibold"> Nouveau Secondaire (NS1 à NS4)</strong>. 
-            Les examens sont organisés en salle de cours aux heures régulières d'enseignement.
+            Les examens se déroulent aux heures régulières de classe.
           </p>
 
-          {/* Quick Contacts Bar inside Header */}
-          <div className="pt-3 border-t border-slate-800/90 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-300">
-              <span className="text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1.5 text-xs">
-                <Phone className="w-4 h-4" /> Secrétariat :
+          {/* Quick Contacts & Actions inside Header */}
+          <div className="pt-3 border-t border-slate-800/90 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4 no-print">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-slate-300">
+              <span className="text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1.5 text-[11px] sm:text-xs">
+                <Phone className="w-3.5 h-3.5" /> Secrétariat :
               </span>
               <a 
                 href={`tel:${phone1.replace(/[^0-9+]/g, '')}`}
@@ -218,19 +229,19 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
               >
                 {phone2}
               </a>
-              <span className="text-slate-400 text-xs hidden md:inline">
+              <span className="text-slate-400 text-xs hidden lg:inline">
                 (Accueil des familles dès 07h15 à Delmas 50)
               </span>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={handlePrint}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-md transition-all active:scale-95 cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider shadow-md transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                 title="Imprimer l'horaire d'examen au format A4"
               >
-                <Printer className="w-4 h-4" />
+                <Printer className="w-3.5 h-3.5" />
                 <span>Imprimer la Grille</span>
               </button>
 
@@ -238,28 +249,28 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
                 href={`https://wa.me/${phone1.replace(/[^0-9]/g, '') || '50933160934'}?text=Bonjour,%20je%20souhaite%20une%20information%20concernant%20l'horaire%20des%20contrôles%20académiques`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors shadow-sm"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-colors shadow-sm whitespace-nowrap"
               >
-                <MessageSquare className="w-4 h-4" />
-                <span className="hidden sm:inline">WhatsApp Secrétariat</span>
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span>WhatsApp Secrétariat</span>
               </a>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Selector Tabs: The 4 Controls */}
-      <div className="space-y-3">
+      {/* 3. Selector Tabs: The 4 Controls (Responsive 1/2/4 Grid) */}
+      <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
+          <h2 className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-slate-500">
             Sélectionnez la période d'évaluation :
           </h2>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-[11px] sm:text-xs text-slate-400 font-mono">
             {CONTROL_PERIODS.length} périodes officielles
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
           {CONTROL_PERIODS.map((ctrl, idx) => {
             const isSelected = selectedControl === idx;
             return (
@@ -267,22 +278,22 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
                 key={ctrl.id}
                 type="button"
                 onClick={() => setSelectedControl(idx)}
-                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col justify-between ${
+                className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer relative flex flex-col justify-between ${
                   isSelected
-                    ? 'bg-blue-900 text-white border-blue-900 shadow-lg scale-[1.01]'
+                    ? 'bg-blue-900 text-white border-blue-900 shadow-md ring-2 ring-blue-900/20'
                     : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200/90 shadow-2xs'
                 }`}
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className={`text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    <span className={`text-[10px] sm:text-[11px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
                       isSelected 
                         ? 'bg-amber-400 text-slate-950' 
                         : 'bg-blue-50 text-blue-900'
                     }`}>
                       {ctrl.number}e Contrôle
                     </span>
-                    <span className={`text-[11px] font-mono font-semibold ${
+                    <span className={`text-[10px] sm:text-[11px] font-mono font-semibold ${
                       isSelected ? 'text-blue-200' : 'text-slate-400'
                     }`}>
                       {ctrl.durationDays} jours
@@ -290,7 +301,7 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
                   </div>
 
                   <div>
-                    <h3 className={`font-serif font-bold text-base ${
+                    <h3 className={`font-serif font-bold text-sm sm:text-base ${
                       isSelected ? 'text-white' : 'text-slate-900'
                     }`}>
                       {ctrl.periodName}
@@ -303,7 +314,7 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
                   </div>
                 </div>
 
-                <div className={`mt-3 pt-2 text-[11px] border-t flex items-center justify-between ${
+                <div className={`mt-3 pt-2 text-[10.5px] sm:text-[11px] border-t flex items-center justify-between ${
                   isSelected ? 'border-white/20 text-slate-200' : 'border-slate-100 text-slate-500'
                 }`}>
                   <span className="truncate">{ctrl.statusBadge}</span>
@@ -318,24 +329,24 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
       </div>
 
       {/* 4. Official Directive Banner */}
-      <div className="bg-amber-50 border-2 border-amber-300/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-950 shadow-xs">
-        <div className="flex items-start gap-3">
+      <div className="bg-amber-50 border-2 border-amber-300/80 rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-amber-950 shadow-xs">
+        <div className="flex items-start gap-3 min-w-0">
           <div className="w-8 h-8 rounded-xl bg-amber-200/80 text-amber-900 flex items-center justify-center shrink-0 mt-0.5">
             <AlertCircle className="w-5 h-5 text-amber-800" />
           </div>
-          <div className="space-y-0.5 text-xs sm:text-sm">
+          <div className="space-y-0.5 text-xs sm:text-sm min-w-0">
             <h4 className="font-serif font-bold text-amber-950 text-sm sm:text-base">
               Note Officielle de la Direction des Études
             </h4>
             <p className="text-amber-900/90 leading-relaxed font-light">
               Les examens se feront <strong>aux heures habituelles des cours par les professeurs de chaque matière</strong>. 
-              Toutes autres dispositions pédagogiques ou consignes jugées nécessaires par la Direction seront appliquées pour garantir la sérénité et la régularité des épreuves.
+              Toutes autres dispositions pédagogiques ou consignes jugées nécessaires par la Direction seront appliquées pour garantir la sérénité des épreuves.
             </p>
           </div>
         </div>
 
         <div className="shrink-0 flex items-center gap-2 self-end sm:self-center">
-          <span className="text-[11px] font-mono uppercase tracking-wider text-amber-800 font-bold bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-300">
+          <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-amber-800 font-bold bg-amber-100 px-2.5 py-1 rounded-lg border border-amber-300 whitespace-nowrap">
             Règlement Pédagogique
           </span>
         </div>
@@ -344,256 +355,412 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
       {/* 5. Period Content : 1er Contrôle vs 2e/3e/4e Contrôles */}
       {selectedControl === 0 ? (
         /* ================= 1ER CONTRÔLE : GRILLE OFFICIELLE COMPLÈTE ================= */
-        <div className="space-y-6">
+        <div className="space-y-5 sm:space-y-6">
           
-          {/* Controls Bar : Level Filters + Day Selectors + View Mode Switch */}
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Controls Bar : Level Filters + Day Selectors + View Mode Switch (Fully responsive) */}
+          <div className="bg-white rounded-2xl p-3.5 sm:p-5 border border-slate-200/90 shadow-xs space-y-3.5 no-print">
             
-            {/* Cycle Selector */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 mr-1">
-                Filière / Niveau :
-              </span>
-              {[
-                { id: 'all', label: 'Tous les Niveaux (Vue d’ensemble)' },
-                { id: 'fundamental', label: '3e Cycle Fondamental (7e, 8e, 9e AF)' },
-                { id: 'secondary123', label: 'Nouveau Secondaire 1, 2 et 3' },
-                { id: 'secondary4', label: 'Secondaire 4 (NS4 / Terminale)' },
-              ].map(cycle => (
-                <button
-                  key={cycle.id}
-                  type="button"
-                  onClick={() => setSelectedCycle(cycle.id as any)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                    selectedCycle === cycle.id
-                      ? 'bg-blue-900 text-white shadow-xs'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  {cycle.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Day Filter */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-slate-500 mr-1">
-                Jour :
-              </span>
-              {['all', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].map(day => (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => setSelectedDay(day)}
-                  className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                    selectedDay.toLowerCase() === day.toLowerCase()
-                      ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  {day === 'all' ? 'Toute la semaine' : day}
-                </button>
-              ))}
-            </div>
-
-          </div>
-
-          {/* Schedule Content Cards */}
-          <div className="space-y-6">
-            {filteredDays.map((day) => (
-              <div 
-                key={day.dayName}
-                className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-hidden"
-              >
-                {/* Day Header */}
-                <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white px-5 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-serif font-extrabold text-base shadow-sm">
-                      {day.dayName.substring(0, 2)}
-                    </div>
-                    <div>
-                      <h3 className="font-serif font-bold text-lg sm:text-xl text-white">
-                        {day.dayName}
-                      </h3>
-                      <p className="text-xs text-slate-300 font-mono">
-                        {day.dateStr}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] uppercase font-bold tracking-wider px-3 py-1 rounded-full bg-white/10 text-amber-300 border border-white/15">
-                      Journée d'évaluation officielle
-                    </span>
-                  </div>
-                </div>
-
-                {/* Day Grid by Level */}
-                <div className="p-5 sm:p-7 grid grid-cols-1 md:grid-cols-3 gap-5">
-                  
-                  {/* 1. 3e Cycle Fondamental */}
-                  {(selectedCycle === 'all' || selectedCycle === 'fundamental') && (
-                    <div className={`rounded-2xl border transition-all p-5 flex flex-col justify-between ${
-                      selectedCycle === 'fundamental'
-                        ? 'md:col-span-3 bg-blue-50/60 border-blue-300 shadow-sm'
-                        : 'bg-slate-50/70 border-slate-200/90'
-                    }`}>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
-                          <div className="flex items-center gap-2">
-                            <GraduationCap className="w-4 h-4 text-blue-900" />
-                            <h4 className="font-serif font-bold text-sm sm:text-base text-slate-900">
-                              3e Cycle (7e, 8e, 9e AF)
-                            </h4>
-                          </div>
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 text-blue-900">
-                            Fondamental
-                          </span>
-                        </div>
-
-                        <div className="space-y-2.5">
-                          {day.fundamental.map((slot, idx) => (
-                            <div 
-                              key={idx}
-                              className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between gap-3 hover:border-blue-300 transition-colors"
-                            >
-                              <div className="min-w-0">
-                                <p className="font-bold text-sm text-slate-900 truncate">
-                                  {slot.subject}
-                                </p>
-                                {slot.notes && (
-                                  <p className="text-xs text-slate-500 mt-0.5">{slot.notes}</p>
-                                )}
-                              </div>
-                              <span className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-blue-50 text-blue-900 border border-blue-200">
-                                {slot.time}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 pt-2.5 border-t border-slate-200/70 text-[11px] text-slate-500 font-mono flex items-center justify-between">
-                        <span>Épreuves en salle</span>
-                        <span className="font-bold text-blue-900">Surveillance continue</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 2. Nouveau Secondaire 1, 2 et 3 */}
-                  {(selectedCycle === 'all' || selectedCycle === 'secondary123') && (
-                    <div className={`rounded-2xl border transition-all p-5 flex flex-col justify-between ${
-                      selectedCycle === 'secondary123'
-                        ? 'md:col-span-3 bg-amber-50/60 border-amber-300 shadow-sm'
-                        : 'bg-slate-50/70 border-slate-200/90'
-                    }`}>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
-                          <div className="flex items-center gap-2">
-                            <BookOpen className="w-4 h-4 text-amber-700" />
-                            <h4 className="font-serif font-bold text-sm sm:text-base text-slate-900">
-                              Secondaire 1, 2 et 3 (NS)
-                            </h4>
-                          </div>
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-900">
-                            Secondaire
-                          </span>
-                        </div>
-
-                        <div className="space-y-2.5">
-                          {day.secondary123.map((slot, idx) => (
-                            <div 
-                              key={idx}
-                              className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between gap-3 hover:border-amber-300 transition-colors"
-                            >
-                              <div className="min-w-0">
-                                <p className="font-bold text-sm text-slate-900 truncate">
-                                  {slot.subject}
-                                </p>
-                                {slot.notes && (
-                                  <p className="text-xs text-slate-500 mt-0.5">{slot.notes}</p>
-                                )}
-                              </div>
-                              <span className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                                {slot.time}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 pt-2.5 border-t border-slate-200/70 text-[11px] text-slate-500 font-mono flex items-center justify-between">
-                        <span>Épreuves en salle</span>
-                        <span className="font-bold text-amber-800">Surveillance continue</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* 3. Nouveau Secondaire 4 (NS4) */}
-                  {(selectedCycle === 'all' || selectedCycle === 'secondary4') && (
-                    <div className={`rounded-2xl border transition-all p-5 flex flex-col justify-between ${
-                      selectedCycle === 'secondary4'
-                        ? 'md:col-span-3 bg-purple-50/60 border-purple-300 shadow-sm'
-                        : 'bg-slate-50/70 border-slate-200/90'
-                    }`}>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
-                          <div className="flex items-center gap-2">
-                            <Sparkles className="w-4 h-4 text-purple-700" />
-                            <h4 className="font-serif font-bold text-sm sm:text-base text-slate-900">
-                              Secondaire 4 (NS4)
-                            </h4>
-                          </div>
-                          <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-100 text-purple-900">
-                            Terminale (Bac)
-                          </span>
-                        </div>
-
-                        <div className="space-y-2.5">
-                          {day.secondary4.map((slot, idx) => (
-                            <div 
-                              key={idx}
-                              className="p-3 rounded-xl bg-white border border-slate-200 shadow-2xs flex items-center justify-between gap-3 hover:border-purple-300 transition-colors"
-                            >
-                              <div className="min-w-0">
-                                <p className="font-bold text-sm text-slate-900 truncate">
-                                  {slot.subject}
-                                </p>
-                                {slot.notes && (
-                                  <p className="text-xs text-slate-500 mt-0.5">{slot.notes}</p>
-                                )}
-                              </div>
-                              <span className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-purple-50 text-purple-800 border border-purple-200">
-                                {slot.time}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="mt-4 pt-2.5 border-t border-slate-200/70 text-[11px] text-slate-500 font-mono flex items-center justify-between">
-                        <span>Épreuves en salle</span>
-                        <span className="font-bold text-purple-800">Baccalauréat Prépa</span>
-                      </div>
-                    </div>
-                  )}
-
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              
+              {/* Cycle Selector (Horizontally scrollable on mobile) */}
+              <div className="space-y-1.5 min-w-0">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500 block">
+                  Filtrer par Filière / Cycle :
+                </span>
+                <div className="flex items-center gap-1.5 overflow-x-auto py-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-nowrap sm:flex-wrap">
+                  {[
+                    { id: 'all', label: 'Tous les Niveaux' },
+                    { id: 'fundamental', label: '3e Cycle (7e, 8e, 9e AF)' },
+                    { id: 'secondary123', label: 'Nouveau Secondaire 1, 2 et 3' },
+                    { id: 'secondary4', label: 'Secondaire 4 (NS4 / Bac)' },
+                  ].map(cycle => (
+                    <button
+                      key={cycle.id}
+                      type="button"
+                      onClick={() => setSelectedCycle(cycle.id as any)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                        selectedCycle === cycle.id
+                          ? 'bg-blue-900 text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {cycle.label}
+                    </button>
+                  ))}
                 </div>
               </div>
-            ))}
+
+              {/* View Switcher (Grille vs Tableau Matrice) */}
+              <div className="space-y-1.5 shrink-0 self-start lg:self-auto">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500 block">
+                  Mode d'Affichage :
+                </span>
+                <div className="inline-flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('cards')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      viewMode === 'cards'
+                        ? 'bg-white text-blue-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span>Vue Cartes</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('table')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                      viewMode === 'table'
+                        ? 'bg-white text-blue-900 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <TableIcon className="w-3.5 h-3.5" />
+                    <span>Tableau Hebdo</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Day Filter (Lundi - Vendredi) */}
+            {viewMode === 'cards' && (
+              <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-500 block">
+                  Sélectionner un Jour Spécifique :
+                </span>
+                <div className="flex items-center gap-1.5 overflow-x-auto py-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-nowrap sm:flex-wrap">
+                  {['all', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'].map(day => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => setSelectedDay(day)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                        selectedDay.toLowerCase() === day.toLowerCase()
+                          ? 'bg-amber-400 text-slate-950 font-bold shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {day === 'all' ? 'Toute la semaine' : day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
           </div>
+
+          {/* VIEW 1 : CARDS LAYOUT (Responsive 1 col mobile, 2 cols tablet, 3 cols desktop) */}
+          {viewMode === 'cards' ? (
+            <div className="space-y-5 sm:space-y-6">
+              {filteredDays.map((day) => (
+                <div 
+                  key={day.dayName}
+                  className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-hidden print-block"
+                >
+                  {/* Day Header */}
+                  <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white px-4 sm:px-6 py-3.5 sm:py-4 flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-800">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-serif font-extrabold text-sm sm:text-base shadow-sm shrink-0">
+                        {day.dayName.substring(0, 2)}
+                      </div>
+                      <div>
+                        <h3 className="font-serif font-bold text-base sm:text-lg text-white">
+                          {day.dayName}
+                        </h3>
+                        <p className="text-[11px] sm:text-xs text-slate-300 font-mono">
+                          {day.dateStr}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-white/10 text-amber-300 border border-white/15">
+                        Journée d'évaluation
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Day Grid by Level : 1 col mobile, 2 cols tablet (md), 3 cols desktop (xl) */}
+                  <div className="p-3.5 sm:p-5 lg:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-4 lg:gap-5">
+                    
+                    {/* 1. 3e Cycle Fondamental */}
+                    {(selectedCycle === 'all' || selectedCycle === 'fundamental') && (
+                      <div className={`rounded-2xl border transition-all p-3.5 sm:p-4 flex flex-col justify-between ${
+                        selectedCycle === 'fundamental'
+                          ? 'md:col-span-2 xl:col-span-3 bg-blue-50/60 border-blue-300 shadow-sm'
+                          : 'bg-slate-50/70 border-slate-200/90'
+                      }`}>
+                        <div className="space-y-2.5">
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <GraduationCap className="w-4 h-4 text-blue-900 shrink-0" />
+                              <h4 className="font-serif font-bold text-xs sm:text-sm text-slate-900 truncate">
+                                3e Cycle (7e, 8e, 9e AF)
+                              </h4>
+                            </div>
+                            <span className="text-[9.5px] sm:text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 text-blue-900 shrink-0">
+                              Fondamental
+                            </span>
+                          </div>
+
+                          <div className="space-y-2">
+                            {day.fundamental.map((slot, idx) => (
+                              <div 
+                                key={idx}
+                                className="p-2.5 sm:p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col xs:flex-row sm:flex-row xs:items-center sm:items-center justify-between gap-1.5 sm:gap-2.5 hover:border-blue-300 transition-colors"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-xs sm:text-sm text-slate-900 leading-snug break-words">
+                                    {slot.subject}
+                                  </p>
+                                  {slot.notes && (
+                                    <p className="text-[11px] text-slate-500 mt-0.5">{slot.notes}</p>
+                                  )}
+                                </div>
+                                <span className="shrink-0 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-mono font-bold bg-blue-50 text-blue-900 border border-blue-200 self-start xs:self-center sm:self-center whitespace-nowrap">
+                                  {slot.time}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mt-3 pt-2 border-t border-slate-200/70 text-[10px] sm:text-[11px] text-slate-500 font-mono flex items-center justify-between">
+                          <span>Épreuves en salle</span>
+                          <span className="font-bold text-blue-900">Surveillance continue</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 2. Nouveau Secondaire 1, 2 et 3 */}
+                    {(selectedCycle === 'all' || selectedCycle === 'secondary123') && (
+                      <div className={`rounded-2xl border transition-all p-3.5 sm:p-4 flex flex-col justify-between ${
+                        selectedCycle === 'secondary123'
+                          ? 'md:col-span-2 xl:col-span-3 bg-amber-50/60 border-amber-300 shadow-sm'
+                          : 'bg-slate-50/70 border-slate-200/90'
+                      }`}>
+                        <div className="space-y-2.5">
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <BookOpen className="w-4 h-4 text-amber-700 shrink-0" />
+                              <h4 className="font-serif font-bold text-xs sm:text-sm text-slate-900 truncate">
+                                Secondaire 1, 2 et 3 (NS)
+                              </h4>
+                            </div>
+                            <span className="text-[9.5px] sm:text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-100 text-amber-900 shrink-0">
+                              Secondaire
+                            </span>
+                          </div>
+
+                          <div className="space-y-2">
+                            {day.secondary123.map((slot, idx) => (
+                              <div 
+                                key={idx}
+                                className="p-2.5 sm:p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col xs:flex-row sm:flex-row xs:items-center sm:items-center justify-between gap-1.5 sm:gap-2.5 hover:border-amber-300 transition-colors"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-xs sm:text-sm text-slate-900 leading-snug break-words">
+                                    {slot.subject}
+                                  </p>
+                                  {slot.notes && (
+                                    <p className="text-[11px] text-slate-500 mt-0.5">{slot.notes}</p>
+                                  )}
+                                </div>
+                                <span className="shrink-0 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 self-start xs:self-center sm:self-center whitespace-nowrap">
+                                  {slot.time}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mt-3 pt-2 border-t border-slate-200/70 text-[10px] sm:text-[11px] text-slate-500 font-mono flex items-center justify-between">
+                          <span>Épreuves en salle</span>
+                          <span className="font-bold text-amber-800">Surveillance continue</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 3. Nouveau Secondaire 4 (NS4) */}
+                    {(selectedCycle === 'all' || selectedCycle === 'secondary4') && (
+                      <div className={`rounded-2xl border transition-all p-3.5 sm:p-4 flex flex-col justify-between ${
+                        selectedCycle === 'secondary4'
+                          ? 'md:col-span-2 xl:col-span-3 bg-purple-50/60 border-purple-300 shadow-sm'
+                          : 'bg-slate-50/70 border-slate-200/90'
+                      }`}>
+                        <div className="space-y-2.5">
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Sparkles className="w-4 h-4 text-purple-700 shrink-0" />
+                              <h4 className="font-serif font-bold text-xs sm:text-sm text-slate-900 truncate">
+                                Secondaire 4 (NS4)
+                              </h4>
+                            </div>
+                            <span className="text-[9.5px] sm:text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-purple-100 text-purple-900 shrink-0">
+                              Terminale (Bac)
+                            </span>
+                          </div>
+
+                          <div className="space-y-2">
+                            {day.secondary4.map((slot, idx) => (
+                              <div 
+                                key={idx}
+                                className="p-2.5 sm:p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col xs:flex-row sm:flex-row xs:items-center sm:items-center justify-between gap-1.5 sm:gap-2.5 hover:border-purple-300 transition-colors"
+                              >
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-xs sm:text-sm text-slate-900 leading-snug break-words">
+                                    {slot.subject}
+                                  </p>
+                                  {slot.notes && (
+                                    <p className="text-[11px] text-slate-500 mt-0.5">{slot.notes}</p>
+                                  )}
+                                </div>
+                                <span className="shrink-0 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-mono font-bold bg-purple-50 text-purple-800 border border-purple-200 self-start xs:self-center sm:self-center whitespace-nowrap">
+                                  {slot.time}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mt-3 pt-2 border-t border-slate-200/70 text-[10px] sm:text-[11px] text-slate-500 font-mono flex items-center justify-between">
+                          <span>Épreuves en salle</span>
+                          <span className="font-bold text-purple-800">Baccalauréat Prépa</span>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* VIEW 2 : COMPREHENSIVE WEEKLY MATRIX TABLE (TABLEAU COMPLET) */
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="p-4 bg-slate-900 text-white flex items-center justify-between gap-2 border-b border-slate-800">
+                <div className="flex items-center gap-2">
+                  <TableIcon className="w-4 h-4 text-amber-400" />
+                  <h3 className="font-serif font-bold text-sm sm:text-base text-white">
+                    Matrice Hebdomadaire Complète · 1er Contrôle (9 au 13 Nov. 2026)
+                  </h3>
+                </div>
+                <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+                  Filières Fondamental & Secondaire
+                </span>
+              </div>
+
+              {/* Scrollable table container */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse min-w-[700px]">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[10.5px]">
+                      <th className="p-3 w-40 border-r border-slate-200 sticky left-0 bg-slate-100 z-10 shadow-xs">
+                        Niveau / Cycle
+                      </th>
+                      {FIRST_EXAM_DAYS.map(d => (
+                        <th key={d.dayName} className="p-3 min-w-[150px] border-r border-slate-200">
+                          <div>{d.dayName}</div>
+                          <div className="text-[9.5px] font-normal text-slate-500 lowercase first-letter:uppercase">{d.dateStr}</div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 text-slate-800">
+                    
+                    {/* Row 1: 3e Cycle Fondamental */}
+                    <tr className="hover:bg-blue-50/30 transition-colors">
+                      <td className="p-3 font-serif font-bold text-slate-900 bg-slate-50/80 border-r border-slate-200 sticky left-0 z-10">
+                        <div className="flex items-center gap-1.5">
+                          <GraduationCap className="w-3.5 h-3.5 text-blue-900 shrink-0" />
+                          <span>3e Cycle Fondamental</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-500 font-normal">7e, 8e, 9e AF</span>
+                      </td>
+                      {FIRST_EXAM_DAYS.map(d => (
+                        <td key={d.dayName} className="p-2.5 border-r border-slate-100 align-top">
+                          <div className="space-y-1.5">
+                            {d.fundamental.map((s, i) => (
+                              <div key={i} className="p-1.5 rounded bg-blue-50/60 border border-blue-100">
+                                <div className="font-bold text-[11px] text-slate-900">{s.subject}</div>
+                                <div className="text-[9.5px] font-mono text-blue-900">{s.time}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Row 2: Nouveau Secondaire 1, 2 et 3 */}
+                    <tr className="hover:bg-amber-50/30 transition-colors">
+                      <td className="p-3 font-serif font-bold text-slate-900 bg-slate-50/80 border-r border-slate-200 sticky left-0 z-10">
+                        <div className="flex items-center gap-1.5">
+                          <BookOpen className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                          <span>Secondaire 1, 2 et 3</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-slate-500 font-normal">NS1, NS2, NS3</span>
+                      </td>
+                      {FIRST_EXAM_DAYS.map(d => (
+                        <td key={d.dayName} className="p-2.5 border-r border-slate-100 align-top">
+                          <div className="space-y-1.5">
+                            {d.secondary123.map((s, i) => (
+                              <div key={i} className="p-1.5 rounded bg-amber-50/60 border border-amber-100">
+                                <div className="font-bold text-[11px] text-slate-900">{s.subject}</div>
+                                <div className="text-[9.5px] font-mono text-amber-800">{s.time}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+
+                    {/* Row 3: Secondaire 4 */}
+                    <tr className="hover:bg-purple-50/30 transition-colors">
+                      <td className="p-3 font-serif font-bold text-slate-900 bg-slate-50/80 border-r border-slate-200 sticky left-0 z-10">
+                        <div className="flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+                          <span>Secondaire 4 (NS4)</span>
+                        </div>
+                        <span className="text-[10px] font-mono text-purple-700 font-bold">Terminale (Bac)</span>
+                      </td>
+                      {FIRST_EXAM_DAYS.map(d => (
+                        <td key={d.dayName} className="p-2.5 border-r border-slate-100 align-top">
+                          <div className="space-y-1.5">
+                            {d.secondary4.map((s, i) => (
+                              <div key={i} className="p-1.5 rounded bg-purple-50/60 border border-purple-100">
+                                <div className="font-bold text-[11px] text-slate-900">{s.subject}</div>
+                                <div className="text-[9.5px] font-mono text-purple-800">{s.time}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      ))}
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="p-3 bg-slate-50 border-t border-slate-200 text-[11px] text-slate-500 flex flex-wrap items-center justify-between gap-2">
+                <span>Glissez horizontalement pour faire défiler tous les jours de la semaine.</span>
+                <span className="font-bold text-blue-900">Collège Isaac Newton · SI Pédagogique</span>
+              </div>
+            </div>
+          )}
 
         </div>
       ) : (
         /* ================= 2E, 3E & 4E CONTRÔLES : VUE SYNTHÉTIQUE & PRÉVISIONNELLE ================= */
-        <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 lg:p-8 border border-slate-200 shadow-sm space-y-5 sm:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
             <div>
               <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-blue-900 mb-1">
                 <CalendarCheck className="w-4 h-4 text-amber-500" />
                 <span>Période Académique Officielle · {currentControl.label}</span>
               </div>
-              <h3 className="font-serif text-xl sm:text-2xl font-bold text-slate-900">
+              <h3 className="font-serif text-lg sm:text-2xl font-bold text-slate-900">
                 {currentControl.periodName} ({currentControl.datesRange})
               </h3>
             </div>
@@ -602,12 +769,12 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-blue-900">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+              <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-blue-900">
                 Dates des Examens
               </span>
-              <p className="font-serif font-bold text-lg text-slate-900">
+              <p className="font-serif font-bold text-base sm:text-lg text-slate-900">
                 {currentControl.examDates}
               </p>
               <p className="text-xs text-slate-600">
@@ -615,11 +782,11 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-800">
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+              <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-emerald-800">
                 Remise des Carnets / Notes
               </span>
-              <p className="font-serif font-bold text-lg text-slate-900">
+              <p className="font-serif font-bold text-base sm:text-lg text-slate-900">
                 {currentControl.reportCardDate}
               </p>
               <p className="text-xs text-slate-600">
@@ -627,11 +794,11 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
               </p>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-amber-800">
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5 sm:col-span-2 lg:col-span-1">
+              <span className="text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider text-amber-800">
                 Congés & Vacances
               </span>
-              <p className="font-serif font-bold text-base text-slate-900">
+              <p className="font-serif font-bold text-sm sm:text-base text-slate-900">
                 {currentControl.holidays || 'Selon le calendrier officiel MENFP'}
               </p>
               <p className="text-xs text-slate-600">
@@ -641,12 +808,12 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
           </div>
 
           {currentControl.specialEvents && (
-            <div className="p-5 rounded-2xl bg-blue-950 text-white space-y-3">
-              <h4 className="font-serif font-bold text-sm sm:text-base text-amber-300 flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-400" />
-                Événements Clés & Examens d'État durant cette période :
+            <div className="p-4 sm:p-5 rounded-2xl bg-blue-950 text-white space-y-3">
+              <h4 className="font-serif font-bold text-xs sm:text-sm md:text-base text-amber-300 flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Événements Clés & Examens d'État durant cette période :</span>
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs text-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs text-slate-200">
                 {currentControl.specialEvents.map((evt, idx) => (
                   <div key={idx} className="flex items-center gap-2 bg-white/10 p-2.5 rounded-xl border border-white/10">
                     <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -657,17 +824,17 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
             </div>
           )}
 
-          <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 text-xs text-amber-900 flex items-center justify-between gap-3">
+          <div className="bg-amber-50 p-3.5 sm:p-4 rounded-2xl border border-amber-200 text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <Info className="w-4 h-4 text-amber-700 shrink-0" />
               <span>
-                La grille horaire détaillée matière par matière pour le <strong>{currentControl.label}</strong> sera publiée et affichée 2 semaines avant les épreuves.
+                La grille horaire détaillée matière par matière pour le <strong>{currentControl.label}</strong> sera diffusée 2 semaines avant les épreuves.
               </span>
             </div>
             <button
               type="button"
               onClick={() => setSelectedControl(0)}
-              className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer"
+              className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs uppercase tracking-wider transition-colors cursor-pointer self-start sm:self-auto"
             >
               Voir la Grille du 1er Contrôle
             </button>
@@ -675,12 +842,12 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
         </div>
       )}
 
-      {/* 6. Consignes d'Organisation & Conseils aux Familles */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+      {/* 6. Consignes d'Organisation & Conseils aux Familles (Responsive 1/2/4 Grid) */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-slate-200 shadow-sm space-y-4 sm:space-y-5 print-block">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-blue-900" />
-            <h3 className="font-serif font-bold text-base sm:text-lg text-slate-900">
+            <ShieldCheck className="w-5 h-5 text-blue-900 shrink-0" />
+            <h3 className="font-serif font-bold text-sm sm:text-base text-slate-900">
               Directives Pédagogiques & Consignes aux Candidats
             </h3>
           </div>
@@ -689,10 +856,10 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs text-slate-700">
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs text-slate-700">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
             <div className="flex items-center gap-2 text-blue-900 font-bold">
-              <Clock className="w-4 h-4" />
+              <Clock className="w-4 h-4 shrink-0" />
               <span>Ponctualité dès 07h15</span>
             </div>
             <p className="text-slate-600 leading-relaxed">
@@ -700,9 +867,9 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
             <div className="flex items-center gap-2 text-emerald-800 font-bold">
-              <UserCheck className="w-4 h-4" />
+              <UserCheck className="w-4 h-4 shrink-0" />
               <span>Uniforme Complet Obligatoire</span>
             </div>
             <p className="text-slate-600 leading-relaxed">
@@ -710,9 +877,9 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
             <div className="flex items-center gap-2 text-amber-800 font-bold">
-              <BookOpen className="w-4 h-4" />
+              <BookOpen className="w-4 h-4 shrink-0" />
               <span>Matériel Personnel</span>
             </div>
             <p className="text-slate-600 leading-relaxed">
@@ -720,9 +887,9 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
             <div className="flex items-center gap-2 text-rose-800 font-bold">
-              <AlertCircle className="w-4 h-4" />
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span>Téléphones Strictement Interdits</span>
             </div>
             <p className="text-slate-600 leading-relaxed">
@@ -731,17 +898,17 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
           </div>
         </div>
 
-        {/* Secretary Contacts & Direct assistance */}
-        <div className="mt-4 p-5 rounded-2xl bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        {/* Secretary Contacts & Direct Assistance */}
+        <div className="mt-3 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-              <Phone className="w-4 h-4" />
-              Assistance & Justification d'Absence Immédiate
+              <Phone className="w-4 h-4 shrink-0" />
+              <span>Assistance & Justification d'Absence Immédiate</span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-200">
+            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed">
               Pour signaler un cas de force majeure ou maladie le jour d'un examen, contactez le secrétariat avant 09h00 :
             </p>
-            <div className="flex flex-wrap items-center gap-3 pt-1 text-xs">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-1 text-xs">
               <a 
                 href={`tel:${phone1.replace(/[^0-9+]/g, '')}`}
                 className="font-mono font-bold text-white hover:text-amber-300 underline"
@@ -755,17 +922,17 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
               >
                 Ligne 2 : {phone2}
               </a>
-              <span className="text-slate-500">|</span>
+              <span className="text-slate-500 hidden sm:inline">|</span>
               <a 
                 href={`mailto:${SCHOOL_INFO.email}`}
-                className="text-amber-300 hover:underline"
+                className="text-amber-300 hover:underline block sm:inline truncate max-w-[200px]"
               >
                 {SCHOOL_INFO.email}
               </a>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
+          <div className="flex items-center gap-2 shrink-0 w-full md:w-auto no-print">
             <button
               type="button"
               onClick={handlePrint}
