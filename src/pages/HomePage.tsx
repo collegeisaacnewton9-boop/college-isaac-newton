@@ -30,6 +30,7 @@ import { getMediaImageUrl } from '../utils/cacheBuster';
 import { ResponsiveLazyImage } from '../components/common/ResponsiveLazyImage';
 import { ExamNotificationBanner } from '../components/home/ExamNotificationBanner';
 import { FirstExamScheduleModal } from '../components/events/FirstExamScheduleModal';
+import { ExamReminderSubscribeModal } from '../components/events/ExamReminderSubscribeModal';
 
 interface HomePageProps {
   onNavigate: (page: string, subSection?: string) => void;
@@ -46,6 +47,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
   const [newsList, setNewsList] = useState<NewsArticle[]>(INITIAL_NEWS);
   const [eventsList, setEventsList] = useState<SchoolEvent[]>(INITIAL_EVENTS);
   const [isExamModalOpen, setIsExamModalOpen] = useState(false);
+  const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
 
   useEffect(() => {
     apiService.getSettings().then(setSettings).catch(() => {});
@@ -94,6 +96,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
       <ExamNotificationBanner 
         onOpenSchedule={() => onNavigate('exam-schedule')}
         onNavigate={onNavigate}
+        onOpenSubscribe={() => setIsSubscribeModalOpen(true)}
       />
 
       {/* 2. COMPTE À REBOURS ÉVÉNEMENTS IMPORTANTS - Live countdown synchronized with DB */}
@@ -631,6 +634,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSelectArticle,
         isOpen={isExamModalOpen}
         onClose={() => setIsExamModalOpen(false)}
         onOpenFullPage={() => onNavigate('exam-schedule')}
+      />
+
+      {/* Modal d'abonnement aux rappels d'épreuves (E-mail & Push) */}
+      <ExamReminderSubscribeModal
+        isOpen={isSubscribeModalOpen}
+        onClose={() => setIsSubscribeModalOpen(false)}
+        defaultLevel="ALL"
+        defaultControlId={1}
       />
 
     </div>

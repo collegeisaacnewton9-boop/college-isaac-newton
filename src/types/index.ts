@@ -543,3 +543,32 @@ export interface SecurityAuditReport {
     sanitizedEndpoints: string[];
   };
 }
+
+export type ReminderChannel = 'EMAIL' | 'PUSH' | 'WHATSAPP';
+export type SubscriberRole = 'STUDENT' | 'PARENT' | 'TEACHER';
+export type ReminderTiming = '48H' | '24H' | 'SAME_DAY' | 'ALL';
+
+export interface ExamReminderSubscription {
+  id: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  role: SubscriberRole;
+  level: string; // 'ALL' | 'CYCLE_3' | 'SECONDAIRE' | '7e' | '8e' | '9e' | 'NS1' | 'NS2' | 'NS3' | 'NS4'
+  controlIds: number[]; // [1, 2, 3, 4]
+  channels: ReminderChannel[];
+  notifyTiming: ReminderTiming;
+  createdAt: string;
+  confirmed: boolean;
+  status: 'ACTIVE' | 'UNSUBSCRIBED';
+  lastNotifiedAt?: string;
+}
+
+export interface ExamReminderStats {
+  totalSubscribers: number;
+  emailSubscribers: number;
+  pushSubscribers: number;
+  parentCount: number;
+  studentCount: number;
+  teacherCount: number;
+}

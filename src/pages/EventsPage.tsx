@@ -23,11 +23,13 @@ import {
   Phone,
   BookOpen,
   ShieldCheck,
-  MessageSquare
+  MessageSquare,
+  Bell
 } from 'lucide-react';
 import { SchoolEvent, EventCategory, User } from '../types';
 import { apiService } from '../services/api';
 import { SCHOOL_INFO } from '../data/mockData';
+import { ExamReminderSubscribeModal } from '../components/events/ExamReminderSubscribeModal';
 import { OfficialCalendarPrintModal } from '../components/events/OfficialCalendarPrintModal';
 import { FirstExamScheduleModal } from '../components/events/FirstExamScheduleModal';
 
@@ -42,6 +44,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate, currentUser 
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('2026-2027');
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [isFirstExamModalOpen, setIsFirstExamModalOpen] = useState(false);
+  const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
@@ -280,8 +283,8 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate, currentUser 
                   </div>
                 </div>
 
-                {/* Direct Action: Consulter la grille d'examen */}
-                <div className="pt-1">
+                {/* Direct Action: Consulter la grille d'examen & S'abonner */}
+                <div className="pt-1 flex flex-col gap-1.5">
                   <button
                     type="button"
                     onClick={() => onNavigate?.('exam-schedule')}
@@ -289,6 +292,15 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate, currentUser 
                   >
                     <BookOpen className="w-3.5 h-3.5" />
                     <span>Page Horaires des Examens (7e-NS4)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsSubscribeModalOpen(true)}
+                    className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-900 font-semibold text-xs border border-blue-200 transition-colors cursor-pointer"
+                  >
+                    <Bell className="w-3.5 h-3.5 text-blue-900" />
+                    <span>S'abonner aux rappels d'épreuves</span>
                   </button>
                 </div>
               </div>
@@ -842,6 +854,14 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate, currentUser 
         isOpen={isFirstExamModalOpen}
         onClose={() => setIsFirstExamModalOpen(false)}
         onOpenFullPage={() => onNavigate?.('exam-schedule')}
+      />
+
+      {/* Modal d'abonnement aux rappels d'épreuves (E-mail & Push) */}
+      <ExamReminderSubscribeModal
+        isOpen={isSubscribeModalOpen}
+        onClose={() => setIsSubscribeModalOpen(false)}
+        defaultLevel="ALL"
+        defaultControlId={1}
       />
 
     </div>

@@ -706,6 +706,83 @@ if (diskEvents && diskEvents.length > 0) {
   saveEventsToDisk(schoolEvents);
 }
 
+// Disk persistence for Exam Reminder Subscriptions (Élèves & Parents)
+const EXAM_REMINDERS_FILE_PATH = path.join(__dirname, 'data', 'exam_reminders.json');
+let examReminderSubscriptions: any[] = [];
+
+function saveExamRemindersToDisk(subs: any[]) {
+  try {
+    const dir = path.dirname(EXAM_REMINDERS_FILE_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(EXAM_REMINDERS_FILE_PATH, JSON.stringify(subs, null, 2), 'utf-8');
+  } catch (err: any) {
+    console.error('[saveExamRemindersToDisk Error]', err.message);
+  }
+}
+
+function loadExamRemindersFromDisk(): any[] | null {
+  try {
+    if (fs.existsSync(EXAM_REMINDERS_FILE_PATH)) {
+      const data = JSON.parse(fs.readFileSync(EXAM_REMINDERS_FILE_PATH, 'utf-8'));
+      if (Array.isArray(data)) return data;
+    }
+  } catch (err: any) {
+    console.error('[loadExamRemindersFromDisk Error]', err.message);
+  }
+  return null;
+}
+
+const diskReminders = loadExamRemindersFromDisk();
+if (diskReminders && Array.isArray(diskReminders)) {
+  examReminderSubscriptions = diskReminders;
+} else {
+  examReminderSubscriptions = [
+    {
+      id: 'sub-seed-1',
+      fullName: 'Marc-Aurèle Pierre',
+      email: 'm.pierre@example.com',
+      phone: '+509 3712-3456',
+      role: 'PARENT',
+      level: 'CYCLE_3',
+      controlIds: [1, 2, 3, 4],
+      channels: ['EMAIL', 'PUSH'],
+      notifyTiming: 'ALL',
+      createdAt: '2026-10-15T09:00:00.000Z',
+      confirmed: true,
+      status: 'ACTIVE'
+    },
+    {
+      id: 'sub-seed-2',
+      fullName: 'Alexandre Pierre',
+      email: 'alexandre.p@example.com',
+      phone: '+509 3712-3456',
+      role: 'STUDENT',
+      level: '7e AF',
+      controlIds: [1],
+      channels: ['EMAIL', 'PUSH'],
+      notifyTiming: '24H',
+      createdAt: '2026-10-18T14:30:00.000Z',
+      confirmed: true,
+      status: 'ACTIVE'
+    },
+    {
+      id: 'sub-seed-3',
+      fullName: 'Marie-Yolène Auguste',
+      email: 'yolene.auguste@example.com',
+      phone: '+509 4821-7789',
+      role: 'PARENT',
+      level: 'SECONDAIRE',
+      controlIds: [1, 2, 3, 4],
+      channels: ['EMAIL', 'PUSH', 'WHATSAPP'],
+      notifyTiming: 'ALL',
+      createdAt: '2026-10-22T11:15:00.000Z',
+      confirmed: true,
+      status: 'ACTIVE'
+    }
+  ];
+  saveExamRemindersToDisk(examReminderSubscriptions);
+}
+
 let siteSettings: any = {
   announcement: {
     enabled: true,
@@ -2204,6 +2281,232 @@ app.delete('/api/events/:id', async (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
   });
   res.json({ success: true });
+});
+
+// ==============================================================================
+// 5a. Exam Reminder Subscriptions (Élèves & Parents - Rappels d'Épreuves)
+// ==============================================================================
+app.get('/api/exam-reminders/subscriptions', (req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  const activeSubs = examReminderSubscriptions.filter(s => s.status === 'ACTIVE');
+  const stats = {
+    totalSubscribers: activeSubs.length,
+    emailSubscribers: activeSubs.filter(s => s.channels?.includes('EMAIL')).length,
+    pushSubscribers: activeSubs.filter(s => s.channels?.includes('PUSH')).length,
+    parentCount: activeSubs.filter(s => s.role === 'PARENT').length,
+    studentCount: activeSubs.filter(s => s.role === 'STUDENT').length,
+    teacherCount: activeSubs.filter(s => s.role === 'TEACHER').length,
+  };
+  res.json({ subscriptions: examReminderSubscriptions, stats });
+});
+
+app.post('/api/exam-reminders/subscribe', async (req: Request, res: Response) => {
+  try {
+    const { fullName, email, phone, role, level, controlIds, channels, notifyTiming } = req.body;
+
+    if (!fullName || typeof fullName !== 'string' || fullName.trim().length < 2) {
+      return res.status(400).json({ error: 'Le nom complet est obligatoire (minimum 2 caractères).' });
+    }
+
+    const cleanChannels = Array.isArray(channels) && channels.length > 0 ? channels : ['EMAIL'];
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPhone = (phone || '').trim();
+
+    if (cleanChannels.includes('EMAIL')) {
+      if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+        return res.status(400).json({ error: 'Une adresse e-mail valide est requise pour recevoir les alertes par courriel.' });
+      }
+    }
+
+    // Check if an existing subscription exists for this email or phone to update it
+    const existingIndex = examReminderSubscriptions.findIndex(s => 
+      (cleanEmail && s.email && s.email.toLowerCase() === cleanEmail) ||
+      (cleanPhone && s.phone && s.phone === cleanPhone)
+    );
+
+    const subscriptionRecord = {
+      id: existingIndex >= 0 ? examReminderSubscriptions[existingIndex].id : `sub-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      fullName: fullName.trim(),
+      email: cleanEmail,
+      phone: cleanPhone,
+      role: role || 'PARENT',
+      level: level || 'CYCLE_3',
+      controlIds: Array.isArray(controlIds) && controlIds.length > 0 ? controlIds : [1, 2, 3, 4],
+      channels: cleanChannels,
+      notifyTiming: notifyTiming || 'ALL',
+      createdAt: existingIndex >= 0 ? examReminderSubscriptions[existingIndex].createdAt : new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      confirmed: true,
+      status: 'ACTIVE',
+      lastNotifiedAt: null,
+    };
+
+    if (existingIndex >= 0) {
+      examReminderSubscriptions[existingIndex] = subscriptionRecord;
+    } else {
+      examReminderSubscriptions.unshift(subscriptionRecord);
+    }
+
+    saveExamRemindersToDisk(examReminderSubscriptions);
+
+    // Send confirmation email asynchronously if EMAIL channel is enabled
+    if (cleanChannels.includes('EMAIL') && cleanEmail) {
+      (async () => {
+        try {
+          const timingLabel = subscriptionRecord.notifyTiming === 'ALL'
+            ? '48h avant, la veille et le matin de chaque épreuve'
+            : subscriptionRecord.notifyTiming === '48H'
+            ? '48 heures avant le début de la session'
+            : subscriptionRecord.notifyTiming === '24H'
+            ? 'La veille au soir (24h avant)'
+            : 'Le matin même à 06h45';
+
+          const roleLabel = subscriptionRecord.role === 'PARENT' 
+            ? 'Parent d’élève' 
+            : subscriptionRecord.role === 'STUDENT' 
+            ? 'Élève' 
+            : 'Enseignant / Équipe pédagogique';
+
+          const channelsLabel = cleanChannels.map((c: string) => 
+            c === 'EMAIL' ? 'Courriel officiel' : c === 'PUSH' ? 'Notification Push (Web & Mobile)' : 'Alerte WhatsApp'
+          ).join(' + ');
+
+          await sendNotificationEmail({
+            to: cleanEmail,
+            subject: `Confirmation d'Abonnement · Rappels d'Examens & Contrôles (Collège Isaac Newton)`,
+            html: `
+              <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 620px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.06);">
+                <div style="background: linear-gradient(135deg, #091a33 0%, #0f274a 100%); color: #ffffff; padding: 26px 24px; text-align: center;">
+                  <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">COLLÈGE ISAAC NEWTON</h1>
+                  <p style="margin: 6px 0 0 0; color: #fbbf24; font-size: 13px; font-style: italic;">« Savoir aujourd'hui, réussir demain »</p>
+                  <div style="display: inline-block; margin-top: 14px; background: rgba(251, 191, 36, 0.2); border: 1px solid rgba(251, 191, 36, 0.4); padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; color: #fde68a;">
+                    🔔 Confirmation de vos Alertes d'Épreuves
+                  </div>
+                </div>
+
+                <div style="padding: 24px; color: #1e293b; line-height: 1.6; font-size: 14px;">
+                  <p style="margin-top: 0;">Bonjour <strong>${subscriptionRecord.fullName}</strong>,</p>
+                  <p>Votre inscription aux rappels officiels d'épreuves et contrôles académiques pour l'année scolaire <strong>2026-2027</strong> a été validée avec succès.</p>
+                  
+                  <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 16px; margin: 18px 0;">
+                    <p style="margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; font-weight: 700; color: #64748b; letter-spacing: 0.5px;">Paramètres de vos notifications :</p>
+                    <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #334155; line-height: 1.8;">
+                      <li><strong>Profil :</strong> ${roleLabel}</li>
+                      <li><strong>Classe / Cycle suivi :</strong> ${subscriptionRecord.level}</li>
+                      <li><strong>Canaux activés :</strong> ${channelsLabel}</li>
+                      <li><strong>Fréquence programmée :</strong> ${timingLabel}</li>
+                    </ul>
+                  </div>
+
+                  <div style="background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #f59e0b; border-radius: 10px; padding: 14px 16px; margin: 18px 0;">
+                    <p style="margin: 0 0 6px 0; font-weight: bold; color: #92400e; font-size: 13.5px;">📅 1er Contrôle Académique : Du 9 au 13 Novembre 2026</p>
+                    <p style="margin: 0; font-size: 12.5px; color: #78350f; line-height: 1.5;">
+                      Épreuves écrites pour le <strong>3e Cycle Fondamental (7e, 8e, 9e AF)</strong> et le <strong>Nouveau Secondaire (NS1 à NS4)</strong>.<br/>
+                      <strong>Note de la direction :</strong> Les examens se déroulent aux heures habituelles des cours par les professeurs de chaque discipline.
+                    </p>
+                  </div>
+
+                  <p style="font-size: 13px; color: #475569;">
+                    Avant chaque session, vous recevrez automatiquement le calendrier détaillé des épreuves par matière pour accompagner vos révisions en toute sérénité.
+                  </p>
+
+                  <div style="text-align: center; margin: 24px 0 16px 0;">
+                    <a href="https://collegeisaacnewton.com/?page=exam-schedule" style="display: inline-block; background: #0f274a; color: #fbbf24; font-weight: bold; font-size: 13px; text-decoration: none; padding: 12px 24px; border-radius: 12px; border: 1px solid #fbbf24;">
+                      Consulter les Horaires des 4 Contrôles en Ligne →
+                    </a>
+                  </div>
+                </div>
+
+                <div style="background: #f1f5f9; padding: 16px 24px; border-top: 1px solid #e2e8f0; font-size: 11.5px; color: #64748b; text-align: center; line-height: 1.6;">
+                  Collège Isaac Newton · Delmas 50, rue Dominique #2 bis, Port-au-Prince, Haïti<br/>
+                  Secrétariat : +509 3316-0934 / +509 3721-1818 · collegeisaacnewton9@gmail.com
+                </div>
+              </div>
+            `
+          });
+        } catch (err: any) {
+          console.warn('[Exam Reminder Email Error]', err.message);
+        }
+      })();
+    }
+
+    res.status(201).json({
+      success: true,
+      message: cleanChannels.includes('EMAIL')
+        ? 'Abonnement enregistré avec succès ! Un e-mail de confirmation détaillé vous a été envoyé.'
+        : 'Abonnement enregistré avec succès ! Vous recevrez des alertes push sur cet appareil.',
+      subscription: subscriptionRecord
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Erreur lors de l’enregistrement de l’abonnement', details: err.message });
+  }
+});
+
+app.post('/api/exam-reminders/unsubscribe', (req: Request, res: Response) => {
+  const { email, id } = req.body;
+  if (!email && !id) {
+    return res.status(400).json({ error: 'Identifiant ou e-mail requis pour se désabonner.' });
+  }
+
+  let found = false;
+  examReminderSubscriptions = examReminderSubscriptions.map(s => {
+    if ((id && s.id === id) || (email && s.email && s.email.toLowerCase() === email.toLowerCase())) {
+      found = true;
+      return { ...s, status: 'UNSUBSCRIBED', updatedAt: new Date().toISOString() };
+    }
+    return s;
+  });
+
+  saveExamRemindersToDisk(examReminderSubscriptions);
+  res.json({ success: true, message: found ? 'Désabonnement pris en compte.' : 'Aucun abonnement trouvé.' });
+});
+
+app.post('/api/exam-reminders/broadcast', async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization || '';
+  const isAuthAdmin = authHeader.includes('admin') || authHeader.includes('editor') || authHeader.includes('direction') || authHeader.includes('cin');
+  if (!isAuthAdmin && process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Droits d\'administration requis pour diffuser un rappel d\'épreuves.' });
+  }
+
+  const { controlId = 1, customSubject, customMessage } = req.body;
+  const activeSubs = examReminderSubscriptions.filter(s => s.status === 'ACTIVE' && s.channels?.includes('EMAIL'));
+
+  let sentCount = 0;
+  for (const sub of activeSubs) {
+    if (sub.email) {
+      try {
+        await sendNotificationEmail({
+          to: sub.email,
+          subject: customSubject || `[Rappel Imminent] Épreuves du ${controlId}er Contrôle Académique · Collège Isaac Newton`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 10px;">
+              <div style="background-color: #0f274a; color: white; padding: 15px 20px; border-radius: 6px; text-align: center;">
+                <h2 style="margin: 0; font-size: 20px;">Collège Isaac Newton</h2>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #fbbf24;">Avis aux Élèves & Familles · Contrôle Académique</p>
+              </div>
+              <div style="padding: 20px 0; font-size: 14px; line-height: 1.6; color: #1e293b;">
+                <p>Bonjour <strong>${sub.fullName}</strong>,</p>
+                <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 15px 0;">
+                  <p style="margin: 0; font-weight: bold; color: #92400e;">Rappel officiel pour les épreuves à venir</p>
+                  <p style="margin: 6px 0 0 0; font-size: 13px; color: #78350f;">
+                    ${customMessage || 'Les épreuves du 1er Contrôle débutent cette semaine (9 au 13 novembre 2026). Nous vous rappelons que les examens se font aux heures habituelles de cours. Bon travail et plein succès à tous nos candidats !'}
+                  </p>
+                </div>
+                <p style="font-size: 13px; color: #64748b;">
+                  Pour toute question urgente, le secrétariat est joignable au +509 3316-0934 ou +509 3721-1818.
+                </p>
+              </div>
+            </div>
+          `
+        });
+        sentCount++;
+      } catch (err: any) {
+        console.warn(`[Broadcast error for ${sub.email}]:`, err.message);
+      }
+    }
+  }
+
+  res.json({ success: true, sentCount, total: activeSubs.length });
 });
 
 // 5b. Media Library routes (Médiathèque du Collège Isaac Newton) with Hybrid DB & Disk Persistence

@@ -14,9 +14,11 @@ import {
   GraduationCap, 
   Sparkles,
   ChevronRight,
-  Maximize2
+  Maximize2,
+  Bell
 } from 'lucide-react';
 import { SCHOOL_INFO } from '../../data/mockData';
+import { ExamReminderSubscribeModal } from './ExamReminderSubscribeModal';
 
 export interface FirstExamScheduleModalProps {
   isOpen: boolean;
@@ -136,6 +138,7 @@ export const FirstExamScheduleModal: React.FC<FirstExamScheduleModalProps> = ({
 }) => {
   const [selectedCycle, setSelectedCycle] = useState<'all' | 'fundamental' | 'secondary123' | 'secondary4'>(defaultCycle);
   const [selectedDayIndex, setSelectedDayIndex] = useState<number | 'all'>('all');
+  const [isSubscribeOpen, setIsSubscribeOpen] = useState(false);
 
   if (!isOpen) return null;
 
@@ -291,6 +294,16 @@ export const FirstExamScheduleModal: React.FC<FirstExamScheduleModalProps> = ({
                 <span>Ouvrir en Pleine Page</span>
               </button>
             )}
+
+            <button
+              type="button"
+              onClick={() => setIsSubscribeOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-900 hover:bg-blue-800 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              title="S'abonner aux rappels par e-mail ou notification push"
+            >
+              <Bell className="w-3.5 h-3.5 text-amber-300" />
+              <span>Rappels</span>
+            </button>
 
             <button
               type="button"
@@ -547,6 +560,14 @@ export const FirstExamScheduleModal: React.FC<FirstExamScheduleModalProps> = ({
         </div>
 
       </div>
+
+      {/* Modal d'abonnement aux rappels */}
+      <ExamReminderSubscribeModal
+        isOpen={isSubscribeOpen}
+        onClose={() => setIsSubscribeOpen(false)}
+        defaultLevel={selectedCycle === 'fundamental' ? 'CYCLE_3' : selectedCycle === 'secondary4' ? 'NS4' : 'SECONDAIRE'}
+        defaultControlId={1}
+      />
     </div>
   );
 };

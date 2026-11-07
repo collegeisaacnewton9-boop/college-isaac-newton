@@ -10,18 +10,21 @@ import {
   X, 
   BookOpen, 
   GraduationCap,
-  MessageSquare
+  MessageSquare,
+  Bell
 } from 'lucide-react';
 import { SCHOOL_INFO } from '../../data/mockData';
 
 interface ExamNotificationBannerProps {
   onOpenSchedule: () => void;
   onNavigate: (page: string, subSection?: string) => void;
+  onOpenSubscribe?: () => void;
 }
 
 export const ExamNotificationBanner: React.FC<ExamNotificationBannerProps> = ({
   onOpenSchedule,
   onNavigate,
+  onOpenSubscribe,
 }) => {
   const [isDismissed, setIsDismissed] = useState(false);
 
@@ -112,6 +115,18 @@ export const ExamNotificationBanner: React.FC<ExamNotificationBannerProps> = ({
               <span>Voir l'horaire complet</span>
               <ArrowRight className="w-3 h-3 shrink-0 text-slate-950" />
             </button>
+
+            {onOpenSubscribe && (
+              <button
+                type="button"
+                onClick={onOpenSubscribe}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 hover:text-amber-200 font-bold text-xs sm:text-sm border border-amber-400/40 transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                title="S'abonner aux rappels par e-mail ou notification push"
+              >
+                <Bell className="w-3.5 h-3.5 text-amber-400" />
+                <span>Rappels e-mail & push</span>
+              </button>
+            )}
 
             <button
               type="button"

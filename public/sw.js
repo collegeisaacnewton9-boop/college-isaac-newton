@@ -357,3 +357,67 @@ self.addEventListener('message', (event) => {
     });
   }
 });
+
+// ==============================================================================
+// 5. NOTIFICATIONS PUSH & RAPPELS D'ÉPREUVES (PWA)
+// ==============================================================================
+self.addEventListener('push', (event) => {
+  let data = {
+    title: 'Collège Isaac Newton · Rappel d’Évaluation',
+    body: 'Le contrôle académique approche. Consultez la grille horaire officielle de vos épreuves.',
+    icon: '/pwa-192x192.png',
+    badge: '/favicon.svg',
+    url: '/?page=exam-schedule',
+  };
+
+  if (event.data) {
+    try {
+      data = { ...data, ...event.data.json() };
+    } catch (e) {
+      data.body = event.data.text() || data.body;
+    }
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon || '/pwa-192x192.png',
+    badge: data.badge || '/favicon.svg',
+    vibrate: [200, 100, 200],
+    tag: 'cin-exam-reminder',
+    renotify: true,
+    data: { url: data.url || '/?page=exam-schedule' },
+    actions: [
+      { action: 'open_schedule', title: 'Voir l’horaire' },
+      { action: 'close', title: 'Fermer' }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = (event.notification.data && event.notification.data.url) || '/?page=exam-schedule';
+
+  if (event.action === 'close') {
+    return;
+  }
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          if ('navigate' in client) {
+            client.navigate(urlToOpen);
+          }
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});

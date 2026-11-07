@@ -17,7 +17,9 @@ import {
   WhatsAppDiagnosticSummary,
   SecurityAuditReport,
   FacultyMember,
-  HonorRollStudent
+  HonorRollStudent,
+  ExamReminderSubscription,
+  ExamReminderStats
 } from '../types';
 import { 
   INITIAL_ADMISSIONS, 
@@ -789,6 +791,80 @@ export const apiService = {
       window.dispatchEvent(new CustomEvent('cin:events-updated', { detail: { id } }));
     }
     return true;
+  },
+
+  // --- EXAM REMINDERS (RAPPELS D'ÉPREUVES & CONTRÔLES) ---
+  async subscribeExamReminders(data: Partial<ExamReminderSubscription>): Promise<{ 
+    success: boolean; 
+    message: string; 
+    subscription?: ExamReminderSubscription;
+    error?: string;
+  }> {
+    try {
+      const res = await appFetch('/api/exam-reminders/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        return result;
+      }
+      return { success: false, message: result.error || 'Erreur lors de l’abonnement.' };
+    } catch (err: any) {
+      return { success: false, message: err.message || 'Erreur de connexion au serveur.' };
+    }
+  },
+
+  async getExamReminderSubscriptions(): Promise<{
+    subscriptions: ExamReminderSubscription[];
+    stats: ExamReminderStats;
+  }> {
+    try {
+      const res = await appFetch('/api/exam-reminders/subscriptions');
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // fallback
+    }
+    return {
+      subscriptions: [],
+      stats: {
+        totalSubscribers: 0,
+        emailSubscribers: 0,
+        pushSubscribers: 0,
+        parentCount: 0,
+        studentCount: 0,
+        teacherCount: 0,
+      }
+    };
+  },
+
+  async unsubscribeExamReminders(payload: { email?: string; id?: string }): Promise<{ success: boolean; message: string }> {
+    try {
+      const res = await appFetch('/api/exam-reminders/unsubscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      return await res.json();
+    } catch (err: any) {
+      return { success: false, message: err.message || 'Erreur lors du désabonnement.' };
+    }
+  },
+
+  async broadcastExamReminder(payload: { controlId?: number; customSubject?: string; customMessage?: string }): Promise<{ success: boolean; sentCount: number; total: number }> {
+    try {
+      const res = await appFetch('/api/exam-reminders/broadcast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      return await res.json();
+    } catch {
+      return { success: false, sentCount: 0, total: 0 };
+    }
   },
 
   // --- MEDIA LIBRARY (MÉDIATHÈQUE DU COLLÈGE) ---

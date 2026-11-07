@@ -21,10 +21,12 @@ import {
   UserCheck,
   Info,
   LayoutGrid,
-  Table as TableIcon
+  Table as TableIcon,
+  Bell
 } from 'lucide-react';
 import { SCHOOL_INFO } from '../data/mockData';
 import { FIRST_EXAM_DAYS } from '../components/events/FirstExamScheduleModal';
+import { ExamReminderSubscribeModal } from '../components/events/ExamReminderSubscribeModal';
 
 interface ExamSchedulePageProps {
   onNavigate: (page: string, subSection?: string) => void;
@@ -122,6 +124,7 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
   const [selectedCycle, setSelectedCycle] = useState<'all' | 'fundamental' | 'secondary123' | 'secondary4'>('all');
   const [selectedDay, setSelectedDay] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const [isSubscribeModalOpen, setIsSubscribeModalOpen] = useState(false);
 
   const phone1 = SCHOOL_INFO.phone1 || '+509 3316-0934';
   const phone2 = SCHOOL_INFO.phone2 || '+509 3721-1818';
@@ -237,6 +240,16 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
             <div className="flex flex-wrap sm:flex-row items-center gap-2 shrink-0">
               <button
                 type="button"
+                onClick={() => setIsSubscribeModalOpen(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                title="S'abonner aux rappels d'épreuves par e-mail ou notification push"
+              >
+                <Bell className="w-3.5 h-3.5 text-amber-300" />
+                <span>Rappels E-mail & Push</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={handlePrint}
                 className="inline-flex items-center justify-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-xs hover:shadow transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                 title="Imprimer l'horaire d'examen au format A4"
@@ -326,6 +339,40 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
             );
           })}
         </div>
+      </div>
+
+      {/* 3b. Interactive Reminder Subscription Card for Students & Parents */}
+      <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 rounded-2xl p-4 sm:p-5 border border-amber-400/30 text-white shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4 no-print">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+            <Bell className="w-5 h-5 text-slate-950" />
+          </div>
+          <div className="space-y-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-400/30 font-mono">
+                Alerte Automatisée Élèves & Parents
+              </span>
+              <span className="text-[11px] text-slate-300 font-mono hidden sm:inline">
+                48h et 24h avant chaque contrôle
+              </span>
+            </div>
+            <h3 className="font-serif font-bold text-sm sm:text-base text-white tracking-tight">
+              Ne manquez aucune épreuve ! Activez vos rappels par e-mail et notification push
+            </h3>
+            <p className="text-xs text-slate-300 leading-relaxed font-light max-w-2xl">
+              Recevez les horaires détaillés par discipline, les convocations et les consignes officielles directement sur votre boîte courriel et sur votre appareil (PWA).
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsSubscribeModalOpen(true)}
+          className="shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-md transition-all active:scale-95 cursor-pointer whitespace-nowrap self-start md:self-auto"
+        >
+          <Bell className="w-3.5 h-3.5" />
+          <span>M'abonner aux rappels</span>
+        </button>
       </div>
 
       {/* 4. Official Directive Banner */}
@@ -945,6 +992,14 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
         </div>
 
       </div>
+
+      {/* Modal d'abonnement aux rappels d'épreuves (E-mail & Push) */}
+      <ExamReminderSubscribeModal
+        isOpen={isSubscribeModalOpen}
+        onClose={() => setIsSubscribeModalOpen(false)}
+        defaultLevel={selectedCycle === 'all' ? 'ALL' : selectedCycle === 'fundamental' ? 'CYCLE_3' : selectedCycle === 'secondary4' ? 'NS4' : 'SECONDAIRE'}
+        defaultControlId={selectedControl + 1}
+      />
 
     </div>
   );

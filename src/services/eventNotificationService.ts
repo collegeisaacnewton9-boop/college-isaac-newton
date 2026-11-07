@@ -1,4 +1,4 @@
-import { SchoolEvent } from '../types';
+import { SchoolEvent, ExamReminderSubscription } from '../types';
 import { toast } from 'sonner';
 
 export interface ImminentEventAlert {
@@ -10,6 +10,7 @@ export interface ImminentEventAlert {
 }
 
 const STORAGE_KEY_DISMISSED = 'cin_imminent_event_dismissed';
+const STORAGE_KEY_EXAM_SUB = 'cin_exam_reminder_subscription';
 const inMemoryDismissed = new Set<string>();
 
 function parseEventTimestamp(dateStr: string, isEnd = false): number {
@@ -337,5 +338,113 @@ export const eventNotificationService = {
     });
 
     return alerts;
+  },
+
+  /**
+   * Vérifie si les notifications push/navigateur sont supportées sur ce terminal.
+   */
+  isNotificationSupported(): boolean {
+    return typeof window !== 'undefined' && 'Notification' in window;
+  },
+
+  /**
+   * Obtient le statut actuel de permission pour les notifications ('default' | 'granted' | 'denied').
+   */
+  getNotificationPermission(): NotificationPermission {
+    if (!this.isNotificationSupported()) return 'denied';
+    return Notification.permission;
+  },
+
+  /**
+   * Demande formellement à l'utilisateur l'autorisation d'envoyer des notifications push du navigateur.
+   */
+  async requestNotificationPermission(): Promise<NotificationPermission> {
+    if (!this.isNotificationSupported()) {
+      return 'denied';
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      return permission;
+    } catch {
+      return 'denied';
+    }
+  },
+
+  /**
+   * Déclenche une notification système / push directe (Service Worker ou Web Notification).
+   */
+  async triggerBrowserNotification(
+    title: string,
+    options?: {
+      body?: string;
+      icon?: string;
+      badge?: string;
+      tag?: string;
+      data?: any;
+    }
+  ): Promise<boolean> {
+    if (!this.isNotificationSupported()) return false;
+    if (Notification.permission !== 'granted') return false;
+
+    const notifOptions: NotificationOptions = {
+      body: options?.body || 'Rappel officiel du Collège Isaac Newton.',
+      icon: options?.icon || '/pwa-192x192.png',
+      badge: options?.badge || '/favicon.svg',
+      tag: options?.tag || 'cin-exam-reminder',
+      data: options?.data || { url: '/?page=exam-schedule' },
+    };
+
+    try {
+      // 1. Tenter via Service Worker actif (support PWA / mobile complet)
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        if (registration && registration.showNotification) {
+          await registration.showNotification(title, notifOptions);
+          return true;
+        }
+      }
+      // 2. Repli sur constructeur Notification classique
+      new Notification(title, notifOptions);
+      return true;
+    } catch (err) {
+      console.warn('[Notification Error]', err);
+      return false;
+    }
+  },
+
+  /**
+   * Récupère l'abonnement actif aux rappels d'épreuves enregistré sur ce navigateur.
+   */
+  getLocalExamSubscription(): ExamReminderSubscription | null {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_EXAM_SUB);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Enregistre l'abonnement localement dans le stockage sécurisé du navigateur.
+   */
+  saveLocalExamSubscription(sub: ExamReminderSubscription): void {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(STORAGE_KEY_EXAM_SUB, JSON.stringify(sub));
+      window.dispatchEvent(new CustomEvent('cin:exam-subscription-updated', { detail: sub }));
+    } catch {}
+  },
+
+  /**
+   * Supprime l'abonnement local.
+   */
+  removeLocalExamSubscription(): void {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') return;
+    try {
+      localStorage.removeItem(STORAGE_KEY_EXAM_SUB);
+      window.dispatchEvent(new CustomEvent('cin:exam-subscription-updated', { detail: null }));
+    } catch {}
   },
 };

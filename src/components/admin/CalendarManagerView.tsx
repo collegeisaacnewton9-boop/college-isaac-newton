@@ -26,9 +26,12 @@ import {
   AlertTriangle,
   RotateCcw,
   BookOpen,
-  CalendarCheck
+  CalendarCheck,
+  Bell,
+  Mail,
+  Smartphone
 } from 'lucide-react';
-import { SchoolEvent, EventCategory, AcademicEventType, User } from '../../types';
+import { SchoolEvent, EventCategory, AcademicEventType, User, ExamReminderStats } from '../../types';
 import { apiService } from '../../services/api';
 import { eventNotificationService } from '../../services/eventNotificationService';
 import { toast } from 'sonner';
@@ -62,6 +65,10 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
   // New Academic Year Modal
   const [isNewYearModalOpen, setIsNewYearModalOpen] = useState(false);
   const [newYearInput, setNewYearInput] = useState('');
+
+  // Exam Reminders Subscription Metrics & Broadcast State
+  const [examStats, setExamStats] = useState<ExamReminderStats | null>(null);
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState<{
@@ -111,9 +118,44 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
     }
   };
 
+  const loadExamStats = async () => {
+    try {
+      const data = await apiService.getExamReminderSubscriptions();
+      if (data?.stats) {
+        setExamStats(data.stats);
+      }
+    } catch {}
+  };
+
+  const handleBroadcastExamReminder = async () => {
+    if (!confirm('Voulez-vous envoyer un rappel immédiat par e-mail à tous les élèves et parents inscrits aux alertes du 1er Contrôle ?')) {
+      return;
+    }
+
+    setIsBroadcasting(true);
+    try {
+      const res = await apiService.broadcastExamReminder({
+        controlId: 1,
+        customSubject: 'Rappel d’Épreuves · 1er Contrôle Académique (Collège Isaac Newton)',
+        customMessage: 'Les épreuves du 1er Contrôle débutent cette semaine (du 9 au 13 novembre 2026). Nous vous rappelons que les examens se feront aux heures habituelles des cours par les professeurs de chaque matière.',
+      });
+      if (res.success) {
+        toast.success(`Rappel diffusé avec succès à ${res.sentCount} abonné(s) !`);
+      } else {
+        toast.error('Erreur lors de la diffusion du rappel.');
+      }
+    } finally {
+      setIsBroadcasting(false);
+    }
+  };
+
   useEffect(() => {
     loadEvents();
-    const handleUpdated = () => loadEvents();
+    loadExamStats();
+    const handleUpdated = () => {
+      loadEvents();
+      loadExamStats();
+    };
     window.addEventListener('cin:events-updated', handleUpdated);
     return () => window.removeEventListener('cin:events-updated', handleUpdated);
   }, []);
@@ -563,6 +605,67 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
 
         </div>
 
+      </div>
+
+      {/* Exam Reminders (Élèves & Parents) Operational Card */}
+      <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white rounded-2xl p-4 sm:p-5 border border-amber-400/30 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+            <Bell className="w-5 h-5 text-slate-950" />
+          </div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-400/30 font-mono">
+                Rappels d'Épreuves Élèves & Parents
+              </span>
+              <span className="text-[11px] text-emerald-400 font-mono">
+                Infrastructure Active (SMTP & Web Push)
+              </span>
+            </div>
+            <h3 className="font-serif font-bold text-sm sm:text-base text-white">
+              Abonnements & Alertes Automatisées aux Contrôles
+            </h3>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 pt-1">
+              <span className="flex items-center gap-1 font-medium">
+                <Users className="w-3.5 h-3.5 text-amber-300" />
+                <strong>{examStats?.totalSubscribers ?? 0}</strong> inscrits au total
+              </span>
+              <span className="text-slate-600">|</span>
+              <span className="flex items-center gap-1">
+                <Mail className="w-3.5 h-3.5 text-blue-300" />
+                <strong>{examStats?.emailSubscribers ?? 0}</strong> par courriel
+              </span>
+              <span className="text-slate-600">|</span>
+              <span className="flex items-center gap-1">
+                <Smartphone className="w-3.5 h-3.5 text-emerald-300" />
+                <strong>{examStats?.pushSubscribers ?? 0}</strong> par push
+              </span>
+              <span className="text-slate-600">|</span>
+              <span className="text-[11px] text-slate-400">
+                ({examStats?.parentCount ?? 0} parents, {examStats?.studentCount ?? 0} élèves)
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 self-start md:self-auto">
+          <button
+            type="button"
+            onClick={handleBroadcastExamReminder}
+            disabled={isBroadcasting}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+            title="Diffuser un rappel d'épreuve officiel par email à tous les abonnés du 1er Contrôle"
+          >
+            {isBroadcasting ? (
+              <span className="inline-flex items-center gap-1">Envoi en cours...</span>
+            ) : (
+              <>
+                <Send className="w-3.5 h-3.5" />
+                <span>Diffuser Rappel 1er Contrôle</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* 2. Official Milestones Summary Banner (Highlighting the 4 Controls) */}
