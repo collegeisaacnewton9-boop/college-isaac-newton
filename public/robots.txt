@@ -1,0 +1,16 @@
+# Robots.txt for Collège Isaac Newton (https://collegeisaacnewton.com)
+# Autorise tous les robots de recherche Google (Googlebot) à indexer le site officiel
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+
+# Googlebot spécifique
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /admin
+
+# Sitemap officiel pour Google Search Console
+Sitemap: https://collegeisaacnewton.com/sitemap.xml
