@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { FacultyMember, FacultyCategory, User } from '../types';
 import { apiService } from '../services/api';
+import { SCHOOL_INFO } from '../data/mockData';
 import { INITIAL_FACULTY_MEMBERS } from '../data/facultyData';
 import { ContentEditable } from '../components/common/ContentEditable';
 
@@ -679,7 +680,7 @@ export const FacultyPage: React.FC<FacultyPageProps> = ({
                 onClick={() => onNavigate('pre-registration')}
                 className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors cursor-pointer border border-white/20"
               >
-                Préinscription en ligne 2026-2027
+                Préinscription en ligne {SCHOOL_INFO.currentYear}
               </button>
             </div>
           </div>

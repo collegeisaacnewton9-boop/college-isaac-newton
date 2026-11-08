@@ -20,6 +20,7 @@ import {
 import { SCHOOL_IMAGES } from '../assets/images';
 import { ContentEditable } from '../components/common/ContentEditable';
 import { User } from '../types';
+import { SCHOOL_INFO } from '../data/mockData';
 
 interface ProgramsPageProps {
   subSection?: string;
@@ -315,7 +316,7 @@ export const ProgramsPage: React.FC<ProgramsPageProps> = ({ subSection, onNaviga
           <div className="bg-linear-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between gap-5 shadow-lg">
             <div className="space-y-1.5 text-center sm:text-left">
               <h3 className="font-serif text-xl sm:text-2xl font-bold text-amber-300">
-                Campagne des Admissions 2026-2027 Ouverte
+                Campagne des Admissions {SCHOOL_INFO.currentYear} Ouverte
               </h3>
               <p className="text-xs sm:text-sm text-slate-200 max-w-xl">
                 Nos conseillers pédagogiques vous orientent vers le cycle le plus adapté aux besoins de votre enfant.

@@ -10,6 +10,7 @@ import {
   AcademicCyclesRecord,
   HonorRollStudent
 } from '../types';
+import { getCurrentAcademicYear } from '../utils/academicYear';
 
 export const SCHOOL_INFO = {
   name: 'Collège Isaac Newton',
@@ -29,7 +30,7 @@ export const SCHOOL_INFO = {
   email: 'collegeisaacnewton9@gmail.com',
   openingHours: 'Lun - Ven : 7:30 AM - 2:00 PM',
   adminHours: "Secrétariat ouvert jusqu'à 3:30 PM",
-  currentYear: '2026-2027',
+  currentYear: getCurrentAcademicYear(),
   established: '2014',
 };
 

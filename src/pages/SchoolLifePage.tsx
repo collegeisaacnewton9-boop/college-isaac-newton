@@ -23,6 +23,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { SCHOOL_IMAGES } from '../assets/images';
+import { SCHOOL_INFO } from '../data/mockData';
 import { ContentEditable } from '../components/common/ContentEditable';
 import { ImageEditable } from '../components/common/ImageEditable';
 import { officialDocumentsPdfService } from '../services/officialDocumentsPdfService';
@@ -463,7 +464,7 @@ export const SchoolLifePage: React.FC<SchoolLifePageProps> = ({ onNavigate, curr
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300">
               <FileText className="w-4 h-4" />
-              <span>Document Administratif Officiel · Édition 2026-2027</span>
+              <span>Document Administratif Officiel · Édition {SCHOOL_INFO.currentYear}</span>
             </div>
             <h3 className="font-serif text-xl sm:text-2xl font-bold text-white">
               Règlement Intérieur & Charte de Vie Scolaire

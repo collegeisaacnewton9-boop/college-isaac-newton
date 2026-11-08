@@ -48,7 +48,7 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
     studentBirthDate: '',
     studentGender: 'M',
     previousSchool: '',
-    schoolYear: '2026-2027',
+    schoolYear: SCHOOL_INFO.currentYear,
     targetLevel: subSection === 'prescolaire' ? 'Grande Section (GS)' : subSection === 'secondaire' ? 'Nouveau Secondaire 1 (NS1)' : '7ème Année Fondamentale (7e AF)',
     cycle: subSection === 'prescolaire' ? 'PRESCOLAIRE' : subSection === 'secondaire' ? 'SECONDAIRE' : 'FONDAMENTAL_CYCLE_3',
     hasBirthCert: true,
@@ -1190,7 +1190,7 @@ export const PreRegistrationPage: React.FC<PreRegistrationPageProps> = ({ onNavi
                     </div>
                   </div>
                   <p className="text-[10px] text-amber-800 font-semibold mt-1.5 pl-6">
-                    Tarif standard applicable pour l'année 2026-2027
+                    Tarif standard applicable pour l'année {SCHOOL_INFO.currentYear}
                   </p>
                 </div>
 

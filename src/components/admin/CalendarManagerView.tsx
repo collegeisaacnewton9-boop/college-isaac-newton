@@ -35,6 +35,7 @@ import { SchoolEvent, EventCategory, AcademicEventType, User, ExamReminderStats 
 import { apiService } from '../../services/api';
 import { eventNotificationService } from '../../services/eventNotificationService';
 import { toast } from 'sonner';
+import { getCurrentAcademicYear } from '../../utils/academicYear';
 
 interface CalendarManagerViewProps {
   currentUser: User | null;
@@ -46,7 +47,7 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
 
   // Filters
   const [temporalFilter, setTemporalFilter] = useState<'ACTIVE_UPCOMING' | 'ALL' | 'PAST'>('ACTIVE_UPCOMING');
-  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>('2026-2027');
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>(getCurrentAcademicYear());
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT'>('ALL');
   const [visibilityFilter, setVisibilityFilter] = useState<'ALL' | 'VISIBLE' | 'HIDDEN'>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
@@ -96,7 +97,7 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
     category: 'Contrôle',
     audience: 'ALL',
     isPublic: true,
-    academicYear: '2026-2027',
+    academicYear: getCurrentAcademicYear(),
     status: 'PUBLISHED',
     indicatedDuration: '',
     displayOrder: 1,

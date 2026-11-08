@@ -163,7 +163,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
       id: 'page-pre-registration',
       type: 'page',
       title: 'Formulaire de Préinscription en Ligne',
-      subtitle: 'Admissions · Année Académique 2026-2027',
+      subtitle: `Admissions · Année Académique ${SCHOOL_INFO.currentYear}`,
       description: 'Dépôt de candidature rapide en 4 étapes pour réserver la place de votre enfant.',
       page: 'pre-registration',
       category: 'Admissions',

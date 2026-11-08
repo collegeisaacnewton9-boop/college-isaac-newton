@@ -108,7 +108,7 @@ const CONTROL_PERIODS: ControlPeriodInfo[] = [
     ],
     isPublished: false,
     statusBadge: 'Épreuves Finales',
-    description: "Clôture de l'année scolaire 2026-2027, passages de classe, décisions du conseil des professeurs et épreuves finales de fin d'année.",
+    description: `Clôture de l'année scolaire ${SCHOOL_INFO.currentYear}, passages de classe, décisions du conseil des professeurs et épreuves finales de fin d'année.`,
   },
 ];
 

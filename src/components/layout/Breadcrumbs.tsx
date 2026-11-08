@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Home, ChevronRight } from 'lucide-react';
-import { INITIAL_NEWS } from '../../data/mockData';
+import { INITIAL_NEWS, SCHOOL_INFO } from '../../data/mockData';
 
 export interface BreadcrumbItem {
   label: string;
@@ -90,7 +90,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({
 
     case 'pre-registration':
       items.push({ label: 'Admissions', page: 'admissions', canonicalPath: '/admissions' });
-      items.push({ label: 'Préinscription en Ligne 2026-2027', isCurrent: true, canonicalPath: '/pre-registration' });
+      items.push({ label: `Préinscription en Ligne ${SCHOOL_INFO.currentYear}`, isCurrent: true, canonicalPath: '/pre-registration' });
       break;
 
     case 'school-life':

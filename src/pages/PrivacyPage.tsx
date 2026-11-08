@@ -35,7 +35,7 @@ export const PrivacyPage: React.FC = () => {
             Les données recueillies via le formulaire de préinscription ou de contact sont traitées uniquement pour :
           </p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>L'instruction des demandes d'admission pour l'année scolaire 2026-2027 ;</li>
+            <li>L'instruction des demandes d'admission pour l'année scolaire {SCHOOL_INFO.currentYear} ;</li>
             <li>La convocation aux tests d'aptitude et aux entretiens d'orientation ;</li>
             <li>La communication institutionnelle avec les familles.</li>
           </ul>

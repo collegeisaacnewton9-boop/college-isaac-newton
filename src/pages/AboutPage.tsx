@@ -534,7 +534,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate, subSection, cu
               onClick={() => onNavigate('pre-registration')}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-bold text-xs hover:bg-amber-300 transition-colors cursor-pointer shadow-md"
             >
-              <span>Préinscrire votre enfant pour 2026-2027</span>
+              <span>Préinscrire votre enfant pour {SCHOOL_INFO.currentYear}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

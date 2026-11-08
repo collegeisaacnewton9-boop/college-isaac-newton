@@ -67,7 +67,7 @@ import {
   SiteSettings
 } from '../types';
 import { apiService } from '../services/api';
-import { INITIAL_USERS } from '../data/mockData';
+import { INITIAL_USERS, SCHOOL_INFO } from '../data/mockData';
 import { SettingsView, SettingsTab } from '../components/admin/SettingsView';
 import { AccessControlView } from '../components/admin/AccessControlView';
 import { MediaLibraryView } from '../components/admin/MediaLibraryView';
@@ -770,7 +770,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
 
             <div className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400 font-mono bg-emerald-950/70 px-2.5 py-1 rounded-lg border border-emerald-800/40">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Authentification Requise · Session 2026-2027</span>
+              <span>Authentification Requise · Session {SCHOOL_INFO.currentYear}</span>
             </div>
           </div>
 
@@ -2202,7 +2202,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 <div className="flex items-baseline gap-2">
                   <span className="font-sans text-xl sm:text-2xl font-black text-slate-900 tabular-nums tracking-tight">{totalAdmissions}</span>
                   <span className="text-[9.5px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.2 rounded-full font-sans">
-                    2026-2027
+                    {SCHOOL_INFO.currentYear}
                   </span>
                 </div>
                 <div className="text-[9.5px] text-slate-500 flex justify-between pt-1 border-t border-slate-100 font-sans">
@@ -2283,7 +2283,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                       </span>
                     </h3>
                     <p className="text-[11px] text-slate-300">
-                      Rapport synthétique pour la Direction sur les candidatures 2026-2027, la charge du secrétariat et les priorités académiques.
+                      Rapport synthétique pour la Direction sur les candidatures {SCHOOL_INFO.currentYear}, la charge du secrétariat et les priorités académiques.
                     </p>
                   </div>
                 </div>
@@ -2650,7 +2650,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
                 }`}
               >
                 <FileCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Conditions d'Admission & Pièces Exigées (Éditeur 2026-2027)</span>
+                <span>Conditions d'Admission & Pièces Exigées (Éditeur {SCHOOL_INFO.currentYear})</span>
               </button>
             </div>
 
@@ -2666,7 +2666,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h2 className="font-sans font-bold text-slate-900 text-xs sm:text-sm tracking-tight">
-                    Gestion des Dossiers de Préinscription 2026-2027
+                    Gestion des Dossiers de Préinscription {SCHOOL_INFO.currentYear}
                   </h2>
                   <p className="text-[10.5px] text-slate-500 font-sans">
                     Examen pédagogique des candidatures, convocation aux entretiens et validation des admissions.
