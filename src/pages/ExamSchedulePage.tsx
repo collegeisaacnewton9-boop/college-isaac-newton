@@ -108,7 +108,7 @@ const CONTROL_PERIODS: ControlPeriodInfo[] = [
     ],
     isPublished: false,
     statusBadge: 'Épreuves Finales',
-    description: "Clôture de l'année scolaire 2026-2027, passages de classe, décisions du conseil et examens officiels du MENFP.",
+    description: "Clôture de l'année scolaire 2026-2027, passages de classe, décisions du conseil des professeurs et épreuves finales de fin d'année.",
   },
 ];
 
@@ -197,7 +197,7 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
                 2026–2027
               </span>
               <span className="text-[11px] text-slate-300 font-medium">
-                4 Contrôles Académiques MENFP
+                4 Contrôles Académiques de l'Établissement
               </span>
               <span className="text-slate-600 hidden sm:inline">·</span>
               <span className="text-slate-300 text-[11px] flex items-center gap-1">
@@ -764,7 +764,7 @@ export const ExamSchedulePage: React.FC<ExamSchedulePageProps> = ({
                 Congés & Vacances
               </span>
               <p className="font-serif font-bold text-xs sm:text-sm text-slate-900">
-                {currentControl.holidays || 'Selon le calendrier officiel MENFP'}
+                {currentControl.holidays || "Selon le calendrier officiel de l'établissement"}
               </p>
               <p className="text-[11px] text-slate-600">
                 Reprise des cours aux horaires réguliers dès 07h30.

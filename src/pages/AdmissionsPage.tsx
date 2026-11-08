@@ -431,7 +431,7 @@ export const AdmissionsPage: React.FC<AdmissionsPageProps> = ({
                         </h5>
                       </div>
                       <p className="text-[11px] text-slate-600">
-                        Obligatoires pour la conformité du dossier académique auprès du Ministère (MENFP) :
+                        Obligatoires pour la conformité officielle du dossier académique de l'élève :
                       </p>
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">

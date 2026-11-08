@@ -274,7 +274,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate, currentUse
     },
     {
       q: 'Le Collège accepte-t-il les dons en nature (ordinateurs, manuels, matériel scientifique) ?',
-      a: 'Absolument. Les dons d’équipements fonctionnels (ordinateurs portables ou fixes, onduleurs, matériel de laboratoire de sciences, manuels scolaires conformes aux programmes officiels du MENFP) sont très précieux pour enrichir l’environnement éducatif des enfants. L’équipe technique valide au préalable la compatibilité du matériel [critères de conformité à confirmer par la direction].',
+      a: 'Absolument. Les dons d’équipements fonctionnels (ordinateurs portables ou fixes, onduleurs, matériel de laboratoire de sciences, manuels scolaires conformes aux programmes officiels) sont très précieux pour enrichir l’environnement éducatif des enfants. L’équipe technique valide au préalable la compatibilité du matériel [critères de conformité à confirmer par la direction].',
     },
     {
       q: 'Un don donne-t-il droit à un reçu fiscal ou une déduction d’impôt ?',
@@ -433,7 +433,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onNavigate, currentUse
                   Livres & Fournitures scolaires
                 </h3>
                 <span className="text-[11px] text-amber-700 font-medium block mt-0.5">
-                  [Listes officielles MENFP à confirmer]
+                  [Listes officielles de l'établissement à confirmer]
                 </span>
               </div>
               <p className="text-xs text-slate-600 leading-relaxed">

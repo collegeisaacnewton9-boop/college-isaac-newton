@@ -188,7 +188,7 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
             </div>
             <div className="bg-white/10 rounded-xl p-2.5 border border-white/10 text-center">
               <div className="font-bold text-emerald-400 text-sm leading-tight">100%</div>
-              <div className="text-slate-300 text-[10px] mt-0.5">Réussite MENFP</div>
+              <div className="text-slate-300 text-[10px] mt-0.5">Réussite Officielle</div>
             </div>
           </div>
         </div>

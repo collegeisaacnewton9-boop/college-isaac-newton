@@ -268,10 +268,10 @@ export const OfficialCalendarPrintModal: React.FC<OfficialCalendarPrintModalProp
               </div>
             </div>
 
-            {/* 3. SECTION B : DATES IMPORTANTES ET EXAMENS D'ÉTAT MENFP */}
+            {/* 3. SECTION B : DATES IMPORTANTES ET EXAMENS D'ÉTAT */}
             <div className="space-y-2.5">
               <h3 className="font-serif font-bold text-xs sm:text-sm text-blue-950 uppercase tracking-wider border-b border-slate-200 pb-1">
-                B. Événements Majeurs, Fêtes Institutionnelles & Examens d’État (MENFP)
+                B. Événements Majeurs, Fêtes Institutionnelles & Examens d’État
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">

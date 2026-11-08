@@ -451,7 +451,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate, currentUser 
                 Épreuves Officielles & Célébrations Phares 2026–2027
               </div>
               <h3 className="font-serif text-lg sm:text-xl font-bold text-white mt-0.5">
-                Examens d'État (MENFP) et Solennités du Campus
+                Examens d'État & Solennités du Campus
               </h3>
             </div>
             <span className="text-xs text-slate-300 font-light">
@@ -489,7 +489,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate, currentUser 
 
             <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-400/30 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-rose-300 font-bold text-xs uppercase tracking-wider">Examen d'État MENFP</span>
+                <span className="text-rose-300 font-bold text-xs uppercase tracking-wider">Épreuve Nationale d'État</span>
                 <span className="text-[11px] font-mono text-rose-200">14 au 17 Juin 2027</span>
               </div>
               <h4 className="font-bold text-white text-sm">Examens officiels de 9e A.F.</h4>
@@ -498,11 +498,11 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onNavigate, currentUser 
 
             <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-400/30 space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-rose-300 font-bold text-xs uppercase tracking-wider">Examen d'État MENFP</span>
+                <span className="text-rose-300 font-bold text-xs uppercase tracking-wider">Épreuve Nationale d'État</span>
                 <span className="text-[11px] font-mono text-rose-200">28 Juin au 1er Juillet 2027</span>
               </div>
               <h4 className="font-bold text-white text-sm">Examens officiels de NS4</h4>
-              <p className="text-xs text-slate-300">Épreuves nationales du Baccalauréat Unique MENFP.</p>
+              <p className="text-xs text-slate-300">Épreuves nationales du Baccalauréat Unique.</p>
             </div>
 
             <div className="p-3.5 rounded-xl bg-amber-500/15 border border-amber-400/40 space-y-1">

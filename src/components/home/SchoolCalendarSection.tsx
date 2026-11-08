@@ -900,7 +900,7 @@ export const SchoolCalendarSection: React.FC<SchoolCalendarSectionProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="Ex: Auditorium, Campus Delmas 50 ou Centres MENFP"
+                  placeholder="Ex: Auditorium, Campus Delmas 50 ou Salles d'examen"
                   value={formLocation}
                   onChange={(e) => setFormLocation(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-blue-900"

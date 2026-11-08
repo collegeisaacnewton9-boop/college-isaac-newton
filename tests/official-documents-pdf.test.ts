@@ -21,7 +21,7 @@ test('Official Documents PDF Generator Service', async (t) => {
     assert.strictEqual(typeof result.downloadBlob, 'function');
   });
 
-  await t.test('should generate official PDF for Academic Calendar with official MENFP periods', async () => {
+  await t.test('should generate official PDF for Academic Calendar with official school periods', async () => {
     const calendarDoc = INITIAL_DOCUMENTS.find(d => d.category === 'calendrier') || INITIAL_DOCUMENTS[1];
     const result = await officialDocumentsPdfService.generateDocumentPdf(calendarDoc, []);
     

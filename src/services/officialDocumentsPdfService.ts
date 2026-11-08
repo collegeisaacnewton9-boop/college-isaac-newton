@@ -4,7 +4,7 @@
  * 
  * Génère des documents PDF 1.4 vectoriels natifs certifiés (ISO 32000-1) avec pdf-lib :
  * - Formats normalisés A4 et Letter
- * - En-tête officiel République d'Haïti / MENFP / Collège Isaac Newton
+ * - En-tête officiel République d'Haïti / Collège Isaac Newton
  * - Respect strict des marges, polices vectorielles Type-1 Helvetica, WinAnsi
  * - Tableaux, encadrés administratifs, sceaux officiels et emplacements de signature
  * - Téléchargement immédiat et traçabilité des téléchargements
@@ -110,7 +110,7 @@ class OfficialDocumentsPdfService {
         color: COLOR_MUTED,
       });
 
-      page.drawText(sanitizeText('MINISTÈRE DE L’ÉDUCATION NATIONALE ET DE LA FORMATION PROFESSIONNELLE (MENFP)'), {
+      page.drawText(sanitizeText('ENSEIGNEMENT FONDAMENTAL ET SECONDAIRE · DIRECTION DES ÉTUDES'), {
         x: margin,
         y: currentY - 10,
         size: 7,

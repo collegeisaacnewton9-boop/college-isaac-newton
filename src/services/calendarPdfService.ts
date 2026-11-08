@@ -68,8 +68,8 @@ export const OFFICIAL_STATE_EXAMS_AND_FEASTS = [
   { date: '12 Février 2027', title: 'Partage des dédicaces', category: 'Tradition fraternelle du campus' },
   { date: '14 Mai 2027', title: 'Fête des professeurs et exposition des projets', category: 'Hommage pédagogique & Sciences' },
   { date: '28 Mai 2027', title: 'Fête du Collège', category: 'Grande solennité institutionnelle' },
-  { date: '14 au 17 Juin 2027', title: 'Examens de fin de cycle 9e A.F.', category: 'Épreuves Officielles d’État (MENFP)' },
-  { date: '28 Juin au 1er Juil. 2027', title: 'Examens de fin de cycle NS4', category: 'Baccalauréat Unique MENFP' },
+  { date: '14 au 17 Juin 2027', title: 'Examens de fin de cycle 9e A.F.', category: 'Épreuves Officielles d’État' },
+  { date: '28 Juin au 1er Juil. 2027', title: 'Examens de fin de cycle NS4', category: 'Baccalauréat Unique' },
   { date: '10 Juillet 2027', title: 'Graduation & Collation des Diplômes', category: 'Cérémonie solennelle & Toges' },
 ];
 
@@ -138,7 +138,7 @@ export const calendarPdfService = {
     const doc = await PDFDocument.create();
     doc.setTitle(`Calendrier Scolaire & Agenda Officiel - Collège Isaac Newton - ${academicYear}`);
     doc.setAuthor('Collège Isaac Newton');
-    doc.setSubject(`Calendrier académique officiel, contrôles et examens MENFP ${academicYear}`);
+    doc.setSubject(`Calendrier académique officiel et contrôles périodiques ${academicYear}`);
     doc.setCreator('Système d’Information Scolaire Collège Isaac Newton');
 
     const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
@@ -362,8 +362,8 @@ export const calendarPdfService = {
 
     currentY -= 14;
 
-    // SECTION B : DATES IMPORTANTES & EXAMENS D'ÉTAT (MENFP)
-    page1.drawText(sanitizeText('2. Événements Majeurs, Fêtes Phares & Examens d’État MENFP'), {
+    // SECTION B : DATES IMPORTANTES & EXAMENS D'ÉTAT
+    page1.drawText(sanitizeText('2. Événements Majeurs, Fêtes Phares & Examens d’État'), {
       x: margin,
       y: currentY,
       size: 10,

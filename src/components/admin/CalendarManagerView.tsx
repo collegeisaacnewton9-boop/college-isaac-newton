@@ -982,7 +982,7 @@ export const CalendarManagerView: React.FC<CalendarManagerViewProps> = ({ curren
                         <option value="Réunion">Réunion des Parents</option>
                         <option value="Sportif">Sportif</option>
                         <option value="Férié">Jour Férié National</option>
-                        <option value="Officiel">Échéance Officielle MENFP</option>
+                        <option value="Officiel">Échéance Officielle</option>
                       </select>
                     </div>
 

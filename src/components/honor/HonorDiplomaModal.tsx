@@ -148,7 +148,7 @@ export const HonorDiplomaModal: React.FC<HonorDiplomaModalProps> = ({
               {/* Header */}
               <div className="space-y-1">
                 <span className="text-[10px] tracking-widest text-slate-500 font-sans font-bold uppercase block">
-                  RÉPUBLIQUE D'HAÏTI · MENFP
+                  RÉPUBLIQUE D'HAÏTI · DIRECTION DES ÉTUDES
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-bold text-blue-900 tracking-wide">
                   COLLÈGE ISAAC NEWTON

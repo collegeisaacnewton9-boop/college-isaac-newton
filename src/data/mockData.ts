@@ -242,7 +242,7 @@ export const INITIAL_EVENTS: SchoolEvent[] = [
   {
     id: 'event-h1',
     title: 'Congé officiel de la Toussaint & Fête des Morts',
-    description: 'Journées chômées officielles selon le calendrier du Ministère de l’Éducation Nationale (MENFP). Fermeture administrative du campus.',
+    description: 'Journées chômées officielles selon le calendrier scolaire national. Fermeture administrative du campus.',
     startDate: '2026-11-01T00:00:00',
     endDate: '2026-11-02T23:59:59',
     location: 'Établissement fermé',
@@ -455,11 +455,11 @@ export const INITIAL_EVENTS: SchoolEvent[] = [
   },
   {
     id: 'event-exam-etat',
-    title: 'Examens Officiels d’État MENFP (9e AF & Baccalauréat)',
-    description: 'Déroulement des épreuves officielles nationales du Ministère de l’Éducation Nationale pour les promotions terminales.',
+    title: 'Examens Officiels d’État (9e AF & Baccalauréat)',
+    description: 'Déroulement des épreuves officielles nationales pour les promotions terminales.',
     startDate: '2027-06-21T08:00:00',
     endDate: '2027-06-25T14:00:00',
-    location: 'Centres d’Examens Officiels désignés par le MENFP',
+    location: 'Centres d’Examens Officiels désignés',
     category: 'Examen',
     audience: 'STUDENTS',
     isPublic: false,

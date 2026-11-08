@@ -175,7 +175,7 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({
             Ressources & Espace Numérique
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 font-light max-w-2xl">
-            Règlements intérieurs certifiés, listes de fournitures par cycle, calendrier officiel MENFP et accès aux portails numériques.
+            Règlements intérieurs certifiés, listes de fournitures par cycle, calendrier scolaire officiel et accès aux portails numériques.
           </p>
         </div>
 
@@ -245,11 +245,11 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({
                       <span>Calendrier Officiel</span>
                     </span>
                     <span className="font-mono text-slate-300">
-                      MENFP · Session {calendarDoc.schoolYear || SCHOOL_INFO.currentYear}
+                      Collège Isaac Newton · Session {calendarDoc.schoolYear || SCHOOL_INFO.currentYear}
                     </span>
                     <span className="text-emerald-400 font-semibold flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" />
-                      <span>4 Contrôles Intégrés</span>
+                      <span>4 Contrôles de l'Établissement</span>
                     </span>
                   </div>
 
@@ -257,7 +257,7 @@ export const ResourcesPage: React.FC<ResourcesPageProps> = ({
                     {calendarDoc.title}
                   </h2>
                   <p className="text-xs text-slate-300 font-light leading-relaxed">
-                    {calendarDoc.description || "Dates clés, trimestres, congés officiels d'État et examens officiels MENFP 9e AF & NS4."}
+                    {calendarDoc.description || "Dates clés, trimestres, 4 contrôles académiques de l'établissement et calendrier scolaire annuel."}
                   </p>
 
                   {/* Repères des 4 contrôles - Compact */}

@@ -258,7 +258,7 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({
       id: 'page-legal',
       type: 'page',
       title: 'Mentions Légales & Agréments',
-      subtitle: 'Informations juridiques · Reconnaissance MENFP',
+      subtitle: 'Informations juridiques · Reconnaissance officielle',
       description: 'Statut de l’établissement et conformité aux normes éducatives nationales.',
       page: 'legal',
       category: 'Légal',

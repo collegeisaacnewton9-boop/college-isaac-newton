@@ -183,7 +183,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, onOpenAuth }) => {
               </a>
               
               <span className="text-[11px] text-slate-400 pl-2 border-l border-slate-800">
-                Agrément MENFP Haïti
+                Établissement Agréé Haïti
               </span>
             </div>
           </div>
