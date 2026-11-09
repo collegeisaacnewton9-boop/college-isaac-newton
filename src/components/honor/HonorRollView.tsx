@@ -10,14 +10,11 @@ import {
   BookOpen, 
   HeartHandshake, 
   X,
-  FileCheck2,
-  Calendar,
-  CheckCircle2
+  Calendar
 } from 'lucide-react';
 import { HonorRollStudent, HonorDistinctionType } from '../../types';
 import { apiService } from '../../services/api';
 import { INITIAL_HONOR_ROLL } from '../../data/mockData';
-import { HonorDiplomaModal } from './HonorDiplomaModal';
 
 interface HonorRollViewProps {
   onOpenAuth?: () => void;
@@ -32,7 +29,6 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
   const [selectedDistinction, setSelectedDistinction] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('ALL');
-  const [selectedStudentForDiploma, setSelectedStudentForDiploma] = useState<HonorRollStudent | null>(null);
 
   const loadHonorRoll = async () => {
     try {
@@ -148,7 +144,7 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
     setSearchQuery('');
   };
 
-  // Best average calculation
+  // Calcul de la meilleure note
   const topAverage = useMemo(() => {
     if (students.length === 0) return '9.45 / 10';
     const fundamentalStudents = students.filter(s => s.maxScale === 10);
@@ -330,7 +326,7 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
         </div>
       </section>
 
-      {/* GRILLE DES ÉLÈVES PRIMÉS - DENSE & ERGONOMIQUE */}
+      {/* GRILLE DES ÉLÈVES PRIMÉS - DENSE & ÉPURÉE SANS BOUTON DIPLÔME */}
       {filteredStudents.length === 0 ? (
         <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6 text-center space-y-2">
           <Award className="w-8 h-8 text-slate-400 mx-auto" />
@@ -408,18 +404,6 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
                   )}
                 </div>
 
-                {/* Bouton Diplôme Officiel & Certification */}
-                <div className="pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedStudentForDiploma(student)}
-                    className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-900 text-2xs font-semibold border border-slate-200 hover:border-blue-200 transition-all cursor-pointer"
-                  >
-                    <FileCheck2 className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Consulter le Diplôme d'Honneur</span>
-                  </button>
-                </div>
-
               </div>
             );
           })}
@@ -479,13 +463,6 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
           </div>
         </div>
       </section>
-
-      {/* Modal du Diplôme d'Honneur */}
-      <HonorDiplomaModal
-        isOpen={Boolean(selectedStudentForDiploma)}
-        onClose={() => setSelectedStudentForDiploma(null)}
-        student={selectedStudentForDiploma}
-      />
 
     </div>
   );
