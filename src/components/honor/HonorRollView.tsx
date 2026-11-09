@@ -354,52 +354,56 @@ export const HonorRollView: React.FC<HonorRollViewProps> = ({
                 {/* Accent ribbon at top */}
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-900 via-amber-400 to-blue-900" />
 
-                <div className="space-y-2 pt-0.5">
+                <div className="space-y-3 pt-0.5">
                   {/* Top row: Rank & Average */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200/70">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-amber-50 text-amber-900 border border-amber-200/70 shadow-2xs">
                       <Trophy className="w-3 h-3 text-amber-600" />
                       <span>{student.rankInClass === 1 ? '1er de la classe' : `${student.rankInClass}e de la classe`}</span>
                     </span>
 
-                    <span className="text-xs font-mono font-extrabold text-blue-900 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/70 tabular-nums">
+                    <span className="text-xs font-mono font-extrabold text-blue-900 bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200/70 tabular-nums shadow-2xs">
                       {student.average} / {student.maxScale}
                     </span>
                   </div>
 
-                  {/* Student Identity */}
-                  <div className="flex items-start gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-900 to-slate-900 text-amber-400 font-serif font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs border border-amber-400/30">
+                  {/* Centered Student Identity & Class */}
+                  <div className="space-y-1.5 text-center">
+                    <div className="w-12 h-12 rounded-2xl mx-auto bg-gradient-to-br from-blue-900 via-blue-950 to-slate-900 text-amber-400 font-serif font-bold text-sm flex items-center justify-center shadow-xs border border-amber-400/30">
                       {student.studentName.split(' ').map(n => n[0]).join('').slice(0, 2)}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-serif font-bold text-sm text-slate-900 group-hover:text-blue-900 transition-colors leading-snug truncate">
-                        {student.studentName}
-                      </h3>
-                      <div className="flex items-center gap-1.5 flex-wrap text-2xs text-slate-500 font-medium">
-                        <span className="truncate">{student.classLevel}</span>
-                        <span className="text-slate-300">·</span>
-                        <span className="font-mono text-slate-400 text-[10px]">{student.period}</span>
-                      </div>
+                    
+                    <h3 className="font-serif font-bold text-base text-slate-900 group-hover:text-blue-900 transition-colors leading-snug">
+                      {student.studentName}
+                    </h3>
+                    
+                    <div className="text-xs font-semibold text-slate-700">
+                      {student.classLevel}
+                    </div>
+
+                    <div className="font-mono text-[11px] text-slate-400">
+                      {student.period}
                     </div>
                   </div>
 
-                  {/* Distinction Tag */}
-                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-2xs font-bold border ${badge.bg}`}>
-                    <BadgeIcon className={`w-3 h-3 ${badge.iconColor} shrink-0`} />
-                    <span className="truncate">{badge.label}</span>
+                  {/* Centered Distinction Tag */}
+                  <div className="flex justify-center">
+                    <div className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border shadow-2xs text-center ${badge.bg}`}>
+                      <BadgeIcon className={`w-3.5 h-3.5 ${badge.iconColor} shrink-0`} />
+                      <span>{badge.label}</span>
+                    </div>
                   </div>
 
-                  {/* Citation du Conseil */}
-                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-100 text-2xs text-slate-700 italic leading-relaxed">
+                  {/* Centered Citation du Conseil */}
+                  <div className="p-3 rounded-xl bg-slate-50/90 border border-slate-100 text-xs text-slate-700 italic leading-relaxed text-center">
                     « {student.citation} »
                   </div>
 
-                  {/* Specialty tag if present */}
+                  {/* Centered Specialty - Single line, no clipping */}
                   {student.specialty && (
-                    <div className="flex items-center gap-1 text-2xs text-slate-500 pt-0.5">
-                      <span className="font-semibold text-slate-700">Point fort :</span>
-                      <span className="truncate">{student.specialty}</span>
+                    <div className="rounded-xl bg-blue-50/60 border border-blue-100/80 px-2.5 py-1.5 text-center text-xs leading-normal">
+                      <span className="font-bold text-blue-950 whitespace-nowrap">Point fort : </span>
+                      <span className="font-medium text-slate-700">{student.specialty}</span>
                     </div>
                   )}
                 </div>
