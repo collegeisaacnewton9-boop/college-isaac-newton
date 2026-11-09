@@ -280,6 +280,7 @@ export default function App() {
           <NewsPage
             selectedArticleId={selectedArticleId}
             onClearSelectedArticle={() => setSelectedArticleId(null)}
+            onNavigate={handleNavigate}
           />
         )}
 
