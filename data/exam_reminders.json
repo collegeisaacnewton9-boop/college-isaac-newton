@@ -1,0 +1,66 @@
+[
+  {
+    "id": "sub-seed-1",
+    "fullName": "Marc-Aurèle Pierre",
+    "email": "m.pierre@example.com",
+    "phone": "+509 3712-3456",
+    "role": "PARENT",
+    "level": "CYCLE_3",
+    "controlIds": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "channels": [
+      "EMAIL",
+      "PUSH"
+    ],
+    "notifyTiming": "ALL",
+    "createdAt": "2026-10-15T09:00:00.000Z",
+    "confirmed": true,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "sub-seed-2",
+    "fullName": "Alexandre Pierre",
+    "email": "alexandre.p@example.com",
+    "phone": "+509 3712-3456",
+    "role": "STUDENT",
+    "level": "7e AF",
+    "controlIds": [
+      1
+    ],
+    "channels": [
+      "EMAIL",
+      "PUSH"
+    ],
+    "notifyTiming": "24H",
+    "createdAt": "2026-10-18T14:30:00.000Z",
+    "confirmed": true,
+    "status": "ACTIVE"
+  },
+  {
+    "id": "sub-seed-3",
+    "fullName": "Marie-Yolène Auguste",
+    "email": "yolene.auguste@example.com",
+    "phone": "+509 4821-7789",
+    "role": "PARENT",
+    "level": "SECONDAIRE",
+    "controlIds": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "channels": [
+      "EMAIL",
+      "PUSH",
+      "WHATSAPP"
+    ],
+    "notifyTiming": "ALL",
+    "createdAt": "2026-10-22T11:15:00.000Z",
+    "confirmed": true,
+    "status": "ACTIVE"
+  }
+]
