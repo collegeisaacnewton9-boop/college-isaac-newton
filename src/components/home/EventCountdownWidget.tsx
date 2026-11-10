@@ -20,7 +20,8 @@ import {
   Play, 
   Pause,
   GraduationCap,
-  History
+  History,
+  CalendarClock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -141,22 +142,35 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
       .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
   }, [events, now]);
 
-  // 2. Active list based on viewMode and filterMode
+  // Smart Initial ViewMode: If no upcoming events exist but past events do, auto-switch to PAST
+  const hasAutoSwitchedMode = useRef(false);
+  useEffect(() => {
+    if (!hasAutoSwitchedMode.current && events.length > 0) {
+      if (allUpcomingEvents.length === 0 && allPastEvents.length > 0) {
+        setViewMode('PAST');
+      }
+      hasAutoSwitchedMode.current = true;
+    }
+  }, [events, allUpcomingEvents.length, allPastEvents.length]);
+
+  // 2. Active list strictly based on viewMode and filterMode - NEVER fallback to past events in upcoming mode!
   const activeList = useMemo(() => {
     const base = viewMode === 'UPCOMING' ? allUpcomingEvents : allPastEvents;
-    const filtered = filterMode === 'EXAMS' ? base.filter(isExamEvent) : base;
-    if (filtered.length > 0) return filtered;
-    return base.length > 0 ? base : events;
-  }, [viewMode, allUpcomingEvents, allPastEvents, filterMode, events]);
+    if (filterMode === 'EXAMS') {
+      return base.filter(isExamEvent);
+    }
+    return base;
+  }, [viewMode, allUpcomingEvents, allPastEvents, filterMode]);
 
-  // Active event to display
+  // Active event to display - strictly from activeList. Never fallback to events[0]
   const activeEvent = useMemo(() => {
+    if (activeList.length === 0) return null;
     if (selectedEventId) {
       const found = activeList.find(e => e.id === selectedEventId);
       if (found) return found;
     }
-    return activeList[0] || events[0] || null;
-  }, [activeList, selectedEventId, events]);
+    return activeList[0] || null;
+  }, [activeList, selectedEventId]);
 
   // Precise temporal details from centralized service
   const temporalDetails = useMemo(() => {
@@ -263,25 +277,26 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
     return { totalMs: diff, days, hours, minutes, seconds, isPast: false };
   }, [activeEvent, now]);
 
-  if (!activeEvent) return null;
+  if (events.length === 0) return null;
 
   // Format date nicely in French
-  const eventDateObj = new Date(activeEvent.startDate);
-  const formattedDate = !isNaN(eventDateObj.getTime())
+  const eventDateObj = activeEvent?.startDate ? new Date(activeEvent.startDate) : null;
+  const formattedDate = eventDateObj && !isNaN(eventDateObj.getTime())
     ? eventDateObj.toLocaleDateString('fr-FR', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
         year: 'numeric',
       })
-    : activeEvent.startDate;
+    : activeEvent?.startDate || '';
 
-  const formattedTime = !isNaN(eventDateObj.getTime())
+  const formattedTime = eventDateObj && !isNaN(eventDateObj.getTime())
     ? eventDateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
     : '';
 
   // Format short date for badges (e.g. "18 nov.")
   const getShortDateLabel = (dateStr: string) => {
+    if (!dateStr) return 'Date';
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return 'Date';
     return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
@@ -289,7 +304,7 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
 
   // Google Calendar Link generator
   const getGoogleCalendarUrl = () => {
-    if (!activeEvent.startDate) return '#';
+    if (!activeEvent || !activeEvent.startDate) return '#';
     const startIso = new Date(activeEvent.startDate).toISOString().replace(/-|:|\.\d\d\d/g, '');
     const endIso = activeEvent.endDate 
       ? new Date(activeEvent.endDate).toISOString().replace(/-|:|\.\d\d\d/g, '')
@@ -348,6 +363,7 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
   // Submit Quick Reminder Request
   const handleSubmitReminder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!activeEvent) return;
     if (!reminderEmail && !reminderPhone) {
       toast.error('Veuillez renseigner un email ou un numéro WhatsApp.');
       return;
@@ -488,7 +504,7 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
                   >
                     <CalendarDays className="w-3.5 h-3.5 text-amber-300 shrink-0" />
                     <span className="max-w-[130px] sm:max-w-[180px] truncate text-slate-100 font-medium">
-                      {getShortDateLabel(activeEvent.startDate)} · {activeEvent.title}
+                      {activeEvent ? `${getShortDateLabel(activeEvent.startDate)} · ${activeEvent.title}` : 'Sélectionner un événement'}
                     </span>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-400 group-hover:text-amber-300 transition-transform ${isDropdownOpen ? 'rotate-180 text-amber-300' : ''}`} />
                   </button>
@@ -510,7 +526,7 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
 
                         <div className="max-h-64 overflow-y-auto space-y-1 py-1 pr-0.5">
                           {activeList.map((evt, idx) => {
-                            const isSelected = activeEvent.id === evt.id;
+                            const isSelected = activeEvent?.id === evt.id;
                             const shortDate = getShortDateLabel(evt.startDate);
                             return (
                               <button
@@ -626,7 +642,7 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
           </div>
 
           {/* BALANCED 4-CARD INTERACTIVE PROGRESS TRACK (SLIDING WINDOW MATCHING ACTIVE INDEX) */}
-          {timelineEvents.length > 1 && (
+          {timelineEvents.length > 1 && activeEvent && (
             <div className="space-y-1">
               <nav 
                 aria-label="Sélecteur d'événements officiels"
@@ -634,7 +650,7 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
               >
                 {timelineEvents.map((evt, idx) => {
                   const absoluteIndex = timelineBatchStart + idx;
-                  const isSelected = activeEvent.id === evt.id;
+                  const isSelected = activeEvent?.id === evt.id;
                   const shortDate = getShortDateLabel(evt.startDate);
                   return (
                     <button
@@ -688,205 +704,259 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
           )}
 
           {/* MAIN EVENT SHOWCASE WITH FLUID FRAMER-MOTION TRANSITION */}
-          <div className="relative min-h-[170px] flex items-center">
-            <AnimatePresence mode="wait" custom={direction}>
-              <motion.div
-                key={activeEvent.id}
-                custom={direction}
-                initial={{ opacity: 0, x: direction > 0 ? 16 : -16 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: direction > 0 ? -16 : 16 }}
-                transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-4 lg:gap-6 items-center"
-              >
-                
-                {/* LEFT DETAILS (7 Cols) */}
-                <div className="lg:col-span-7 space-y-2 sm:space-y-2.5">
+          {activeEvent ? (
+            <div className="relative min-h-[170px] flex items-center">
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.div
+                  key={activeEvent.id}
+                  custom={direction}
+                  initial={{ opacity: 0, x: direction > 0 ? 16 : -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: direction > 0 ? -16 : 16 }}
+                  transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                  className="w-full grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-4 lg:gap-6 items-center"
+                >
                   
-                  {/* Clean unboxed metadata row */}
-                  <div className="flex items-center gap-2 flex-wrap text-xs text-slate-300">
-                    {isExamEvent(activeEvent) && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-extrabold text-[10.5px] shadow-xs uppercase tracking-wider">
-                        <span>🎓</span>
-                        <span>Épreuve / Examen Officiel</span>
+                  {/* LEFT DETAILS (7 Cols) */}
+                  <div className="lg:col-span-7 space-y-2 sm:space-y-2.5">
+                    
+                    {/* Clean unboxed metadata row */}
+                    <div className="flex items-center gap-2 flex-wrap text-xs text-slate-300">
+                      {isExamEvent(activeEvent) && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 font-extrabold text-[10.5px] shadow-xs uppercase tracking-wider">
+                          <span>🎓</span>
+                          <span>Épreuve / Examen Officiel</span>
+                        </span>
+                      )}
+                      <span className="font-bold text-amber-300 tracking-wide uppercase text-[11px]">
+                        {activeEvent.category || 'Pédagogique'}
                       </span>
-                    )}
-                    <span className="font-bold text-amber-300 tracking-wide uppercase text-[11px]">
-                      {activeEvent.category || 'Pédagogique'}
-                    </span>
-                    <span className="text-white/30" aria-hidden="true">·</span>
-                    <span className="text-slate-300 text-[11px]">
-                      {activeEvent.audience === 'PARENTS' 
-                        ? 'Pour Parents d’élèves' 
-                        : activeEvent.audience === 'STUDENTS' 
-                          ? 'Pour Élèves & Candidats' 
-                          : 'Tous publics'}
-                    </span>
-                    {viewMode === 'PAST' && (
-                      <>
-                        <span className="text-white/30" aria-hidden="true">·</span>
-                        <span className="text-[10.5px] font-semibold text-slate-300 bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
-                          {temporalDetails.label || 'Événement Clôturé'}
-                        </span>
-                      </>
-                    )}
-                    {viewMode === 'UPCOMING' && timeRemaining.days <= 1 && !temporalDetails.isPast && !temporalDetails.isOngoing && (
-                      <>
-                        <span className="text-white/30" aria-hidden="true">·</span>
-                        <span className="text-[10.5px] font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30 flex items-center gap-1 animate-pulse">
-                          <span>⚡</span>
-                          <span>{timeRemaining.days === 0 ? 'Aujourd’hui (< 24h)' : 'Échéance Imminente (< 48h)'}</span>
-                        </span>
-                      </>
-                    )}
+                      <span className="text-white/30" aria-hidden="true">·</span>
+                      <span className="text-slate-300 text-[11px]">
+                        {activeEvent.audience === 'PARENTS' 
+                          ? 'Pour Parents d’élèves' 
+                          : activeEvent.audience === 'STUDENTS' 
+                            ? 'Pour Élèves & Candidats' 
+                            : 'Tous publics'}
+                      </span>
+                      {viewMode === 'PAST' && (
+                        <>
+                          <span className="text-white/30" aria-hidden="true">·</span>
+                          <span className="text-[10.5px] font-semibold text-slate-300 bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
+                            {temporalDetails.label || 'Événement Clôturé'}
+                          </span>
+                        </>
+                      )}
+                      {viewMode === 'UPCOMING' && timeRemaining.days <= 1 && !temporalDetails.isPast && !temporalDetails.isOngoing && (
+                        <>
+                          <span className="text-white/30" aria-hidden="true">·</span>
+                          <span className="text-[10.5px] font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-400/30 flex items-center gap-1 animate-pulse">
+                            <span>⚡</span>
+                            <span>{timeRemaining.days === 0 ? 'Aujourd’hui (< 24h)' : 'Échéance Imminente (< 48h)'}</span>
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="font-serif text-lg sm:text-xl lg:text-2xl font-bold text-white tracking-tight leading-snug">
+                      {activeEvent.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-xs sm:text-[13px] text-slate-300 line-clamp-2 font-light leading-relaxed">
+                      {activeEvent.description || 'Retrouvez toutes les informations et consignes officielles relatives à cet événement dans l’agenda de l’établissement.'}
+                    </p>
+
+                    {/* Event Metas in a compact row */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-300 pt-0.5 font-medium">
+                      <div className="flex items-center gap-1.5 text-amber-300">
+                        <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span className="capitalize">{formattedDate}</span>
+                      </div>
+                      {formattedTime && (
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-blue-300 shrink-0" />
+                          <span>À {formattedTime}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span className="truncate">{activeEvent.location || 'Campus Principal · Delmas 50'}</span>
+                      </div>
+                    </div>
+
                   </div>
 
-                  {/* Title */}
-                  <h3 className="font-serif text-lg sm:text-xl lg:text-2xl font-bold text-white tracking-tight leading-snug">
-                    {activeEvent.title}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="text-xs sm:text-[13px] text-slate-300 line-clamp-2 font-light leading-relaxed">
-                    {activeEvent.description || 'Retrouvez toutes les informations et consignes officielles relatives à cet événement dans l’agenda de l’établissement.'}
-                  </p>
-
-                  {/* Event Metas in a compact row */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-300 pt-0.5 font-medium">
-                    <div className="flex items-center gap-1.5 text-amber-300">
-                      <Calendar className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      <span className="capitalize">{formattedDate}</span>
-                    </div>
-                    {formattedTime && (
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-blue-300 shrink-0" />
-                        <span>À {formattedTime}</span>
+                  {/* RIGHT COUNTDOWN & RECAP (5 Cols) */}
+                  <div className="lg:col-span-5 flex flex-col items-center lg:items-end justify-center">
+                    
+                    {viewMode === 'PAST' ? (
+                      /* ARCHIVED PAST EVENT RECAP BOX - CLEAN RECAP, NEVER ZERO COUNTDOWN */
+                      <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 text-center w-full max-w-sm shadow-md space-y-2">
+                        <div className="w-9 h-9 rounded-full bg-slate-700/60 text-slate-400 flex items-center justify-center mx-auto border border-slate-600">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm text-slate-200">
+                            Événement scolaire réalisé
+                          </h4>
+                          <p className="text-xs text-amber-300 font-semibold mt-0.5">
+                            Clôturé le {formattedDate}
+                          </p>
+                        </div>
+                        <p className="text-2xs text-slate-400 leading-relaxed font-light">
+                          {isExamEvent(activeEvent)
+                            ? 'Les évaluations se sont tenues selon le protocole académique et les résultats sont traités par le Conseil.'
+                            : 'Cet événement officiel s’est déroulé sur le campus selon le calendrier officiel de l’établissement.'}
+                        </p>
+                        <div className="pt-1 flex flex-col gap-1.5">
+                          {isExamEvent(activeEvent) ? (
+                            <button
+                              type="button"
+                              onClick={() => onNavigate('resources', 'palmares')}
+                              className="w-full py-1.5 px-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-2xs font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-1"
+                            >
+                              <span>Consulter le Tableau d'Honneur</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => onNavigate('news')}
+                              className="w-full py-1.5 px-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-2xs font-semibold transition-all cursor-pointer inline-flex items-center justify-center gap-1"
+                            >
+                              <span>Voir les actualités associées</span>
+                              <ArrowRight className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    )}
-                    <div className="flex items-center gap-1.5 text-slate-300">
-                      <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span className="truncate">{activeEvent.location || 'Campus Principal · Delmas 50'}</span>
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* RIGHT COUNTDOWN & RECAP (5 Cols) */}
-                <div className="lg:col-span-5 flex flex-col items-center lg:items-end justify-center">
-                  
-                  {viewMode === 'PAST' ? (
-                    /* ARCHIVED PAST EVENT RECAP BOX */
-                    <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-4 text-center w-full max-w-sm shadow-md space-y-2">
-                      <div className="w-9 h-9 rounded-full bg-slate-700/60 text-slate-400 flex items-center justify-center mx-auto border border-slate-600">
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm text-slate-200">
-                          Événement scolaire réalisé
+                    ) : temporalDetails.isOngoing ? (
+                      /* ONGOING EVENT BANNER */
+                      <div className="bg-emerald-500/20 border border-emerald-400/50 rounded-2xl p-4 text-center w-full max-w-sm shadow-lg ring-1 ring-emerald-400/30">
+                        <CheckCircle2 className="w-7 h-7 text-emerald-400 mx-auto mb-1.5" />
+                        <h4 className="font-bold text-sm text-white flex items-center justify-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span className="text-emerald-300">Événement en cours aujourd’hui</span>
                         </h4>
-                        <p className="text-xs text-amber-300 font-semibold mt-0.5">
-                          Clôturé le {formattedDate}
+                        <p className="text-xs text-emerald-100 font-medium mt-1">
+                          Bienvenue aux participants sur le campus de Delmas 50 !
                         </p>
                       </div>
-                      <p className="text-2xs text-slate-400 leading-relaxed font-light">
-                        {isExamEvent(activeEvent)
-                          ? 'Les évaluations se sont tenues selon le protocole académique et les résultats sont traités par le Conseil.'
-                          : 'Cet événement officiel s’est déroulé sur le campus selon le calendrier officiel de l’établissement.'}
-                      </p>
-                      <div className="pt-1 flex flex-col gap-1.5">
-                        {isExamEvent(activeEvent) ? (
-                          <button
-                            type="button"
-                            onClick={() => onNavigate('resources', 'palmares')}
-                            className="w-full py-1.5 px-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-2xs font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-1"
-                          >
-                            <span>Consulter le Tableau d'Honneur</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => onNavigate('news')}
-                            className="w-full py-1.5 px-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-2xs font-semibold transition-all cursor-pointer inline-flex items-center justify-center gap-1"
-                          >
-                            <span>Voir les actualités associées</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
-                        )}
+                    ) : (
+                      /* ACTIVE 4-BOX COUNTDOWN STRICTLY FOR UPCOMING EVENTS */
+                      <div className="w-full max-w-md">
+                        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center">
+                          
+                          {/* Days */}
+                          <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-2 sm:p-2.5 border border-white/10 shadow-md">
+                            <span className="block font-mono text-xl sm:text-2xl lg:text-3xl font-extrabold text-amber-400 tabular-nums leading-tight">
+                              {String(timeRemaining.days).padStart(2, '0')}
+                            </span>
+                            <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">
+                              Jours
+                            </span>
+                          </div>
+
+                          {/* Hours */}
+                          <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-2 sm:p-2.5 border border-white/10 shadow-md">
+                            <span className="block font-mono text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tabular-nums leading-tight">
+                              {String(timeRemaining.hours).padStart(2, '0')}
+                            </span>
+                            <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">
+                              Heures
+                            </span>
+                          </div>
+
+                          {/* Minutes */}
+                          <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-2 sm:p-2.5 border border-white/10 shadow-md">
+                            <span className="block font-mono text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tabular-nums leading-tight">
+                              {String(timeRemaining.minutes).padStart(2, '0')}
+                            </span>
+                            <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">
+                              Minutes
+                            </span>
+                          </div>
+
+                          {/* Seconds */}
+                          <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-2 sm:p-2.5 border border-white/10 shadow-md">
+                            <span className="block font-mono text-xl sm:text-2xl lg:text-3xl font-extrabold text-amber-300 tabular-nums leading-tight">
+                              {String(timeRemaining.seconds).padStart(2, '0')}
+                            </span>
+                            <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">
+                              Secondes
+                            </span>
+                          </div>
+
+                        </div>
                       </div>
-                    </div>
-                  ) : temporalDetails.isOngoing ? (
-                    /* ONGOING EVENT BANNER */
-                    <div className="bg-emerald-500/20 border border-emerald-400/50 rounded-2xl p-4 text-center w-full max-w-sm shadow-lg ring-1 ring-emerald-400/30">
-                      <CheckCircle2 className="w-7 h-7 text-emerald-400 mx-auto mb-1.5" />
-                      <h4 className="font-bold text-sm text-white flex items-center justify-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-emerald-300">Événement en cours aujourd’hui</span>
-                      </h4>
-                      <p className="text-xs text-emerald-100 font-medium mt-1">
-                        Bienvenue aux participants sur le campus de Delmas 50 !
-                      </p>
-                    </div>
-                  ) : (
-                    /* ACTIVE 4-BOX COUNTDOWN FOR UPCOMING EVENTS */
-                    <div className="w-full max-w-md">
-                      <div className="grid grid-cols-4 gap-1.5 sm:gap-2 text-center">
-                        
-                        {/* Days */}
-                        <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-2 sm:p-2.5 border border-white/10 shadow-md">
-                          <span className="block font-mono text-xl sm:text-2xl lg:text-3xl font-extrabold text-amber-400 tabular-nums leading-tight">
-                            {String(timeRemaining.days).padStart(2, '0')}
-                          </span>
-                          <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">
-                            Jours
-                          </span>
-                        </div>
+                    )}
 
-                        {/* Hours */}
-                        <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-2 sm:p-2.5 border border-white/10 shadow-md">
-                          <span className="block font-mono text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tabular-nums leading-tight">
-                            {String(timeRemaining.hours).padStart(2, '0')}
-                          </span>
-                          <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">
-                            Heures
-                          </span>
-                        </div>
+                  </div>
 
-                        {/* Minutes */}
-                        <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-2 sm:p-2.5 border border-white/10 shadow-md">
-                          <span className="block font-mono text-xl sm:text-2xl lg:text-3xl font-extrabold text-white tabular-nums leading-tight">
-                            {String(timeRemaining.minutes).padStart(2, '0')}
-                          </span>
-                          <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">
-                            Minutes
-                          </span>
-                        </div>
-
-                        {/* Seconds */}
-                        <div className="bg-slate-800/80 backdrop-blur-md rounded-xl p-2 sm:p-2.5 border border-white/10 shadow-md">
-                          <span className="block font-mono text-xl sm:text-2xl lg:text-3xl font-extrabold text-amber-300 tabular-nums leading-tight">
-                            {String(timeRemaining.seconds).padStart(2, '0')}
-                          </span>
-                          <span className="text-[9.5px] sm:text-[10.5px] uppercase tracking-wider text-slate-400 font-bold block mt-0.5">
-                            Secondes
-                          </span>
-                        </div>
-
-                      </div>
-                    </div>
-                  )}
-
-                </div>
-
-              </motion.div>
-            </AnimatePresence>
-          </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          ) : (
+            /* DYNAMIC ANNOUNCEMENT CARD WHEN NO EVENTS MATCH VIEW/FILTER */
+            <div className="w-full py-8 px-4 sm:px-8 text-center bg-white/5 border border-white/10 rounded-2xl space-y-3.5 my-1">
+              <div className="w-12 h-12 rounded-2xl bg-amber-400/15 text-amber-300 flex items-center justify-center mx-auto border border-amber-400/30 shadow-xs">
+                <CalendarClock className="w-6 h-6 animate-pulse" />
+              </div>
+              <div className="space-y-1 max-w-xl mx-auto">
+                <h3 className="font-serif text-base sm:text-lg font-bold text-white tracking-tight">
+                  {viewMode === 'UPCOMING'
+                    ? (filterMode === 'EXAMS' 
+                        ? 'Aucun examen officiel immédiat à afficher' 
+                        : 'Prochaines échéances officielles en cours de publication')
+                    : 'Aucun événement passé archivé'}
+                </h3>
+                <p className="text-xs sm:text-[13px] text-slate-300 leading-relaxed font-light">
+                  {viewMode === 'UPCOMING'
+                    ? (filterMode === 'EXAMS'
+                        ? 'Toutes les épreuves antérieures ont été achevées. Les dates des prochains examens officiels seront publiées selon le calendrier du MENFP.'
+                        : 'Tous les événements récents ont été menés à terme avec succès sur le campus. La Direction Pédagogique publiera très prochainement les nouvelles dates clés de l’année académique 2026–2027.')
+                    : 'Les comptes-rendus et archives des cérémonies et évaluations scolaires seront répertoriés ici.'}
+                </p>
+              </div>
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-2 text-xs">
+                {viewMode === 'UPCOMING' && allPastEvents.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => { setViewMode('PAST'); setSelectedEventId(null); }}
+                    className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
+                  >
+                    <History className="w-3.5 h-3.5" />
+                    <span>Consulter les {allPastEvents.length} événements récents déjà réalisés</span>
+                  </button>
+                )}
+                {filterMode === 'EXAMS' && (
+                  <button
+                    type="button"
+                    onClick={() => { setFilterMode('ALL'); }}
+                    className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5 border border-white/10"
+                  >
+                    <span>Afficher tous les événements</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onNavigate('events')}
+                  className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold transition-all cursor-pointer inline-flex items-center gap-1.5 border border-white/10"
+                >
+                  <Calendar className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Ouvrir l’agenda scolaire complet</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* FOOTER ACTIONS BAR */}
           <div className="pt-2.5 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
             
             <div className="flex items-center gap-2 flex-wrap">
-              {viewMode === 'UPCOMING' && (
+              {viewMode === 'UPCOMING' && activeEvent && (
                 <>
                   {/* Google Calendar Link */}
                   <a
@@ -914,7 +984,7 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
               )}
 
               {/* Admin Direct Quick Edit */}
-              {canManage && (
+              {canManage && activeEvent && (
                 <button
                   type="button"
                   onClick={handleOpenEditModal}
@@ -944,7 +1014,7 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
       </div>
 
       {/* QUICK REMINDER FORM MODAL */}
-      {isReminderModalOpen && (
+      {isReminderModalOpen && activeEvent && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 animate-fade-in text-slate-900">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-5 space-y-4">
             
@@ -1023,7 +1093,7 @@ export const EventCountdownWidget: React.FC<EventCountdownWidgetProps> = ({
       )}
 
       {/* ADMIN IN-PLACE QUICK EDIT MODAL */}
-      {isEditModalOpen && (
+      {isEditModalOpen && activeEvent && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-3 animate-fade-in text-slate-900">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-lg w-full p-5 space-y-4 max-h-[90vh] overflow-y-auto">
             
